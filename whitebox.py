@@ -4,8 +4,9 @@ import abc
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from itertools import product
+from sklearn.utils.validation import check_is_fitted
+from sklearn.exceptions import NotFittedError
 import warnings
-
 
 
 class WhiteBoxBase(object):
@@ -21,8 +22,18 @@ class WhiteBoxBase(object):
         assert hasattr(modelobj, 'predict'), 'modelObj does not have predict method.' \
                                              ' WhiteBoxError only works with model objects with predict method'
 
+        # need to ensure modelobj has previously been fitted, otherwise raise NotFittedError
+        try:
+            # try predicting on model dataframe
+            modelobj.predict(model_df.loc[:, model_df.columns != ydepend])
+        except NotFittedError as e:
+            # raise exception and not fitted error
+            raise Exception('{}\nPlease fit model: {}'.format(e, modelobj.__class__))
+
         assert isinstance(model_df, pd.core.frame.DataFrame), 'orig_df variable not pandas dataframe. ' \
                                                              'WhiteBoxError only works with dataframe objects'
+
+        assert model_df.shape[1] == modelobj.n_features_, ''
         if isinstance(cat_df, pd.core.frame.DataFrame):
             assert isinstance(cat_df, pd.core.frame.DataFrame), 'dummy_df variable not pandas dataframe. ' \
                                                                   'WhiteBoxError only works with dataframe objects'
@@ -52,9 +63,9 @@ class WhiteBoxBase(object):
         # predict_df = convert_categorical_independent(self.model_df)
         # create predictions
         print(self.model_df.head())
-        preds = self.modelobj.predict(self.model_df)#self.model_df.loc[:, self.model_df.columns != self.ydepend])
+        preds = self.modelobj.predict(self.model_df.loc[:, self.model_df.columns != self.ydepend])#self.model_df.loc[:, self.model_df.columns != self.ydepend])
         # calculate error
-        diff = preds - self.cat_df.loc[:, yDepend]
+        diff = preds - self.cat_df.loc[:, self.ydepend]
         # assign errors
         self.cat_df['errors'] = diff
         # assign predictions
@@ -116,6 +127,8 @@ class WhiteBoxError(WhiteBoxBase):
         return toreturn.mean()
 
     def run(self):
+        # run the prediction function first to assign the errors to the dataframe
+        self.predict()
         # get the 100 percentiles of the data
         vecs = getVectors(self.cat_df)
 
@@ -124,8 +137,9 @@ class WhiteBoxError(WhiteBoxBase):
 
         for col, groupby in product(self.cat_df.columns[~self.cat_df.columns.isin(['errors', 'predictedYSmooth',
                                                                                    self.ydepend])], self.groupbyvars):
-            # check if we are a col that is the groupbyvar
+            # check if we are a col that is the groupbyvar3
             if col != groupby:
+                print(col)
                 # subset col indices
                 col_indices = [col, 'errors', 'predictedYSmooth', groupby]
                 # check if categorical
@@ -133,7 +147,7 @@ class WhiteBoxError(WhiteBoxBase):
                     # slice over the groupby variable and the categories within the current column
                     errors = self.cat_df[col_indices].groupby([groupby, col]).apply(self.transform_function)
                     # append to all errors
-                    placeholder.append(errors)
+                    #placeholder.append(errors)
                 else:
                     # create col bin name
                     col_bin_name = '{}_bins'.format(col)
@@ -149,21 +163,52 @@ class WhiteBoxError(WhiteBoxBase):
                     # remove col_bin_name
                     del errors[col_bin_name]
                     del self.cat_df[col_bin_name]
-                    errors = errors.reset_index().rename(columns={groupby: 'groupByValue'})
-                    errors['groupByVarName'] = groupby
-                    # append to placeholder
-                    placeholder.append(errors)
+                #errors = errors.reset_index(drop = True).rename(columns={groupby: 'groupByValue'})
+                errors.reset_index(drop = True, inplace = True)
+                #errors.rename(columns = {groupby = 'groupByValue'}, inplace = True)
+                errors.rename(columns = {groupby : 'groupByValue'}, inplace = True)
+                errors['groupByVarName'] = groupby
+                # append to placeholder
+                placeholder.append(errors)
 
         # assign outputs to class
         self.outputs = placeholder
 
+from sklearn import datasets
+iris_data = datasets.load_iris()
+df = pd.DataFrame(data=np.c_[iris_data['data'], iris_data['target']],
+                            columns = ['sepall', 'sepalw', 'petall', 'petalw', 'target'])
+
+# set up randomforestregressor
+modelobj = RandomForestRegressor()
+
+modelobj.fit(df.loc[:, df.columns != 'target'],
+            df['target'])
 
 
+# test whether outputs are assigned to instance after run
+WB = WhiteBoxError(modelobj = modelobj,
+              model_df = df,
+              ydepend = 'target',
+              groupbyvars = ['sepalw'])
 
+WB.run()
+
+WB.outputs[0]
+df.loc[:, df.columns != 'target']
+
+modelobj.n_features_
+
+modelobj.predict(df.loc[:, df.columns != 'target'])
+
+WB.run()
+
+df.columns
+
+'''
 wine = pd.read_csv('./data/winequality.csv')
 
 modelObjc = RandomForestRegressor()
-
 #=====================================
 yDepend = 'fixed.acidity'
 groupbyVars = ['Type']
@@ -196,10 +241,10 @@ WB = WhiteBoxError(modelobj = modelObjc,
                    ydepend= 'quality',
                    cat_df = wine_sub,
                    groupbyvars = ['Type'])
-
-WB.predict()
+WB.outputs
 WB.run()
 
+type(WB.outputs)
 #========================================
 # OLD
 
@@ -352,3 +397,4 @@ with open('./output/test1.html', 'w') as outfile:
     outfile.write(output)
 
 
+'''

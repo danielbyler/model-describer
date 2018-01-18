@@ -4,6 +4,8 @@ import pandas as pd
 import numpy as np
 import warnings
 from utils.utils import getVectors, to_json, convert_categorical_independent
+from whitebox import WhiteBoxError
+from sklearn.ensemble import RandomForestRegressor
 
 class TestWhiteBox(unittest.TestCase):
 
@@ -11,7 +13,8 @@ class TestWhiteBox(unittest.TestCase):
         # load iris data for testing WhiteBox functionality
         iris_data = datasets.load_iris()
         self.iris = pd.DataFrame(data=np.c_[iris_data['data'], iris_data['target']],
-                            columns=iris_data['feature_names'] + ['target'])
+                                 columns = ['sepall', 'sepalw', 'petall', 'petalw', 'target'])
+
 
     def test_getVectors_shape(self):
         # test final output of getVectors being lenght 100
@@ -80,6 +83,48 @@ class TestWhiteBox(unittest.TestCase):
 
         self.assertEqual(warn_message, 'Pandas categorical variable types not detected',
                          'Categorical warning not displayed with all number dataframe')
+
+    def test_wberror_notfitted(self):
+        df = pd.DataFrame({'col1': list(range(100)),
+                           'col2': list(range(100))})
+
+        # set up randomforestregressor
+        modelobj = RandomForestRegressor()
+
+        error_message = ''
+        try:
+            WhiteBoxError(modelobj = modelobj,
+                          model_df = df,
+                          ydepend = 'col1',
+                          cat_df = df,
+                          groupbyvars = ['col2'])
+        except Exception as e:
+            error_message += str(e)
+
+            self.assertIn('not fitted', error_message,
+                      'WhiteBoxError not correctly detecting unfitted models')
+
+    def test_run_outputs(self):
+        # set up randomforestregressor
+        modelobj = RandomForestRegressor()
+
+        modelobj.fit(self.iris.loc[:, self.iris.columns != 'target'],
+                    self.iris['target'])
+        # test whether outputs are assigned to instance after run
+        WB = WhiteBoxError(modelobj = modelobj,
+                      model_df = self.iris,
+                      ydepend = 'target',
+                      groupbyvars = ['sepalw'])
+
+
+        WB.run()
+
+        self.assertIsInstance(WB.outputs, list,
+                              msg = 'WhiteBoxError is not producing list of outputs after run')
+
+
+
+
 
 
 
