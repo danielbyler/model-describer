@@ -2,7 +2,8 @@ import unittest
 from sklearn import datasets
 import pandas as pd
 import numpy as np
-from utils.utils import HTML, getVectors, to_json
+import warnings
+from utils.utils import getVectors, to_json, convert_categorical_independent
 
 class TestWhiteBox(unittest.TestCase):
 
@@ -28,7 +29,7 @@ class TestWhiteBox(unittest.TestCase):
                          'Final shape: {}'.format(self.iris.shape,
                                                   getVectors_results.shape))
     #todo Add unit tests for testing the HTML code for class string and len of string
-
+    '''
     def test_wbox_html(self):
         # test wbox html is string
         self.assertIsInstance(HTML.wbox_html, str,
@@ -38,7 +39,7 @@ class TestWhiteBox(unittest.TestCase):
         # test wbox html string length
         self.assertGreater(len(HTML.wbox_html),
                            100, 'check length of HTML string. Current length: {}'.format(len(HTML.wbox_html)))
-
+    '''
     def test_to_json(self):
         # test final output of to_json is class dict
         json = to_json(self.iris, vartype = 'Continuous')
@@ -50,6 +51,35 @@ class TestWhiteBox(unittest.TestCase):
         json = to_json(self.iris, vartype = 'Continuous')
         self.assertEqual(json['Type'], 'Continuous',
                          'Vartype incorrect, current vartype is {}'.format(json['Type']))
+
+    def test_convert_categorical_independent(self):
+        # test the conversion of pandas categorical datatypes to integers
+        # create simulated dataframe
+        df = pd.DataFrame({'category1': list('abcabcabcabc'),
+                           'category2': list('defdefdefdef')})
+
+        df['category1'] = pd.Categorical(df['category1'])
+        df['category2'] = pd.Categorical(df['category2'])
+
+        num_df = convert_categorical_independent(df)
+
+        self.assertEqual(num_df.select_dtypes(include = [np.number]).shape[1],
+                         df.shape[1], 'Numeric column shapes mismatched: Original: {}' \
+                                      'Transformed: {}'.format(df.shape, num_df.shape))
+
+
+    def test_convert_categorical_independent_warnings(self):
+        # create only numeric dataframe
+        df = pd.DataFrame({'col1': list(range(100)),
+                           'col2': list(range(100))})
+        warn_message = ''
+        # capture warnings messages
+        with warnings.catch_warnings(record=True) as w:
+            df2 = convert_categorical_independent(df)
+            warn_message += str(w[-1].message)
+
+        self.assertEqual(warn_message, 'Pandas categorical variable types not detected',
+                         'Categorical warning not displayed with all number dataframe')
 
 
 

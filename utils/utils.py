@@ -1,7 +1,7 @@
 import pandas as pd
 import math
 import numpy as np
-import os
+import warnings
 
 def getVectors(dataframe):
     """
@@ -25,6 +25,23 @@ def getVectors(dataframe):
 
     return(tempVec)
 
+def convert_categorical_independent(dataframe):
+    """
+    convert pandas dtypes 'categorical' into numerical columns
+    :param dataframe: dataframe to perform adjustment on
+    :return: dataframe that has converted strings to numbers
+    """
+    dataframe = dataframe.copy(deep = True) # we want to change the data, not copy and change
+    # convert all category datatypes into numeric
+    cats = dataframe.select_dtypes(include=['category'])
+    # warn user if no categorical variables detected
+    if cats.shape[1] == 0:
+        warnings.warn('Pandas categorical variable types not detected', UserWarning)
+    # iterate over these columns
+    for category in cats.columns:
+        dataframe.loc[:, category] = dataframe.loc[:, category].cat.codes
+
+    return dataframe
 
 def create_insights(group, diff, group_level, group_var,
                     error_type = 'MSE'):
@@ -67,11 +84,11 @@ def to_json(dataframe, vartype='Continuous'):
     return json_out
 
 #todo add HTML class to point to html text
-
+'''
 class HTML(object):
     # utility class to hold whitebox files
     wbox_html = open('./utils/HTML/html_error.txt', 'r').read()
-
+'''
 def createMLErrorHTML(datastring, dependentVar):
     """
     create WhiteBox error plot html code
@@ -79,8 +96,17 @@ def createMLErrorHTML(datastring, dependentVar):
     :param dependentVar: name of dependent variable
     :return: html string
     """
-    return HTML.wbox_html.replace('<***>', datastring
+    output = HTML.wbox_html.replace('<***>', datastring
                                   ).replace('Quality', dependentVar)
+
+    # convert single quotes to double
+    output = output.replace("'", '"')
+
+    # convert "null" to null
+    output = output.replace('"null"', 'null')
+
+    # return
+    return output
 
 
 
