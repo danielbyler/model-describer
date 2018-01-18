@@ -4,7 +4,7 @@ import abc
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from itertools import product
-from sklearn import datasets
+import warnings
 
 
 
@@ -52,9 +52,9 @@ class WhiteBoxBase(object):
         # predict_df = convert_categorical_independent(self.model_df)
         # create predictions
         print(self.model_df.head())
-        preds = self.modelobj.predict(self.model_df.loc[:, self.model_df.columns != self.ydepend])
+        preds = self.modelobj.predict(self.model_df)#self.model_df.loc[:, self.model_df.columns != self.ydepend])
         # calculate error
-        diff = preds - self.model_df.loc[:, yDepend]
+        diff = preds - self.cat_df.loc[:, yDepend]
         # assign errors
         self.cat_df['errors'] = diff
         # assign predictions
@@ -154,6 +154,9 @@ class WhiteBoxError(WhiteBoxBase):
                     # append to placeholder
                     placeholder.append(errors)
 
+        # assign outputs to class
+        self.outputs = placeholder
+
 
 
 
@@ -168,8 +171,6 @@ groupbyVars = ['Type']
 wine_sub = wine[['fixed.acidity', 'volatile.acidity', 'citric.acid',
              'residual.sugar', 'Type', 'quality', 'AlcoholContent']].copy(deep = True)
 
-wine_sub
-
 string_categories = wine_sub.select_dtypes(include = ['O'])
 # iterate over string categories
 for cat in string_categories:
@@ -179,60 +180,28 @@ for cat in string_categories:
 dummies = pd.concat([pd.get_dummies(wine_sub.loc[:, col], prefix = col) for col in wine_sub.select_dtypes(include = ['category']).columns], axis = 1)
 finaldf = pd.concat([wine_sub.select_dtypes(include = [np.number]), dummies], axis = 1)
 
-string_categories
-
-def dummy_to_categories(org_df, dummy_df):
-    # pull out all the category column names
-    category_columns = org_df.select_dtypes(include = ['category']).columns
-    # iterate over the categories and reconstruct
-
-    # stack the resulting dataframe results
-    type_test = dummies.filter(regex = ('{}_.*'.format(string_categories.columns[0]))).stack()
-    # create a series and reinsert back into the dataframe
-    t = pd.DataFrame({'cat1': pd.Series(pd.Categorical(type_test[type_test != 0].index.get_level_values(1)))})
-    t['cat1'].replace("Type", "", regex = True)
-
-    t['cat1'].astype(str).replace(to_replace = 'Type_',
-              value = '',
-              regex = False)
-
-    t['cat1'].apply(lambda x: x.replace('Type_', ''))
-
-wine_sub['AlcoholContent'].cat.codes
-
-wine_sub['Type']
-wine_sub.select_dtypes(include = ['category']).columns
-#wine['Type'] = wine.cc.codes
 
 xTrainData = wine_sub.loc[:, wine_sub.columns != yDepend].copy(deep = True)
-xTrainData
 xTrainData = convert_categorical_independent(xTrainData)
-xTrainData.dtypes
 yTrainData = wine_sub[yDepend].copy(deep = True)
 
-import warnings
-
-warn_message = warnings.warn('No categorical variables detected', UserWarning)
-warn_message
 modelObjc.fit(xTrainData, yTrainData)
 
-
-xTrainData.head()
-
 xTrainData['quality'] = wine_sub['quality']
+
+modelObjc.predict(xTrainData)
 
 WB = WhiteBoxError(modelobj = modelObjc,
                    model_df = xTrainData,
                    ydepend= 'quality',
                    cat_df = wine_sub,
                    groupbyvars = ['Type'])
-WB.model_df
-WB.predict()
-
-# manipulate underlying dataframe to append errors and predictions
-df_test = predict(modelObjc, wine_sub, yDepend)
 
 WB.predict()
+WB.run()
+
+#========================================
+# OLD
 
 def trans_func(group):
     """
@@ -314,6 +283,23 @@ for col, groupby in product(df_test.columns[~df_test.columns.isin(['errors', 'pr
             errors['groupByVarName'] = groupby
             # append to placeholder
             placeholder.append(errors)
+
+def dummy_to_categories(org_df, dummy_df):
+    # pull out all the category column names
+    category_columns = org_df.select_dtypes(include = ['category']).columns
+    # iterate over the categories and reconstruct
+
+    # stack the resulting dataframe results
+    type_test = dummies.filter(regex = ('{}_.*'.format(string_categories.columns[0]))).stack()
+    # create a series and reinsert back into the dataframe
+    t = pd.DataFrame({'cat1': pd.Series(pd.Categorical(type_test[type_test != 0].index.get_level_values(1)))})
+    t['cat1'].replace("Type", "", regex = True)
+
+    t['cat1'].astype(str).replace(to_replace = 'Type_',
+              value = '',
+              regex = False)
+
+    t['cat1'].apply(lambda x: x.replace('Type_', ''))
 
 
 placeholder[2].dropna(axis = 0, subset = ['residual.sugar'])
