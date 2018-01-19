@@ -3,11 +3,12 @@ from sklearn import datasets
 import pandas as pd
 import numpy as np
 import warnings
-from utils.utils import getVectors, to_json, convert_categorical_independent
+from utils.utils import *
 from whitebox import WhiteBoxError
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_squared_error, mean_absolute_error
 
-class TestWhiteBox(unittest.TestCase):
+class TestUtils(unittest.TestCase):
 
     def setUp(self):
         # load iris data for testing WhiteBox functionality
@@ -84,47 +85,62 @@ class TestWhiteBox(unittest.TestCase):
         self.assertEqual(warn_message, 'Pandas categorical variable types not detected',
                          'Categorical warning not displayed with all number dataframe')
 
-    def test_wberror_notfitted(self):
-        df = pd.DataFrame({'col1': list(range(100)),
-                           'col2': list(range(100))})
+    def test_create_insights_mse(self):
+        # create sample actual/preds data
+        df = pd.DataFrame({'actual': np.random.rand(100),
+                           'predicted': np.random.rand(100)})
+        df['errors'] = df['actual'] - df['predicted']
+        # set dummy name
+        df.__setattr__('name', 'test')
+        # capture MSE from create_insights
+        msedf = create_insights(df, group_var = 'test',
+                                error_type = 'MSE')
+        mse = msedf['MSE'].values[0]
+        # sklearn mse
+        sklearn_mse = mean_squared_error(df['actual'],
+                                         df['predicted'])
 
-        # set up randomforestregressor
-        modelobj = RandomForestRegressor()
+        self.assertEqual(round(mse, 4), round(sklearn_mse, 4),
+                         msg = 'MSE error miscalc.'\
+                         '\ncreate_insights MSE: {}'\
+                         '\nsklearn_mse: {}'.format(mse, sklearn_mse))
 
-        error_message = ''
-        try:
-            WhiteBoxError(modelobj = modelobj,
-                          model_df = df,
-                          ydepend = 'col1',
-                          cat_df = df,
-                          groupbyvars = ['col2'])
-        except Exception as e:
-            error_message += str(e)
+    def test_create_insights_mae(self):
+        # create sample actual/preds data
+        df = pd.DataFrame({'actual': np.random.rand(100),
+                           'predicted': np.random.rand(100)})
+        df['errors'] = df['predicted'] - df['actual']
+        # set dummy name
+        df.__setattr__('name', 'test')
+        # capture MSE from create_insights
+        maedf = create_insights(df, group_var = 'test',
+                                error_type = 'MAE')
+        mae = maedf['MAE'].values[0]
+        # sklearn mse
+        sklearn_mae = mean_absolute_error(df['actual'],
+                                         df['predicted'])
 
-            self.assertIn('not fitted', error_message,
-                      'WhiteBoxError not correctly detecting unfitted models')
-
-    def test_run_outputs(self):
-        # set up randomforestregressor
-        modelobj = RandomForestRegressor()
-
-        modelobj.fit(self.iris.loc[:, self.iris.columns != 'target'],
-                    self.iris['target'])
-        # test whether outputs are assigned to instance after run
-        WB = WhiteBoxError(modelobj = modelobj,
-                      model_df = self.iris,
-                      ydepend = 'target',
-                      groupbyvars = ['sepalw'])
+        self.assertEqual(round(mae, 4), round(sklearn_mae, 4),
+                         msg = 'MAE error miscalc.'\
+                         '\ncreate_insights MAE: {}'\
+                         '\nsklearn_mse: {}'.format(mae, sklearn_mae))
 
 
-        WB.run()
+'''
+df = pd.DataFrame({'actual': np.random.rand(100),
+                           'predicted': np.random.rand(100)})
+df['errors'] = df['actual'] - df['predicted']
+np.mean(df['errors'] ** 2)
 
-        self.assertIsInstance(WB.outputs, list,
-                              msg = 'WhiteBoxError is not producing list of outputs after run')
+df.__setattr__('name', 'test')
 
 
+np.mean([2, 2, 2, 2] ** 2)
 
-
+np.random.rand(100)
+from sklearn.metrics import mean_squared_error
+mean_squared_error(df['actual'], df['predicted'])
+'''
 
 
 

@@ -43,27 +43,25 @@ def convert_categorical_independent(dataframe):
 
     return dataframe
 
-def create_insights(group, diff, group_level, group_var,
+def create_insights(group, group_var = None,
                     error_type = 'MSE'):
     """
     create_insights develops various error metrics such as MSE, RMSE, MAE, etc.
     :param group: the grouping object from the pandas groupby
-    :param diff: the errors (diff between actual preds and predicted)
-    :param group_level: the slice within a column for a particular value of grouping
     :param group_var: the column that is being grouped on
     :return: dataframe with error metrics
     """
     assert error_type in ['MSE', 'RMSE', 'MAE'], 'Currently only supports'\
                                                 ' MAE, MSE, RMSE'
-    error_dict = {'MSE': np.mean(diff[group.index] ** 2),
-                  'RMSE': (np.mean(diff[group.index] ** 2)) ** (1 / 2),
-                  'MAE': np.mean(np.sum(abs(diff[group.index])))}
+    errors = group['errors']
+    error_dict = {'MSE': np.mean(errors ** 2),
+                  'RMSE': (np.mean(errors ** 2)) ** (1 / 2),
+                  'MAE': np.sum(np.absolute(errors))/group.shape[0]}
 
-    msedf = pd.DataFrame({'groupByValue': [group_level],
+    msedf = pd.DataFrame({'groupByValue': group.name,
                           'groupByVarName': group_var,
                           error_type: error_dict[error_type],
-                          'Total': len(group.index)})
-
+                          'Total': group.shape[0]}, index = [0])
     return msedf
 
 def to_json(dataframe, vartype='Continuous'):
