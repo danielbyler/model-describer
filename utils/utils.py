@@ -68,6 +68,7 @@ def to_json(dataframe, vartype='Continuous'):
     # convert dataframe values into a json like object for D3 consumption
     assert vartype in ['Continuous', 'Categorical', 'Accuracy'], 'Vartypes should only be continuous, categorical' \
                                                                  'or accuracy'
+
     # specify data type
     json_out = {'Type': vartype}
     # create data list
@@ -82,11 +83,11 @@ def to_json(dataframe, vartype='Continuous'):
     return json_out
 
 #todo add HTML class to point to html text
-'''
+
 class HTML(object):
     # utility class to hold whitebox files
     wbox_html = open('./utils/HTML/html_error.txt', 'r').read()
-'''
+
 def createMLErrorHTML(datastring, dependentVar):
     """
     create WhiteBox error plot html code
@@ -97,8 +98,11 @@ def createMLErrorHTML(datastring, dependentVar):
     output = HTML.wbox_html.replace('<***>', datastring
                                   ).replace('Quality', dependentVar)
 
+    #output = output.replace("'{}'".format(dependentVar),
+    #               '"{}"'.format(dependentVar))
+
     # convert single quotes to double
-    output = output.replace("'", '"')
+    # output = output.replace("'", '"')
 
     # convert "null" to null
     output = output.replace('"null"', 'null')

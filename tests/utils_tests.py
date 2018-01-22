@@ -4,8 +4,6 @@ import pandas as pd
 import numpy as np
 import warnings
 from utils.utils import *
-from whitebox import WhiteBoxError
-from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 
 class TestUtils(unittest.TestCase):
@@ -18,7 +16,7 @@ class TestUtils(unittest.TestCase):
 
 
     def test_getVectors_shape(self):
-        # test final output of getVectors being lenght 100
+        # test final output of getVectors being length 100
         getVectors_results = getVectors(self.iris)
         self.assertEqual(getVectors_results.shape[0], 100, 'Final shape of getVectors dataframe'\
                                                              'is not 100 percentiles. Current shape: {}'.format(getVectors_results.shape[0])
@@ -124,26 +122,3 @@ class TestUtils(unittest.TestCase):
                          msg = 'MAE error miscalc.'\
                          '\ncreate_insights MAE: {}'\
                          '\nsklearn_mse: {}'.format(mae, sklearn_mae))
-
-
-'''
-df = pd.DataFrame({'actual': np.random.rand(100),
-                           'predicted': np.random.rand(100)})
-df['errors'] = df['actual'] - df['predicted']
-np.mean(df['errors'] ** 2)
-
-df.__setattr__('name', 'test')
-
-
-np.mean([2, 2, 2, 2] ** 2)
-
-np.random.rand(100)
-from sklearn.metrics import mean_squared_error
-mean_squared_error(df['actual'], df['predicted'])
-'''
-
-
-
-
-
-

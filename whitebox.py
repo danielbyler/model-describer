@@ -2,9 +2,7 @@ import pandas as pd
 from utils.utils import to_json, getVectors, create_insights, createMLErrorHTML, convert_categorical_independent
 import abc
 import numpy as np
-from sklearn.ensemble import RandomForestRegressor
 from itertools import product
-from sklearn.utils.validation import check_is_fitted
 from sklearn.exceptions import NotFittedError
 import warnings
 from functools import partial
@@ -37,19 +35,19 @@ class WhiteBoxBase(object):
             assert model_df.shape[0] == cat_df.shape[0], 'Misaligned rows. \norig_df shape: {} ' \
                                                           '\ndummy_df shape: {}'.format(model_df.shape[0],
                                                                                         cat_df.shape[0])
-            self.cat_df = cat_df
+            self.cat_df = cat_df.copy(deep = True)
 
         else:
             if not isinstance(cat_df, type(None)):
                 warnings.warn('cat_df is not None and not a pd.core.frame.DataFrame. Default becomes model_df'\
                               'and may not be intended user behavior', UserWarning)
 
-            self.cat_df = model_df
+            self.cat_df = model_df.copy(deep = True)
 
         assert isinstance(ydepend, str), 'ydepend not string, dependent variable must be single column name'
 
         self.modelobj = modelobj
-        self.model_df = model_df
+        self.model_df = model_df.copy(deep = True)
         self.ydepend = ydepend
 
     def predict(self):
@@ -108,69 +106,139 @@ class WhiteBoxError(WhiteBoxBase):
                                       ydepend,
                                       cat_df = cat_df)
 
-    def transform_function(self, group):
+    @staticmethod
+    def transform_function(group,
+                           groupby = 'Type',
+                           col=None,
+                           vartype='Continuous'):
         """
         transform slice of data by separating our pos/neg errors, aggregating up to the mean of the slice
         and returning transformed dataset
         :param group: slice of data being operated on
+        :param col: current col name needed for continuous transform
+        :param vartype: str --> categorical or continuous
         :return: compressed data representation in dataframe object
         """
         assert 'errors' in group.columns, 'errors needs to be present in dataframe slice'
+        assert vartype in ['Continuous', 'Categorical'], 'variable type needs to be continuous or categorical'
+        # copy so we don't change the og data
+        group_copy = group.copy(deep=True)
         # split out positive vs negative errors
-        errors = group['errors']
+        errors = group_copy['errors']
         # create separate columns for pos or neg errors
         errors = pd.concat([errors[errors > 0], errors[errors < 0]], axis=1)
         # rename error columns
         errors.columns = ['errPos', 'errNeg']
         # merge back with original data
-        toreturn = pd.concat([group.loc[:, group.columns != 'errors'], errors], axis=1)
+        toreturn = pd.concat([group_copy.loc[:, group_copy.columns != 'errors'], errors], axis=1)
         # return the mean
-        return toreturn.mean()
+        if vartype == 'Categorical':
+            # return the mean of the columns
+            return toreturn.mean()
+        else:
+            errors = pd.DataFrame({col: toreturn[col].max(),
+                                 groupby: toreturn[groupby].mode(),
+                                 'predictedYSmooth': toreturn['predictedYSmooth'].mean(),
+                                 'errPos': toreturn['errPos'].mean(),
+                                 'errNeg': toreturn['errNeg'].mean()})
+
+            return errors
+
+    @staticmethod
+    def continuous_slice(group, col=None,
+                         groupby = None,
+                         vartype='Continuous'):
+        """
+        continuous_slice operates on portions of the data that correspond to a particular group of data from the groupby
+        variable. For instance, if working on the wine quality dataset with Type representing your groupby variable, then
+        continuous_slice would operate on 'White' wine data
+        :param group: slice of data with columns, etc.
+        :param col: current continuous variable being operated on
+        :param vartype: continuous
+        :return: transformed data with col data max, errPos mean, errNeg mean, and prediction means for this group
+        """
+        # create percentiles for specific grouping of variables
+        group_vecs = getVectors(group)
+        # create bins
+        group['fixed_bins'] = np.digitize(group.loc[:, col],
+                                          sorted(list(set(group_vecs.loc[:, col]))), right=True)
+
+        # create partial function for error transform (pos/neg split and reshape)
+        trans_partial = partial(WhiteBoxError.transform_function, col=col,
+                                vartype=vartype)
+
+        # group by bins
+        errors = group.groupby('fixed_bins').apply(trans_partial)
+        # final data prep for continuous errors case
+        # and finalize errors dataframe processing
+        errors.reset_index(drop=True, inplace=True)
+        # drop rows that are all NaN
+        errors.dropna(how='all', axis=0)
+        # errors.reset_index(drop = True, inplace = True)
+        errors.rename(columns={groupby: 'groupByValue'}, inplace=True)
+        errors['groupByVarName'] = groupby
+        errors['highlight'] = 'N'
+
+        # fill na values to null
+        errors.replace(np.nan, 'null', inplace=True)
+        # fill forward any missing values
+        errors.fillna(method='ffill')
+        # merge the data back with the groups perdcentile buckets
+        final_out = pd.merge(pd.DataFrame(group_vecs[col]), errors,
+                             left_on=col, right_on=col, how='left')
+
+        final_out.fillna(method='ffill', inplace=True)
+
+        return final_out
 
     def run(self):
         # run the prediction function first to assign the errors to the dataframe
         self.predict()
-        # get the 100 percentiles of the data
-        vecs = getVectors(self.cat_df)
-
         # create placeholder for outputs
         placeholder = []
+        # create placeholder for all insights
+        insights_df = pd.DataFrame()
 
         for col, groupby in product(self.cat_df.columns[~self.cat_df.columns.isin(['errors', 'predictedYSmooth',
                                                                                    self.ydepend])], self.groupbyvars):
             # check if we are a col that is the groupbyvar3
             if col != groupby:
-                print(col)
+                # print('Currently on col: {}\nGroupby: {}'.format(col, groupby))
                 # subset col indices
                 col_indices = [col, 'errors', 'predictedYSmooth', groupby]
                 # check if categorical
                 if isinstance(self.cat_df.loc[:, col].dtype, pd.types.dtypes.CategoricalDtype):
+                    # set variable type
+                    print('FINALLY ON A CATEGORICAL VARIABLE')
+                    vartype = 'Categorical'
+                    # create a partial function from transform_function to fill in column and variable type
+                    categorical_partial = partial(WhiteBoxError.transform_function,
+                                                  col = col,
+                                                  groupby = groupby,
+                                                  vartype = vartype)
                     # slice over the groupby variable and the categories within the current column
-                    errors = self.cat_df[col_indices].groupby([groupby, col]).apply(self.transform_function)
-                    # append to all errors
-                    #placeholder.append(errors)
+                    errors = self.cat_df[col_indices].groupby([groupby, col]).apply(categorical_partial)
+                    # final categorical transformations
+                    errors.reset_index(inplace = True)
+                    errors.rename(columns = {groupby: 'groupByValue'}, inplace = True)
+                    errors['groupByVarName'] = groupby
+
                 else:
-                    # create col bin name
-                    col_bin_name = '{}_bins'.format(col)
-                    # expand col indices to include bins
-                    col_indices2 = col_indices[:]
-                    # append the new column bins
-                    col_indices2.append(col_bin_name)
-                    # create bins for those percentiles across all data
-                    self.cat_df[col_bin_name] = np.digitize(self.cat_df.loc[:, col],
-                                                        sorted(list(set(vecs.loc[:, col]))), right=True)
-                    # iterate over the grouping variable and the bins to capture the mean positive and negative errors within this slice
-                    errors = self.cat_df[col_indices2].groupby([groupby, col_bin_name]).apply(self.transform_function)
-                    # remove col_bin_name
-                    del errors[col_bin_name]
-                    del self.cat_df[col_bin_name]
-                #errors = errors.reset_index(drop = True).rename(columns={groupby: 'groupByValue'})
-                errors.reset_index(drop = True, inplace = True)
-                #errors.rename(columns = {groupby = 'groupByValue'}, inplace = True)
-                errors.rename(columns = {groupby : 'groupByValue'}, inplace = True)
-                errors['groupByVarName'] = groupby
+                    # set variable type
+                    vartype = 'Continuous'
+                    # create partial function to fill in col and vartype of continuous_slice
+                    cont_slice_partial = partial(WhiteBoxError.continuous_slice,
+                                                 col = col, vartype = vartype,
+                                                 groupby = groupby)
+                    # groupby the groupby variable on subset of columns and apply cont_slice_partial
+                    errors = self.cat_df[col_indices].groupby(groupby).apply(cont_slice_partial)
+
+
+                # json out
+                print(vartype)
+                json_out = to_json(errors, vartype = vartype)
                 # append to placeholder
-                placeholder.append(errors)
+                placeholder.append(json_out)
 
             else:
                 # use this as an opportunity to capture error metrics for the groupby variable
@@ -181,86 +249,17 @@ class WhiteBoxError(WhiteBoxBase):
                 acc = self.cat_df.groupby(groupby).apply(insights)
                 # drop the grouping indexing
                 acc.reset_index(drop = True, inplace = True)
-                # append placeholder
-                print(acc)
-                placeholder.append(acc)
+                # append to insights_df
+                insights_df = insights_df.append(acc)
 
+        # finally convert insights_df into json object
+        insights_json = to_json(insights_df, vartype = 'Accuracy')
+        # append to outputs
+        placeholder.append(insights_json)
         # assign outputs to class
         self.outputs = placeholder
-'''
-from sklearn import datasets
-iris_data = datasets.load_iris()
-df = pd.DataFrame(data=np.c_[iris_data['data'], iris_data['target']],
-                            columns = ['sepall', 'sepalw', 'petall', 'petalw', 'target'])
-
-# set up randomforestregressor
-modelobj = RandomForestRegressor()
-
-modelobj.fit(df.loc[:, df.columns != 'target'],
-            df['target'])
 
 
 
-# test whether outputs are assigned to instance after run
-WB = WhiteBoxError(modelobj = modelobj,
-              model_df = df,
-              ydepend = 'target',
-              groupbyvars = ['sepalw'])
-
-WB.run()
-
-filter(lambda x: 'MSE' in x.columns, WB.outputs)
-
-WB.outputs
-df.loc[:, df.columns != 'target']
-
-modelobj.n_features_
-
-modelobj.predict(df.loc[:, df.columns != 'target'])
-
-WB.run()
-
-df.columns
 
 
-
-wine = pd.read_csv('./data/winequality.csv')
-
-modelObjc = RandomForestRegressor()
-#=====================================
-yDepend = 'fixed.acidity'
-groupbyVars = ['Type']
-
-wine_sub = wine[['fixed.acidity', 'volatile.acidity', 'citric.acid',
-             'residual.sugar', 'Type', 'quality', 'AlcoholContent']].copy(deep = True)
-
-string_categories = wine_sub.select_dtypes(include = ['O'])
-# iterate over string categories
-for cat in string_categories:
-    wine_sub[cat] = wine_sub[cat].astype('category')
-
-# create dummies example using all categorical columns
-dummies = pd.concat([pd.get_dummies(wine_sub.loc[:, col], prefix = col) for col in wine_sub.select_dtypes(include = ['category']).columns], axis = 1)
-finaldf = pd.concat([wine_sub.select_dtypes(include = [np.number]), dummies], axis = 1)
-
-
-xTrainData = wine_sub.loc[:, wine_sub.columns != yDepend].copy(deep = True)
-xTrainData = convert_categorical_independent(xTrainData)
-yTrainData = wine_sub[yDepend].copy(deep = True)
-
-modelObjc.fit(xTrainData, yTrainData)
-
-modelObjc.n_features_
-xTrainData.columns
-
-wine_sub.shape
-yDepend
-WB = WhiteBoxError(modelobj = modelObjc,
-                   model_df = xTrainData,
-                   ydepend= yDepend,
-                   cat_df = wine_sub,
-                   groupbyvars = ['Type'])
-WB.run()
-
-type(WB.outputs)
-'''
