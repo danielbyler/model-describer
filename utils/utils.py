@@ -105,7 +105,7 @@ def createMLErrorHTML(datastring, dependentVar):
     # output = output.replace("'", '"')
 
     # convert "null" to null
-    output = output.replace('"null"', 'null')
+    #output = output.replace('"null"', 'null')
 
     # return
     return output

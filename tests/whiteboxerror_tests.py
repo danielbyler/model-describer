@@ -4,6 +4,7 @@ from sklearn import datasets
 import pandas as pd
 import numpy as np
 import unittest
+from functools import partial
 
 class TestWhiteBoxError(unittest.TestCase):
 
@@ -93,8 +94,8 @@ class TestWhiteBoxError(unittest.TestCase):
                       '{}'.format(WB.cat_df.columns))
 
     def test_wberror_transform_errPos(self):
-        # test whether errPos column present after running whiteboxerror transform_function
-        # method on slice of data
+        # test whether errNeg column is present after running whiteboxerror transform_function
+        # on slice of data
         WB = WhiteBoxError(modelobj=self.modelobj,
                            model_df=self.iris,
                            ydepend='target',
@@ -103,8 +104,14 @@ class TestWhiteBoxError(unittest.TestCase):
 
         WB.predict()
 
+        # create partial func
+        cont_slice_partial = partial(WhiteBoxError.continuous_slice,
+                                     col='sepalw',
+                                     vartype='Continuous',
+                                     groupby='Type')
+
         # run transform function
-        errors = WB.cat_df.groupby(['Type']).apply(WB.transform_function)
+        errors = WB.cat_df.groupby(['Type']).apply(cont_slice_partial)
 
         self.assertIn('errPos', errors.columns,
                       msg='errPos not in errordf after transform_function. Only cols present: ' \
@@ -121,12 +128,53 @@ class TestWhiteBoxError(unittest.TestCase):
 
         WB.predict()
 
+        # create partial func
+        cont_slice_partial = partial(WhiteBoxError.continuous_slice,
+                                     col='sepalw',
+                                     vartype='Continuous',
+                                     groupby='Type')
+
         # run transform function
-        errors = WB.cat_df.groupby(['Type']).apply(WB.transform_function)
+        errors = WB.cat_df.groupby(['Type']).apply(cont_slice_partial)
 
         self.assertIn('errNeg', errors.columns,
                       msg='errNeg not in errordf after transform_function. Only cols present: ' \
                           '{}'.format(errors.columns))
+
+    def test_featuredict_subset(self):
+        # create the featuredict
+        featuredict = {'Type': 'type',
+                       'target': 'target',
+                       'sepall': 'sepall'}
+
+        WB = WhiteBoxError(modelobj=self.modelobj,
+                           model_df=self.iris,
+                           ydepend='target',
+                           groupbyvars=['Type'],
+                           cat_df=self.cat_df,
+                           featuredict = featuredict)
+
+        self.assertListEqual(featuredict.keys(), WB.cat_df.columns.values.tolist(),
+                             'Featuredict and WB instance columns dont match.'\
+                             '\nFeaturedict: {}'\
+                             '\nWB Instance cat df: {}'.format(featuredict.keys(), WB.cat_df.columns.values.tolist()))
+
+    def test_whitebox_no_featuredict(self):
+        WB = WhiteBoxError(modelobj=self.modelobj,
+                           model_df=self.iris,
+                           ydepend='target',
+                           groupbyvars=['Type'],
+                           cat_df=self.cat_df,
+                           featuredict=None)
+
+        self.assertEqual(self.iris.shape[1], len(WB.featuredict.keys()),
+                         'When featuredict is not present, featuredict is not being '\
+                         'populated correctly with dataframe columns.'\
+                         '\nDataframe Columns: {}'\
+                         '\nFeaturedict Keys: {}'.format(self.iris.columns,
+                                                         WB.featuredict.keys()))
+
+
 
 
 

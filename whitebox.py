@@ -15,11 +15,13 @@ class WhiteBoxBase(object):
                  modelobj,
                  model_df,
                  ydepend,
-                 cat_df = None):
-        # assertion statements
-        assert hasattr(modelobj, 'predict'), 'modelObj does not have predict method.' \
-                                             ' WhiteBoxError only works with model objects with predict method'
+                 cat_df = None,
+                 featuredict = None):
 
+        # basic parameter checks
+        if not hasattr(modelobj, 'predict'):
+            raise ValueError('modelObj does not have predict method.' \
+                                             ' WhiteBoxError only works with model objects with predict method')
         # need to ensure modelobj has previously been fitted, otherwise raise NotFittedError
         try:
             # try predicting on model dataframe
@@ -28,27 +30,47 @@ class WhiteBoxBase(object):
             # raise exception and not fitted error
             raise Exception('{}\nPlease fit model: {}'.format(e, modelobj.__class__))
 
-        assert isinstance(model_df, pd.core.frame.DataFrame), 'orig_df variable not pandas dataframe. ' \
-                                                             'WhiteBoxError only works with dataframe objects'
+        if not isinstance(model_df, pd.core.frame.DataFrame):
+            raise TypeError('model_df variable not pandas dataframe. ' \
+                                                             'WhiteBoxError only works with dataframe objects')
+
+        if featuredict is not None and not isinstance(featuredict, dict):
+            raise TypeError('When used Featuredict needs to be of type dictionary. Keys are original column'\
+                            'names and values are formatted column names:'\
+                            '\n{sloppy.name.here: Sloppy Name}')
+        # toggle featuredict depending on whether user specifys cat_df and leaves featuredict blank
+        if featuredict is None and cat_df is not None:
+            self.featuredict = {col : col for col in cat_df.columns}
+        elif featuredict is None:
+            self.featuredict = {col : col for col in model_df.columns}
+        else:
+            self.featuredict = featuredict
 
         if isinstance(cat_df, pd.core.frame.DataFrame):
-            assert model_df.shape[0] == cat_df.shape[0], 'Misaligned rows. \norig_df shape: {} ' \
+
+            if model_df.shape[0] != cat_df.shape[0]:
+                raise StandardError('Misaligned rows. \norig_df shape: {} ' \
                                                           '\ndummy_df shape: {}'.format(model_df.shape[0],
-                                                                                        cat_df.shape[0])
-            self.cat_df = cat_df.copy(deep = True)
+                                                                                        cat_df.shape[0]))
+
+            self.cat_df = cat_df[self.featuredict.keys()].copy(deep = True)
 
         else:
             if not isinstance(cat_df, type(None)):
                 warnings.warn('cat_df is not None and not a pd.core.frame.DataFrame. Default becomes model_df'\
                               'and may not be intended user behavior', UserWarning)
 
-            self.cat_df = model_df.copy(deep = True)
+            self.cat_df = model_df[self.featuredict.keys()].copy(deep = True)
 
-        assert isinstance(ydepend, str), 'ydepend not string, dependent variable must be single column name'
+        if not isinstance(ydepend, str):
+            raise TypeError('ydepend not string, dependent variable must be single column name')
 
         self.modelobj = modelobj
         self.model_df = model_df.copy(deep = True)
         self.ydepend = ydepend
+
+        # subset down cat_df to only those features in featuredict
+        self.cat_df = self.cat_df[self.featuredict.keys()]
 
     def predict(self):
         """
@@ -79,6 +101,19 @@ class WhiteBoxBase(object):
 
     @abc.abstractmethod
     def run(self):
+        """
+        method to run over users data, manipulate various groups to explain prediction quality, errors,
+        etc. during specific regions of the data, store those manipulations and output them
+        :return: undetermined
+        """
+        pass
+
+    @abc.abstractmethod
+    def save(self, fpath = ''):
+        """
+        method to save HTML output to disk
+        :return: html output
+        """
         pass
 
 class WhiteBoxError(WhiteBoxBase):
@@ -91,20 +126,16 @@ class WhiteBoxError(WhiteBoxBase):
                  featuredict = None,
                  groupbyvars = None):
 
-        if featuredict:
-            assert isinstance(featuredict, dict), 'featuredict must be dictionary object mapping original column names to ' \
-                                                  'new col names {org_column : pretty_name}. Only featuredict keys are used ' \
-                                                  'in display if utilized'
+        if groupbyvars is None:
+            raise TypeError('groupbyvars cannot be none, must be a list of grouping variables')
 
-        assert groupbyvars, 'groupbyvars cannot be none'
-
-        self.featuredict = featuredict
         self.groupbyvars = groupbyvars
 
         super(WhiteBoxError, self).__init__(modelobj,
                                       model_df,
                                       ydepend,
-                                      cat_df = cat_df)
+                                      cat_df = cat_df,
+                                      featuredict = featuredict)
 
     @staticmethod
     def transform_function(group,
@@ -159,12 +190,18 @@ class WhiteBoxError(WhiteBoxBase):
         """
         # create percentiles for specific grouping of variables
         group_vecs = getVectors(group)
-        # create bins
-        group['fixed_bins'] = np.digitize(group.loc[:, col],
-                                          sorted(list(set(group_vecs.loc[:, col]))), right=True)
+
+        # if more than 100 values in the group, use percentile bins
+        if group.shape[0] > 100:
+            group['fixed_bins'] = np.digitize(group.loc[:, col],
+                                              sorted(list(set(group_vecs.loc[:, col]))), right=True)
+        else:
+            group['fixed_bins'] = group.loc[:, col]
 
         # create partial function for error transform (pos/neg split and reshape)
-        trans_partial = partial(WhiteBoxError.transform_function, col=col,
+        trans_partial = partial(WhiteBoxError.transform_function,
+                                col=col,
+                                groupby = groupby,
                                 vartype=vartype)
 
         # group by bins
@@ -173,23 +210,26 @@ class WhiteBoxError(WhiteBoxBase):
         # and finalize errors dataframe processing
         errors.reset_index(drop=True, inplace=True)
         # drop rows that are all NaN
-        errors.dropna(how='all', axis=0)
+        #errors.dropna(how='all', axis=0, inplace = True)
         # errors.reset_index(drop = True, inplace = True)
         errors.rename(columns={groupby: 'groupByValue'}, inplace=True)
         errors['groupByVarName'] = groupby
         errors['highlight'] = 'N'
-
-        # fill na values to null
-        errors.replace(np.nan, 'null', inplace=True)
-        # fill forward any missing values
-        errors.fillna(method='ffill')
+        #errors.replace(np.nan, 'null', inplace = True)
+        '''
         # merge the data back with the groups perdcentile buckets
         final_out = pd.merge(pd.DataFrame(group_vecs[col]), errors,
                              left_on=col, right_on=col, how='left')
 
+        print(final_out)
+
         final_out.fillna(method='ffill', inplace=True)
 
-        return final_out
+        # fill na values to null
+        final_out.dropna(axis = 0, how = 'any', inplace = True)
+        final_out.replace(np.nan, 'null', inplace=True)
+        '''
+        return errors
 
     def run(self):
         # run the prediction function first to assign the errors to the dataframe
@@ -203,7 +243,7 @@ class WhiteBoxError(WhiteBoxBase):
                                                                                    self.ydepend])], self.groupbyvars):
             # check if we are a col that is the groupbyvar3
             if col != groupby:
-                # print('Currently on col: {}\nGroupby: {}'.format(col, groupby))
+                print('Currently on col: {}\nGroupby: {}'.format(col, groupby))
                 # subset col indices
                 col_indices = [col, 'errors', 'predictedYSmooth', groupby]
                 # check if categorical
@@ -228,7 +268,8 @@ class WhiteBoxError(WhiteBoxBase):
                     vartype = 'Continuous'
                     # create partial function to fill in col and vartype of continuous_slice
                     cont_slice_partial = partial(WhiteBoxError.continuous_slice,
-                                                 col = col, vartype = vartype,
+                                                 col = col,
+                                                 vartype = vartype,
                                                  groupby = groupby)
                     # groupby the groupby variable on subset of columns and apply cont_slice_partial
                     errors = self.cat_df[col_indices].groupby(groupby).apply(cont_slice_partial)
@@ -259,7 +300,12 @@ class WhiteBoxError(WhiteBoxBase):
         # assign outputs to class
         self.outputs = placeholder
 
+    def save(self, fpath = ''):
+        if not self.outputs:
+            RuntimeError('Must run WhiteBoxError.run() on data to store outputs')
 
-
-
-
+        # create HTML output
+        html_out = createMLErrorHTML(str(self.outputs), self.ydepend)
+        # save html_out to disk
+        with open(fpath, 'w') as outfile:
+            outfile.write(html_out)
