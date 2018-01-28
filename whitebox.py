@@ -1,11 +1,22 @@
+#!/usr/bin/env python
+
 import pandas as pd
-from utils import to_json, getVectors, create_insights, createMLErrorHTML, flatten_json
+#from utils import to_json, getVectors, create_insights, createMLErrorHTML, flatten_json
+import utils
 import abc
 import numpy as np
-from itertools import product
 from sklearn.exceptions import NotFittedError
 import warnings
 from functools import partial
+
+__author__ = "Jason Lewris, Daniel Byler, Shruti Panda, Venkat Gangavarapu"
+__copyright__ = ""
+__credits__ = ["Brian Ray"]
+__license__ = "GPL"
+__version__ = "0.0.1"
+__maintainer__ = "Jason Lewris"
+__email__ = "jlewris@deloitte.com"
+__status__ = "Development"
 
 class WhiteBoxBase(object):
     __metaclass__ = abc.ABCMeta
@@ -189,7 +200,7 @@ class WhiteBoxError(WhiteBoxBase):
         :return: transformed data with col data max, errPos mean, errNeg mean, and prediction means for this group
         """
         # create percentiles for specific grouping of variables
-        group_vecs = getVectors(group)
+        group_vecs = utils.getVectors(group)
 
         # if more than 100 values in the group, use percentile bins
         if group.shape[0] > 100:
@@ -215,19 +226,6 @@ class WhiteBoxError(WhiteBoxBase):
         errors.rename(columns={groupby: 'groupByValue'}, inplace=True)
         errors['groupByVarName'] = groupby
         errors['highlight'] = 'N'
-        '''
-        # merge the data back with the groups perdcentile buckets
-        final_out = pd.merge(pd.DataFrame(group_vecs[col]), errors,
-                             left_on=col, right_on=col, how='left')
-
-        print(final_out)
-
-        final_out.fillna(method='ffill', inplace=True)
-
-        # fill na values to null
-        final_out.dropna(axis = 0, how = 'any', inplace = True)
-        final_out.replace(np.nan, 'null', inplace=True)
-        '''
         return errors
 
     def run(self):
@@ -250,13 +248,11 @@ class WhiteBoxError(WhiteBoxBase):
 
                 # check if we are a col that is the groupbyvar3
                 if col != groupby:
-                    print('Currently on col: {}\nGroupby: {}'.format(col, groupby))
                     # subset col indices
                     col_indices = [col, 'errors', 'predictedYSmooth', groupby]
                     # check if categorical
                     if isinstance(self.cat_df.loc[:, col].dtype, pd.types.dtypes.CategoricalDtype):
                         # set variable type
-                        print('FINALLY ON A CATEGORICAL VARIABLE')
                         vartype = 'Categorical'
                         # create a partial function from transform_function to fill in column and variable type
                         categorical_partial = partial(WhiteBoxError.transform_function,
@@ -284,16 +280,15 @@ class WhiteBoxError(WhiteBoxBase):
 
                     # json out
                     errors = errors.replace(np.nan, 'null')
-                    print(errors)
-                    json_out = to_json(errors, vartype = vartype)
+                    # convert to json structure
+                    json_out = utils.to_json(errors, vartype = vartype)
                     # append to placeholder
                     colhold.append(json_out)
 
                 else:
-                    #todo this is happening multiple times when it should only occur once
                     # use this as an opportunity to capture error metrics for the groupby variable
                     # create a partial func by pre-filling in the parameters for create_insights
-                    insights = partial(create_insights, group_var = groupby,
+                    insights = partial(utils.create_insights, group_var = groupby,
                                        error_type='MSE')
 
                     acc = self.cat_df.groupby(groupby).apply(insights)
@@ -304,11 +299,11 @@ class WhiteBoxError(WhiteBoxBase):
 
             # map all of the same columns errors to the first element and
             # append to placeholder
-            placeholder.append(flatten_json(colhold))
+            placeholder.append(utils.flatten_json(colhold))
 
 
         # finally convert insights_df into json object
-        insights_json = to_json(insights_df, vartype = 'Accuracy')
+        insights_json = utils.to_json(insights_df, vartype = 'Accuracy')
         # append to outputs
         placeholder.append(insights_json)
         # flatten nested outputs
@@ -321,7 +316,7 @@ class WhiteBoxError(WhiteBoxBase):
             RuntimeError('Must run WhiteBoxError.run() on data to store outputs')
 
         # create HTML output
-        html_out = createMLErrorHTML(str(self.outputs), self.ydepend)
+        html_out = utils.createMLErrorHTML(str(self.outputs), self.ydepend)
         # save html_out to disk
         with open(fpath, 'w') as outfile:
             outfile.write(html_out)

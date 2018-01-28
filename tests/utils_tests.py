@@ -1,10 +1,21 @@
+#!/usr/bin/env python
+
 import unittest
 from sklearn import datasets
 import pandas as pd
 import numpy as np
 import warnings
 from sklearn.metrics import mean_squared_error, mean_absolute_error
-from utils import createMLErrorHTML, getVectors, to_json, create_insights, convert_categorical_independent
+import utils
+
+__author__ = "Jason Lewris, Daniel Byler, Shruti Panda, Venkat Gangavarapu"
+__copyright__ = ""
+__credits__ = ["Brian Ray"]
+__license__ = "GPL"
+__version__ = "0.0.1"
+__maintainer__ = "Jason Lewris"
+__email__ = "jlewris@deloitte.com"
+__status__ = "Development"
 
 class TestUtils(unittest.TestCase):
 
@@ -17,40 +28,39 @@ class TestUtils(unittest.TestCase):
 
     def test_getVectors_shape(self):
         # test final output of getVectors being length 100
-        getVectors_results = getVectors(self.iris)
+        getVectors_results = utils.getVectors(self.iris)
         self.assertEqual(getVectors_results.shape[0], 100, 'Final shape of getVectors dataframe'\
                                                              'is not 100 percentiles. Current shape: {}'.format(getVectors_results.shape[0])
                          )
 
     def test_getVectors_col_shape(self):
         # test final output of getVectors widths (columns) match original input
-        getVectors_results = getVectors(self.iris)
+        getVectors_results = utils.getVectors(self.iris)
         self.assertEqual(getVectors_results.shape[1], self.iris.shape[1],
                          'Final shape of getVectors return columns does not match orig. input'\
                          'Original shape: {}'\
                          'Final shape: {}'.format(self.iris.shape,
                                                   getVectors_results.shape))
     #todo Add unit tests for testing the HTML code for class string and len of string
-    '''
     def test_wbox_html(self):
         # test wbox html is string
-        self.assertIsInstance(HTML.wbox_html, str,
+        self.assertIsInstance(utils.HTML.wbox_html, str,
                               'Wbox HTML class is not string. Current type: {}'.format(type(HTML.wbox_html)))
 
     def test_wbox_html_len(self):
         # test wbox html string length
-        self.assertGreater(len(HTML.wbox_html),
+        self.assertGreater(len(utils.HTML.wbox_html),
                            100, 'check length of HTML string. Current length: {}'.format(len(HTML.wbox_html)))
-    '''
+
     def test_to_json(self):
         # test final output of to_json is class dict
-        json = to_json(self.iris, vartype = 'Continuous')
+        json = utils.to_json(self.iris, vartype = 'Continuous')
         self.assertIsInstance(json, dict,
                               'to_json not returning dict, cur class: {}'.format(type(json)))
 
     def test_to_json_var(self):
         # test that the users var type is inserted into json
-        json = to_json(self.iris, vartype = 'Continuous')
+        json = utils.to_json(self.iris, vartype = 'Continuous')
         self.assertEqual(json['Type'], 'Continuous',
                          'Vartype incorrect, current vartype is {}'.format(json['Type']))
 
@@ -63,7 +73,7 @@ class TestUtils(unittest.TestCase):
         df['category1'] = pd.Categorical(df['category1'])
         df['category2'] = pd.Categorical(df['category2'])
 
-        num_df = convert_categorical_independent(df)
+        num_df = utils.convert_categorical_independent(df)
 
         self.assertEqual(num_df.select_dtypes(include = [np.number]).shape[1],
                          df.shape[1], 'Numeric column shapes mismatched: Original: {}' \
@@ -77,7 +87,7 @@ class TestUtils(unittest.TestCase):
         warn_message = ''
         # capture warnings messages
         with warnings.catch_warnings(record=True) as w:
-            df2 = convert_categorical_independent(df)
+            df2 = utils.convert_categorical_independent(df)
             warn_message += str(w[-1].message)
 
         self.assertEqual(warn_message, 'Pandas categorical variable types not detected',
@@ -91,7 +101,7 @@ class TestUtils(unittest.TestCase):
         # set dummy name
         df.__setattr__('name', 'test')
         # capture MSE from create_insights
-        msedf = create_insights(df, group_var = 'test',
+        msedf = utils.create_insights(df, group_var = 'test',
                                 error_type = 'MSE')
         mse = msedf['MSE'].values[0]
         # sklearn mse
@@ -111,7 +121,7 @@ class TestUtils(unittest.TestCase):
         # set dummy name
         df.__setattr__('name', 'test')
         # capture MSE from create_insights
-        maedf = create_insights(df, group_var = 'test',
+        maedf = utils.create_insights(df, group_var = 'test',
                                 error_type = 'MAE')
         mae = maedf['MAE'].values[0]
         # sklearn mse
@@ -122,3 +132,13 @@ class TestUtils(unittest.TestCase):
                          msg = 'MAE error miscalc.'\
                          '\ncreate_insights MAE: {}'\
                          '\nsklearn_mse: {}'.format(mae, sklearn_mae))
+
+    def test_create_html_error(self):
+        # set up sample dependent variable
+        ydepend = 'TESTVARIABLE'
+        datastring = "{'Type': 'Categorical', 'Data': [1, 2, 3]}"
+        output = utils.createMLErrorHTML(datastring, ydepend)
+
+        self.assertIn(ydepend, output,
+                      msg = 'Dependent variable ({}) not found in final output' \
+                            'datastring'.format(ydepend))

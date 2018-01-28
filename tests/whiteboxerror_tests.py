@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from whitebox import WhiteBoxError
 from sklearn.ensemble import RandomForestRegressor
 from sklearn import datasets
@@ -5,6 +7,15 @@ import pandas as pd
 import numpy as np
 import unittest
 from functools import partial
+
+__author__ = "Jason Lewris, Daniel Byler, Shruti Panda, Venkat Gangavarapu"
+__copyright__ = ""
+__credits__ = ["Brian Ray"]
+__license__ = "GPL"
+__version__ = "0.0.1"
+__maintainer__ = "Jason Lewris"
+__email__ = "jlewris@deloitte.com"
+__status__ = "Development"
 
 class TestWhiteBoxError(unittest.TestCase):
 
@@ -173,8 +184,3 @@ class TestWhiteBoxError(unittest.TestCase):
                          '\nDataframe Columns: {}'\
                          '\nFeaturedict Keys: {}'.format(self.iris.columns,
                                                          WB.featuredict.keys()))
-
-
-
-
-

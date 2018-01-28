@@ -1,9 +1,19 @@
+#!/usr/bin/env python
+
 import pandas as pd
 import math
 import numpy as np
 import warnings
 from itertools import chain
 
+__author__ = "Jason Lewris, Daniel Byler, Shruti Panda, Venkat Gangavarapu"
+__copyright__ = ""
+__credits__ = ["Brian Ray"]
+__license__ = "GPL"
+__version__ = "0.0.1"
+__maintainer__ = "Jason Lewris"
+__email__ = "jlewris@deloitte.com"
+__status__ = "Development"
 
 def flatten_outputs(outputs):
     """
@@ -118,6 +128,7 @@ def flatten_json(dictlist):
         for val in copydict[1:]:
             copydict[0]['Data'].extend(val['Data'])
         # append to placeholder
+        #todo need to fix this, could be cases where it is not a list and there is one item
         return copydict[0]
     else:
         return copydict[0]
@@ -126,7 +137,7 @@ def flatten_json(dictlist):
 
 class HTML(object):
     # utility class to hold whitebox files
-    wbox_html = open('HTML/html_error.txt', 'r').read()
+    wbox_html = open('../HTML/html_error.txt', 'r').read()
 
 def createMLErrorHTML(datastring, dependentVar):
     """
@@ -138,16 +149,6 @@ def createMLErrorHTML(datastring, dependentVar):
     output = HTML.wbox_html.replace('<***>', datastring
                                   ).replace('Quality', dependentVar)
 
-    #output = output.replace("'{}'".format(dependentVar),
-    #               '"{}"'.format(dependentVar))
-
-    # convert single quotes to double
-    # output = output.replace("'", '"')
-
-    # convert "null" to null
-    #output = output.replace('"null"', 'null')
-
-    # return
     return output
 
 
