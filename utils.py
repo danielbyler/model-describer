@@ -13,7 +13,7 @@ __license__ = "GPL"
 __version__ = "0.0.1"
 __maintainer__ = "Jason Lewris"
 __email__ = "jlewris@deloitte.com"
-__status__ = "Development"
+__status__ = "Beta"
 
 def flatten_outputs(outputs):
     """
@@ -137,7 +137,10 @@ def flatten_json(dictlist):
 
 class HTML(object):
     # utility class to hold whitebox files
-    wbox_html = open('../HTML/html_error.txt', 'r').read()
+    try:
+        wbox_html = open('../HTML/html_error.txt', 'r').read()
+    except IOError as e:
+        wbox_html = open('HTML/html_error.txt', 'r').read()
 
 def createMLErrorHTML(datastring, dependentVar):
     """

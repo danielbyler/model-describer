@@ -16,7 +16,7 @@ __license__ = "GPL"
 __version__ = "0.0.1"
 __maintainer__ = "Jason Lewris"
 __email__ = "jlewris@deloitte.com"
-__status__ = "Development"
+__status__ = "Beta"
 
 class WhiteBoxBase(object):
     __metaclass__ = abc.ABCMeta
@@ -236,9 +236,6 @@ class WhiteBoxError(WhiteBoxBase):
         # create placeholder for all insights
         insights_df = pd.DataFrame()
 
-        #for col, groupby in product(self.cat_df.columns[~self.cat_df.columns.isin(['errors', 'predictedYSmooth',
-        #                                                                           self.ydepend])], self.groupbyvars):
-
         for col in self.cat_df.columns[~self.cat_df.columns.isin(['errors', 'predictedYSmooth', self.ydepend])]:
 
             # column placeholder
@@ -264,6 +261,8 @@ class WhiteBoxError(WhiteBoxBase):
                         # final categorical transformations
                         errors.reset_index(inplace = True)
                         errors.rename(columns = {groupby: 'groupByValue'}, inplace = True)
+                        # rename columns based on featuredict input
+                        errors.rename(columns=self.featuredict, inplace=True)
                         errors['groupByVarName'] = groupby
 
                     else:
@@ -276,6 +275,8 @@ class WhiteBoxError(WhiteBoxBase):
                                                      groupby = groupby)
                         # groupby the groupby variable on subset of columns and apply cont_slice_partial
                         errors = self.cat_df[col_indices].groupby(groupby).apply(cont_slice_partial)
+                        # rename columns based on featuredict input
+                        errors.rename(columns=self.featuredict, inplace=True)
 
 
                     # json out

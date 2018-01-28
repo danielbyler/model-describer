@@ -40,12 +40,12 @@ yTrainData = wine_sub.loc[:, yDepend]
 modelObjc.fit(xTrainData, yTrainData)
 
 # specify featuredict as a subset of columns we want to focus on
-featuredict = {'fixed.acidity': 'fa',
-               'Type': 'Type',
-               'quality': 'q',
-               'volatile.acidity.bin': 'acid_bins',
+featuredict = {'fixed.acidity': 'FIXED ACIDITY',
+               'Type': 'TYPE',
+               'quality': 'SUPERQUALITY',
+               'volatile.acidity.bin': 'VOLATILE ACIDITY BINS',
                'AlcoholContent': 'AC',
-               'sulphates': 'sulphates'}
+               'sulphates': 'SULPHATES'}
 
 
 WB = WhiteBoxError(modelobj = modelObjc,
@@ -61,7 +61,7 @@ WB.run()
 
 cat = filter(lambda x: x['Type'] == 'Categorical', WB.outputs)
 cont = filter(lambda x: x['Type'] == 'Continuous', WB.outputs)
-
+cat
 for val in WB.outputs:
     print(val['Type'])
 
