@@ -2,6 +2,27 @@ import pandas as pd
 import math
 import numpy as np
 import warnings
+from itertools import chain
+
+
+def flatten_outputs(outputs):
+    """
+    flatten the output list so each datatype key is matched to only one list of data
+    points that have all values instead of separate data dictionaries
+    :param outputs: unflattened outputs in the json format
+    :return: final flattened outputs
+    """
+    # merge and flatten data elements that are the same from on type of data to the next
+    acc = {'Type': 'Accuracy',
+           'Data': list(chain.from_iterable([key['Data'] for key in outputs if key['Type'] == 'Accuracy']))}
+    cont = {'Type': 'Continuous',
+            'Data': list(chain.from_iterable([key['Data'] for key in outputs if key['Type'] == 'Continuous']))}
+    cat = {'Type': 'Categorical',
+           'Data': list(chain.from_iterable([key['Data'] for key in outputs if key['Type'] == 'Categorical']))}
+    # remove any elements that don't have data, i.e. if no categorical data in dataframe
+    finallist = list(filter(lambda x: len(x['Data']) > 0, [acc, cont, cat]))
+
+    return finallist
 
 def getVectors(dataframe):
     """
@@ -82,11 +103,30 @@ def to_json(dataframe, vartype='Continuous'):
 
     return json_out
 
+def flatten_json(dictlist):
+    """
+    flatten lists of dictionaries of the same variable into one dict
+    structure. Inputs: [{'Type': 'Continuous', 'Data': [fixed.acid: 1, ...]},
+    {'Type': 'Continuous', 'Data': [fixed.acid : 2, ...]}]
+    outputs: {'Type' : 'Continuous', 'Data' : [fixed.acid: 1, fixed.acid: 2]}}
+    :param dictlist: current list of dictionaries containing certain column elements
+    :return: flattened structure with column variable as key
+    """
+    # make copy of dictlist
+    copydict = dictlist[:]
+    if len(copydict) > 1:
+        for val in copydict[1:]:
+            copydict[0]['Data'].extend(val['Data'])
+        # append to placeholder
+        return copydict[0]
+    else:
+        return copydict[0]
+
 #todo add HTML class to point to html text
 
 class HTML(object):
     # utility class to hold whitebox files
-    wbox_html = open('./utils/HTML/html_error.txt', 'r').read()
+    wbox_html = open('HTML/html_error.txt', 'r').read()
 
 def createMLErrorHTML(datastring, dependentVar):
     """

@@ -3,8 +3,8 @@ from sklearn import datasets
 import pandas as pd
 import numpy as np
 import warnings
-from utils.utils import *
 from sklearn.metrics import mean_squared_error, mean_absolute_error
+from utils import createMLErrorHTML, getVectors, to_json, create_insights, convert_categorical_independent
 
 class TestUtils(unittest.TestCase):
 

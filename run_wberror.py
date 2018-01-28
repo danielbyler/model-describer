@@ -1,53 +1,52 @@
 from whitebox import WhiteBoxError
 from sklearn.ensemble import RandomForestRegressor
 import pandas as pd
-from utils.utils import convert_categorical_independent, createMLErrorHTML, create_insights, getVectors
+import utils as util
 import numpy as np
-from utils.utils import to_json
-from functools import partial
-from itertools import product
 
 #====================
 # wine quality dataset example
+# featuredict - cat and continuous variables
 
-
+# read in wine quality dataset
 wine = pd.read_csv('./data/winequality.csv')
-
-wine.columns.values.tolist()
-
+# init randomforestregressor
 modelObjc = RandomForestRegressor()
-#=====================================
+
+###
+#
+# Specify model parameters
+#
+###
 yDepend = 'quality'
+# create second categorical variable by binning
 wine['volatile.acidity.bin'] = wine['volatile.acidity'].apply(lambda x: 'bin_0' if x > 0.29 else 'bin_1')
-
+# specify groupby variables
 groupbyVars = ['Type', 'volatile.acidity.bin']
-
-wine_sub = wine[['fixed.acidity', 'volatile.acidity.bin', 'citric.acid',
-             'residual.sugar', 'Type', 'quality', 'AlcoholContent']].copy(deep = True)
-
-
+# subset dataframe down
+wine_sub = wine.copy(deep = True)
+# select all string columns so we can convert to pandas Categorical dtype
 string_categories = wine_sub.select_dtypes(include = ['O'])
-string_categories
 # iterate over string categories
 for cat in string_categories:
     wine_sub[cat] = pd.Categorical(wine_sub[cat])
 
-
+# create train dataset for fitting model
 xTrainData = wine_sub.loc[:, wine_sub.columns != yDepend].copy(deep = True)
-xTrainData = convert_categorical_independent(xTrainData)
+# convert all the categorical columns into their category codes
+xTrainData = util.convert_categorical_independent(xTrainData)
 yTrainData = wine_sub.loc[:, yDepend]
 
 modelObjc.fit(xTrainData, yTrainData)
 
-wine_sub.columns
+# specify featuredict as a subset of columns we want to focus on
 featuredict = {'fixed.acidity': 'fa',
                'Type': 'Type',
                'quality': 'q',
-               'volatile.acidity.bin': 'acid_bins'}
+               'volatile.acidity.bin': 'acid_bins',
+               'AlcoholContent': 'AC',
+               'sulphates': 'sulphates'}
 
-wine_sub[featuredict.keys()]
-
-wine_sub.columns
 
 WB = WhiteBoxError(modelobj = modelObjc,
                    model_df = xTrainData,
@@ -55,60 +54,70 @@ WB = WhiteBoxError(modelobj = modelObjc,
                    cat_df = wine_sub,
                    groupbyvars = groupbyVars,
                    featuredict = featuredict)
+
+wine_sub.head()
 WB.run()
-WB.save(fpath = './output/test_jan25.html')
 
 
-for out in WB.outputs:
-    all_data_keys = out['Data'].keys()
+cat = filter(lambda x: x['Type'] == 'Categorical', WB.outputs)
+cont = filter(lambda x: x['Type'] == 'Continuous', WB.outputs)
 
-featuredict
+for val in WB.outputs:
+    print(val['Type'])
 
-'''
-len(set(featuredict.keys()).intersection(groupbyVars))
+WB.outputs[2]
 
-# see various groupby varialbe names in the final outputs
-all_groups = []
+WB.save(fpath = './output/wine_quality_test.html')
 
-for group in WB.outputs:
-    for data_elem in group['Data']:
-        if data_elem.has_key('fixed.acidity'):
-            all_groups.append(data_elem['fixed.acidity'])
+#=================================
+# IRIS Dataset Example
+#
 
-
-set(all_groups)
+from sklearn import datasets
+ydepend = 'target'
+groupbyvars = ['Type', 'Subtype']
 
 
-WB.outputs[1]
-# filter outputs to examine Categorical output
-cats = filter(lambda x: x if x['Type'] == 'Categorical' else None, WB.outputs)
+iris_data = datasets.load_iris()
+df = pd.DataFrame(data=np.c_[iris_data['data'], iris_data['target']],
+                            columns = ['sepall', 'sepalw', 'petall', 'petalw', 'target'])
 
-# filter accuracy
-acc = filter(lambda x: x if x['Type'] == 'Accuracy' else None, WB.outputs)
+df['Type'] = ['white'] * 75 + ['red'] * 75
+df['Subtype'] = ['bin1'] * 50 + ['bin2'] * 50 + ['bin3'] * 50
+
+
+# set up randomforestregressor
+modelobj = RandomForestRegressor()
+
+df['Type'] = pd.Categorical(df['Type'])
+df['Subtype'] = pd.Categorical(df['Subtype'])
+
+model_df = df.copy(deep = True)
+model_df['Type'] = model_df['Type'].cat.codes
+model_df['Subtype'] = model_df['Subtype'].cat.codes
+
+
+modelobj.fit(model_df.loc[:, model_df.columns != ydepend],
+             model_df.loc[:, ydepend])
+
+# test whether outputs are assigned to instance after run
+WB = WhiteBoxError(modelobj = modelobj,
+              model_df = model_df,
+              ydepend = ydepend,
+              groupbyvars = groupbyvars,
+                   cat_df = df)
+
+WB.featuredict
+WB.run()
+WB.save(fpath = './output/IRIS.html')
+
+acc = filter(lambda x: x['Type'] == 'Accuracy', WB.outputs)
 acc
-# check categorical output
-cats[0]
-
-# secure final output from createMLErrorHTML
-final_out = createMLErrorHTML(str(WB.outputs), yDepend)
-
-with open('./output/test_jan23.html', 'w') as outfile:
-    outfile.write(final_out)
-
-wine_sub.describe()
-
-#--------------------
-# test framework
-import random
-bins = ['bin_{}'.format(bin) for bin in range(0, 100)]
-
-wine_sub['test_bins'] = [random.sample(bins, 1)[0] for _ in xrange(wine_sub.shape[0])]
-
-wine_sub.head(1)
-res = wine_sub.groupby(['Type', 'test_bins']).apply(WB.transform_function) #.get_group(('White','Low')))
-res
-res.reset_index()
-
+WB.outputs
+WB.cat_df['errors']
+WB.cat_df['predictedYSmooth']
+WB.cat_df['target']
+'''
 
 
 #=====================
@@ -148,91 +157,4 @@ final_out = createMLErrorHTML(str(WB.outputs), yDepend)
 
 with open('./output/test.html', 'w') as outfile:
     outfile.write(final_out)
-
-#=================================
-# IRIS Dataset Example
-#
-
-from sklearn import datasets
-ydepend = 'target'
-groupbyvars = ['Type']
-
-
-iris_data = datasets.load_iris()
-df = pd.DataFrame(data=np.c_[iris_data['data'], iris_data['target']],
-                            columns = ['sepall', 'sepalw', 'petall', 'petalw', 'target'])
-
-df['Type'] = ['white'] * 75 + ['red'] * 75
-
-
-# set up randomforestregressor
-modelobj = RandomForestRegressor()
-
-df['Type'] = pd.Categorical(df['Type'])
-
-model_df = df.copy(deep = True)
-model_df['Type'] = model_df['Type'].cat.codes
-
-modelobj.fit(model_df.loc[:, model_df.columns != ydepend],
-             model_df.loc[:, ydepend])
-
-# test whether outputs are assigned to instance after run
-WB = WhiteBoxError(modelobj = modelobj,
-              model_df = model_df,
-              ydepend = ydepend,
-              groupbyvars = groupbyvars,
-                   cat_df = df)
-
-WB.featuredict
-WB.run()
-
-final_out = createMLErrorHTML(str(WB.outputs), ydepend)
-
-with open('./output/IRIS.html', 'w') as outfile:
-    outfile.write(final_out)
-
-
-
-
-
-df_sub = df[df['Type'] == 'white']
-
-col = 'sepalw'
-group_vecs = getVectors(df_sub)
-
-group_vecs.loc[:, col]
-
-df_sub['fixed_bins'] = df_sub.loc[:, col]
-
-df_sub['errors'] = np.random.rand(df_sub.shape[0], 1)
-df_sub['predictedYSmooth'] = np.random.rand(df_sub.shape[0], 1)
-
-trans_partial = partial(WhiteBoxError.transform_function,
-                                col=col,
-                                groupby = 'Type',
-                                vartype='Continuous')
-
-errors = df_sub.groupby('fixed_bins').apply(trans_partial)
-
-errors
-
-errors.reset_index(drop = True, inplace = True)
-
-errors.dropna(how = 'all', axis = 0, inplace = True)
-
-errors.rename(columns={'Type': 'groupByValue'}, inplace=True)
-
-errors['groupByVarName'] = 'Type'
-errors['highlight'] = 'N'
-
-final_out = pd.merge(pd.DataFrame(group_vecs[col]), errors,
-                             left_on=col, right_on=col, how='left')
-
-final_out
-
-set(group_vecs.loc[:, col].values.tolist()).intersection(set(df_sub.loc[:, col]))
-
-df['predictedYSmooth'] = modelobj.predict(model_df.loc[:, model_df.columns != 'target'])
-
-xw
 '''

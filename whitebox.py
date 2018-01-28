@@ -1,5 +1,5 @@
 import pandas as pd
-from utils.utils import to_json, getVectors, create_insights, createMLErrorHTML, convert_categorical_independent
+from utils import to_json, getVectors, create_insights, createMLErrorHTML, flatten_json
 import abc
 import numpy as np
 from itertools import product
@@ -47,24 +47,25 @@ class WhiteBoxBase(object):
             self.featuredict = featuredict
 
         if isinstance(cat_df, pd.core.frame.DataFrame):
-
+        	# check tthat the number of rows from cat_df matches that of model_df
             if model_df.shape[0] != cat_df.shape[0]:
                 raise StandardError('Misaligned rows. \norig_df shape: {} ' \
                                                           '\ndummy_df shape: {}'.format(model_df.shape[0],
                                                                                         cat_df.shape[0]))
-
+            # assign cat_df to class instance and subset to featuredict keys
             self.cat_df = cat_df[self.featuredict.keys()].copy(deep = True)
 
         else:
+        	# check that cat_df is not none and if it's not a pandas dataframe, throw warning
             if not isinstance(cat_df, type(None)):
                 warnings.warn('cat_df is not None and not a pd.core.frame.DataFrame. Default becomes model_df'\
                               'and may not be intended user behavior', UserWarning)
-
+            # assign cat_df to class instance and subset based on featuredict keys
             self.cat_df = model_df[self.featuredict.keys()].copy(deep = True)
-
+        # check that ydepend variable is of string type
         if not isinstance(ydepend, str):
             raise TypeError('ydepend not string, dependent variable must be single column name')
-
+        # assing parameters to class instance
         self.modelobj = modelobj
         self.model_df = model_df.copy(deep = True)
         self.ydepend = ydepend
@@ -83,7 +84,6 @@ class WhiteBoxBase(object):
         # convert categories to numeric using underlying category datatype
         # predict_df = convert_categorical_independent(self.model_df)
         # create predictions
-        print(self.model_df.head())
         preds = self.modelobj.predict(self.model_df.loc[:, self.model_df.columns != self.ydepend])#self.model_df.loc[:, self.model_df.columns != self.ydepend])
         # calculate error
         diff = preds - self.cat_df.loc[:, self.ydepend]
@@ -215,7 +215,6 @@ class WhiteBoxError(WhiteBoxBase):
         errors.rename(columns={groupby: 'groupByValue'}, inplace=True)
         errors['groupByVarName'] = groupby
         errors['highlight'] = 'N'
-        #errors.replace(np.nan, 'null', inplace = True)
         '''
         # merge the data back with the groups perdcentile buckets
         final_out = pd.merge(pd.DataFrame(group_vecs[col]), errors,
@@ -239,66 +238,83 @@ class WhiteBoxError(WhiteBoxBase):
         # create placeholder for all insights
         insights_df = pd.DataFrame()
 
-        for col, groupby in product(self.cat_df.columns[~self.cat_df.columns.isin(['errors', 'predictedYSmooth',
-                                                                                   self.ydepend])], self.groupbyvars):
-            # check if we are a col that is the groupbyvar3
-            if col != groupby:
-                print('Currently on col: {}\nGroupby: {}'.format(col, groupby))
-                # subset col indices
-                col_indices = [col, 'errors', 'predictedYSmooth', groupby]
-                # check if categorical
-                if isinstance(self.cat_df.loc[:, col].dtype, pd.types.dtypes.CategoricalDtype):
-                    # set variable type
-                    print('FINALLY ON A CATEGORICAL VARIABLE')
-                    vartype = 'Categorical'
-                    # create a partial function from transform_function to fill in column and variable type
-                    categorical_partial = partial(WhiteBoxError.transform_function,
-                                                  col = col,
-                                                  groupby = groupby,
-                                                  vartype = vartype)
-                    # slice over the groupby variable and the categories within the current column
-                    errors = self.cat_df[col_indices].groupby([groupby, col]).apply(categorical_partial)
-                    # final categorical transformations
-                    errors.reset_index(inplace = True)
-                    errors.rename(columns = {groupby: 'groupByValue'}, inplace = True)
-                    errors['groupByVarName'] = groupby
+        #for col, groupby in product(self.cat_df.columns[~self.cat_df.columns.isin(['errors', 'predictedYSmooth',
+        #                                                                           self.ydepend])], self.groupbyvars):
+
+        for col in self.cat_df.columns[~self.cat_df.columns.isin(['errors', 'predictedYSmooth', self.ydepend])]:
+
+            # column placeholder
+            colhold = []
+
+            for groupby in self.groupbyvars:
+
+                # check if we are a col that is the groupbyvar3
+                if col != groupby:
+                    print('Currently on col: {}\nGroupby: {}'.format(col, groupby))
+                    # subset col indices
+                    col_indices = [col, 'errors', 'predictedYSmooth', groupby]
+                    # check if categorical
+                    if isinstance(self.cat_df.loc[:, col].dtype, pd.types.dtypes.CategoricalDtype):
+                        # set variable type
+                        print('FINALLY ON A CATEGORICAL VARIABLE')
+                        vartype = 'Categorical'
+                        # create a partial function from transform_function to fill in column and variable type
+                        categorical_partial = partial(WhiteBoxError.transform_function,
+                                                      col = col,
+                                                      groupby = groupby,
+                                                      vartype = vartype)
+                        # slice over the groupby variable and the categories within the current column
+                        errors = self.cat_df[col_indices].groupby([groupby, col]).apply(categorical_partial)
+                        # final categorical transformations
+                        errors.reset_index(inplace = True)
+                        errors.rename(columns = {groupby: 'groupByValue'}, inplace = True)
+                        errors['groupByVarName'] = groupby
+
+                    else:
+                        # set variable type
+                        vartype = 'Continuous'
+                        # create partial function to fill in col and vartype of continuous_slice
+                        cont_slice_partial = partial(WhiteBoxError.continuous_slice,
+                                                     col = col,
+                                                     vartype = vartype,
+                                                     groupby = groupby)
+                        # groupby the groupby variable on subset of columns and apply cont_slice_partial
+                        errors = self.cat_df[col_indices].groupby(groupby).apply(cont_slice_partial)
+
+
+                    # json out
+                    errors = errors.replace(np.nan, 'null')
+                    print(errors)
+                    json_out = to_json(errors, vartype = vartype)
+                    # append to placeholder
+                    colhold.append(json_out)
 
                 else:
-                    # set variable type
-                    vartype = 'Continuous'
-                    # create partial function to fill in col and vartype of continuous_slice
-                    cont_slice_partial = partial(WhiteBoxError.continuous_slice,
-                                                 col = col,
-                                                 vartype = vartype,
-                                                 groupby = groupby)
-                    # groupby the groupby variable on subset of columns and apply cont_slice_partial
-                    errors = self.cat_df[col_indices].groupby(groupby).apply(cont_slice_partial)
+                    #todo this is happening multiple times when it should only occur once
+                    # use this as an opportunity to capture error metrics for the groupby variable
+                    # create a partial func by pre-filling in the parameters for create_insights
+                    insights = partial(create_insights, group_var = groupby,
+                                       error_type='MSE')
 
+                    acc = self.cat_df.groupby(groupby).apply(insights)
+                    # drop the grouping indexing
+                    acc.reset_index(drop = True, inplace = True)
+                    # append to insights_df
+                    insights_df = insights_df.append(acc)
 
-                # json out
-                print(vartype)
-                json_out = to_json(errors, vartype = vartype)
-                # append to placeholder
-                placeholder.append(json_out)
+            # map all of the same columns errors to the first element and
+            # append to placeholder
+            placeholder.append(flatten_json(colhold))
 
-            else:
-                # use this as an opportunity to capture error metrics for the groupby variable
-                # create a partial func by pre-filling in the parameters for create_insights
-                insights = partial(create_insights, group_var = groupby,
-                                   error_type='MSE')
-
-                acc = self.cat_df.groupby(groupby).apply(insights)
-                # drop the grouping indexing
-                acc.reset_index(drop = True, inplace = True)
-                # append to insights_df
-                insights_df = insights_df.append(acc)
 
         # finally convert insights_df into json object
         insights_json = to_json(insights_df, vartype = 'Accuracy')
         # append to outputs
         placeholder.append(insights_json)
+        # flatten nested outputs
+
         # assign outputs to class
-        self.outputs = placeholder
+        self.outputs = placeholder #flatten_outputs(placeholder)
 
     def save(self, fpath = ''):
         if not self.outputs:
