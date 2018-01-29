@@ -49,7 +49,7 @@ We hope our error charts fill that gap for you. These error charts group the lev
 
 .. image:: https://github.com/Data4Gov/WhiteBox/blob/master/img/Impact_Gif.gif
 
-For a more detailed example, see our _`example notebook <https://github.com/Data4Gov/WhiteBox/blob/master/Example_Notebook/Random%20Forest%20Analysis.ipynb>`_
+For a more detailed example, see our `example notebook <https://github.com/Data4Gov/WhiteBox/blob/master/Example_Notebook/Random%20Forest%20Analysis.ipynb>`_
 
 Installation
 ==============
