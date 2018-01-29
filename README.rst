@@ -1,17 +1,18 @@
-# WhiteBox: One line of code to make 'black box' machine learning models interpretable to humans. 
-  
+.. -*- mode: rst -*-
+
+WhiteBox: One line of code to make 'black box' machine learning models interpretable to humans. 
+===============================================================================================
+
 White Box makes it possible for everyday humans to understand 'black-box' machine learning models in two key ways:
 
-1- WhiteBox makes it easy to understand how the model 'believes' different groups behave within the model (e.g. are the drivers of job satisfaction different across continents)
+1. WhiteBox makes it easy to understand how the model 'believes' different groups behave within the model (e.g. are the drivers of job satisfaction different across continents)
 
-2- WhiteBox makes it clear where the model is making disproportionately poor quality estimations (e.g. do we do a worse job at predicting the job satisfaction in one particular continent)
+2. WhiteBox makes it clear where the model is making disproportionately poor quality estimations (e.g. do we do a worse job at predicting the job satisfaction in one particular continent)
 
 To make communicating these findings to your team easy, WhiteBox outputs: 
 
 - Are created with one line of Python code at the end of your existing machine learning workflow and require no model re-training
-
 - Are interactive HTML files that are small enough to be emailed as attachment and only require your teammate/client to have a web browser to open your attachment. No server or messy installation required.
-
 - Do not expose your potentially sensitive raw data. Only summaries of the data are included in the final HTML file. This also makes it possible to summarize models built on extremely large datasets into file sizes that are small enough for email. 
 
 # Sample Outputs
@@ -41,7 +42,7 @@ groupByVar = [ 'AlgorithmUnderstandingLevel'])
 ```
 
 
-![Error Showing Impact Chart](https://github.com/Data4Gov/WhiteBox/blob/master/img/Impact_Gif.gif "What a Random Forest Thinks About What Makes Good  Wine")
+.. image:: https://github.com/Data4Gov/WhiteBox/blob/master/img/Impact_Gif.gif
 
 For a more detailed example, see our [example notebook](https://github.com/Data4Gov/WhiteBox/blob/master/Example_Notebook/Random%20Forest%20Analysis.ipynb)
 
