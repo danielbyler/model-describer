@@ -106,16 +106,18 @@ Other Machine Learning Interpretability Projects
 
 For those looking for intepretation of individual points, please see the .. Lime: https://github.com/marcotcr/lime project and its good work. 
 
+
 Authors:
 ========
 
-Authors include: Venkatesh_Gangavarapu
+Authors include: Daniel_, Venkatesh_, Jason_, Shruti_, and Shanti_.
  
- Please drop us a line in the issues section as bugs or feature requests arise. 
- 
- .. Venkatesh_Gangavarapu: https://www.linkedin.com/in/venkatesh-gangavarapu-9845b36b/ 
+Please drop us a line in the issues section as bugs or feature requests arise. 
+
+.. _Daniel: https://www.linkedin.com/in/danielbyler/
+.. _Venkatesh: https://www.linkedin.com/in/venkatesh-gangavarapu-9845b36b/ 
+.. _Jason: https://www.linkedin.com/in/jasonlewris/ 
+.. _Shruti: https://www.linkedin.com/in/shruti-panda-1466216a/ 
+.. _Shanti: https://www.linkedin.com/in/shantijha/ 
 
 
-External hyperlinks, like Python_.
-
-.. _Python: http://www.python.org/
