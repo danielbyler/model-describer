@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="4a8472f7-9115-4ea2-b49e-ab46144afd55" name="obiwan" url="http://10.11.227.230">
+        <fileTransfer host="10.11.227.230" port="22" rootFolder="/projects/us_eminence/WhiteBox_Production" accessType="SFTP">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" />
+          </advancedOptions>
+          <option name="port" value="22" />
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

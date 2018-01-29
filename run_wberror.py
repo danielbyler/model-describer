@@ -1,8 +1,8 @@
-from whitebox.wbox_error import WhiteBoxError
 from sklearn.ensemble import RandomForestRegressor
 import pandas as pd
 from whitebox import utils
 import numpy as np
+from whitebox.wbox_error import WhiteBoxError
 
 #====================
 # wine quality dataset example
@@ -58,7 +58,7 @@ WB = WhiteBoxError(modelobj = modelObjc,
 wine_sub.head()
 WB.run()
 
-WB.outputs[1]
+WB.outputs[0]
 
 cat = filter(lambda x: x['Type'] == 'Categorical', WB.outputs)
 cont = filter(lambda x: x['Type'] == 'Continuous', WB.outputs)

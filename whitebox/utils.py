@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+import sys
+
+sys.path.insert(0, '/projects/us_eminence/WhiteBox_Production/')
 
 import pandas as pd
 import math
