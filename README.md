@@ -45,6 +45,26 @@ groupByVar = [ 'AlgorithmUnderstandingLevel'])
 
 For a more detailed example, see our [example notebook](https://github.com/Data4Gov/WhiteBox/blob/master/Example_Notebook/Random%20Forest%20Analysis.ipynb)
 
+# Installation
+
+Installation is easy. 
+
+```python
+
+pip install WhiteBox
+
+```
+
+## Requirements
+
+WhiteBox requires:
+
+- Python (>= 2.7 or >= 3.4)
+
+- NumPy (>= 1.8.2)
+
+- scikit-learn (>=0.18.0)
+
 # Helpful Tips
 
 ## Handling Categorical Variables
