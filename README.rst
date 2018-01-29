@@ -114,3 +114,8 @@ Authors include: Venkatesh_Gangavarapu
  Please drop us a line in the issues section as bugs or feature requests arise. 
  
  .. Venkatesh_Gangavarapu: https://www.linkedin.com/in/venkatesh-gangavarapu-9845b36b/ 
+
+
+External hyperlinks, like Python_.
+
+.. _Python: http://www.python.org/
