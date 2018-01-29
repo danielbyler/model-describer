@@ -104,7 +104,7 @@ We currently only support traditional tabular data. We are hoping to include tex
 Other Machine Learning Interpretability Projects
 ------------------------------------------------
 
-For those looking for intepretation of individual points, please see the .. Lime: https://github.com/marcotcr/lime project and its good work. 
+For those looking for intepretation of individual points, please see the `Lime <https://github.com/marcotcr/lime>`_ project and its good work. 
 
 
 Authors:
