@@ -21,7 +21,7 @@ Sample Outputs
 Impact
 ------------
 
-Currently, many people substitute [variable importance](https://en.wikipedia.org/wiki/Random_forest#Variable_importance) charts for an understanding of how the model works. While genuinely helpful, these plots do not help us understand how different subgroups behave differently under the hood of the model. In the example below ([full notebook here](https://github.com/Data4Gov/WhiteBox/blob/master/Example_Notebook/Random%20Forest%20Analysis.ipynb)), all you have to do to produce the interactive chart is this line of code: 
+Currently, many people substitute .. variable importance: https://en.wikipedia.org/wiki/Random_forest#Variable_importance charts for an understanding of how the model works. While genuinely helpful, these plots do not help us understand how different subgroups behave differently under the hood of the model. In the example below (.. full notebook here: https://github.com/Data4Gov/WhiteBox/blob/master/Example_Notebook/Random%20Forest%20Analysis.ipynb), all you have to do to produce the interactive chart is this line of code: 
 
 .. code-block:: python
 
@@ -49,7 +49,7 @@ We hope our error charts fill that gap for you. These error charts group the lev
 
 .. image:: https://github.com/Data4Gov/WhiteBox/blob/master/img/Impact_Gif.gif
 
-For a more detailed example, see our [example notebook](https://github.com/Data4Gov/WhiteBox/blob/master/Example_Notebook/Random%20Forest%20Analysis.ipynb)
+For a more detailed example, see our .. example notebook: https://github.com/Data4Gov/WhiteBox/blob/master/Example_Notebook/Random%20Forest%20Analysis.ipynb
 
 Installation
 ==============
@@ -104,13 +104,10 @@ We currently only support traditional tabular data. We are hoping to include tex
 Other Machine Learning Interpretability Projects
 ------------------------------------------------
 
-For those looking for intepretation of individual points, please see the [Lime](https://github.com/marcotcr/lime) project and its good work. 
+For those looking for intepretation of individual points, please see the .. Lime: https://github.com/marcotcr/lime project and its good work. 
 
 Authors:
 ========
 
-[Daniel Byler](https://www.linkedin.com/in/danielbyler/), [Venkatesh Gangavarapu](https://www.linkedin.com/in/venkatesh-gangavarapu-9845b36b/), [Jason Lewris](https://www.linkedin.com/in/jasonlewris/), [Shruti Panda](https://www.linkedin.com/in/shruti-panda-1466216a/), and [Shanti Jha](https://www.linkedin.com/in/shantijha/) 
-
-
-
-
+ .. Daniel Byler: https://www.linkedin.com/in/danielbyler/, .. Venkatesh Gangavarapu: https://www.linkedin.com/in/venkatesh-gangavarapu-9845b36b/ , .. Jason Lewris: https://www.linkedin.com/in/jasonlewris/ , .. Shruti Panda: https://www.linkedin.com/in/shruti-panda-1466216a/ , .. Shanti Jha: https://www.linkedin.com/in/shantijha/ 
+ 
