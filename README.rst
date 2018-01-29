@@ -109,5 +109,7 @@ For those looking for intepretation of individual points, please see the .. Lime
 Authors:
 ========
 
- .. Daniel Byler: https://www.linkedin.com/in/danielbyler/, .. Venkatesh Gangavarapu: https://www.linkedin.com/in/venkatesh-gangavarapu-9845b36b/ , .. Jason Lewris: https://www.linkedin.com/in/jasonlewris/ , .. Shruti Panda: https://www.linkedin.com/in/shruti-panda-1466216a/ , .. Shanti Jha: https://www.linkedin.com/in/shantijha/ 
+ .. Daniel Byler: https://www.linkedin.com/in/danielbyler/ , .. Venkatesh Gangavarapu: https://www.linkedin.com/in/venkatesh-gangavarapu-9845b36b/ , .. Jason Lewris: https://www.linkedin.com/in/jasonlewris/ , .. Shruti Panda: https://www.linkedin.com/in/shruti-panda-1466216a/ , .. Shanti Jha: https://www.linkedin.com/in/shantijha/ 
+ 
+ 
  
