@@ -109,10 +109,7 @@ For those looking for intepretation of individual points, please see the .. Lime
 Authors:
 ========
 
-
-
-
- .. _Venkatesh Gangavarapu: https://www.linkedin.com/in/venkatesh-gangavarapu-9845b36b/ , .. _Jason Lewris: https://www.linkedin.com/in/jasonlewris/ , .. _Shruti Panda: https://www.linkedin.com/in/shruti-panda-1466216a/ , .. _Shanti Jha: https://www.linkedin.com/in/shantijha/ 
+t .. _Venkatesh Gangavarapu: https://www.linkedin.com/in/venkatesh-gangavarapu-9845b36b/ 
  
  Please drop us a line in the issues section as bugs or feature requests arise. 
  
