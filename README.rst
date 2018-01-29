@@ -109,7 +109,7 @@ For those looking for intepretation of individual points, please see the .. Lime
 Authors:
 ========
 
-t .. _Venkatesh Gangavarapu: https://www.linkedin.com/in/venkatesh-gangavarapu-9845b36b/ 
+Authors include: .. Venkatesh Gangavarapu: https://www.linkedin.com/in/venkatesh-gangavarapu-9845b36b/ 
  
  Please drop us a line in the issues section as bugs or feature requests arise. 
  
