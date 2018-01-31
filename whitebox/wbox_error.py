@@ -27,7 +27,8 @@ class WhiteBoxBase(object):
                  model_df,
                  ydepend,
                  cat_df = None,
-                 featuredict = None):
+                 featuredict = None,
+                 groupbyvars = None):
 
         # basic parameter checks
         if not hasattr(modelobj, 'predict'):
@@ -85,6 +86,10 @@ class WhiteBoxBase(object):
         self.cat_df = self.cat_df[list(self.featuredict.keys())]
         # instantiate self.outputs
         self.outputs = False
+        # check groupby vars
+        if not groupbyvars:
+            raise ValueError("""groupbyvars must be a list of grouping variables and cannot be None""")
+        self.groupbyvars = list(groupbyvars)
 
     def predict(self):
         """
@@ -114,13 +119,114 @@ class WhiteBoxBase(object):
         pass
 
     @abc.abstractmethod
-    def run(self):
-        """
-        method to run over users data, manipulate various groups to explain prediction quality, errors,
-        etc. during specific regions of the data, store those manipulations and output them
-        :return: undetermined
-        """
+    def var_check(self, col=None,
+                  groupby=None):
+        # method to check which type of variable the column is and perform operations specific
+        # to that variable type
         pass
+
+    def run(self):
+        # testing run function
+        # run the prediction function first to assign the errors to the dataframe
+        self.predict()
+        # create placeholder for outputs
+        placeholder = []
+        # create placeholder for all insights
+        insights_df = pd.DataFrame()
+
+        for col in self.cat_df.columns[~self.cat_df.columns.isin(['errors', 'predictedYSmooth', self.ydepend])]:
+
+            # column placeholder
+            colhold = []
+
+            for groupby in self.groupbyvars:
+
+                # check if we are a col that is the groupbyvar3
+                if col != groupby:
+                    json_out = self.var_check(col=col,
+                                            groupby=groupby)
+                    # append to placeholder
+                    colhold.append(json_out)
+
+                else:
+                    # create error metrics for slices of groupby data
+                    acc = self.create_accuracy(groupby=groupby)
+                    # append to insights dataframe placeholder
+                    insights_df = insights_df.append(acc)
+
+            # map all of the same columns errors to the first element and
+            # append to placeholder
+            placeholder.append(utils.flatten_json(colhold))
+
+        # finally convert insights_df into json object
+        insights_json = utils.to_json(insights_df, vartype='Accuracy')
+        # append to outputs
+        placeholder.append(insights_json)
+        # assign placeholder final outputs to class instance
+        self.outputs = placeholder
+
+    def create_accuracy(self,
+                     groupby=None):
+        """
+        create error metrics for each slice of the groupby variable. i.e. if groupby is type of wine,
+        create error metric for all white wine, then all red wine.
+        :param groupby: groupby variable -- str -- i.e. 'Type'
+        :return: accuracy dataframe for groupby variable
+        """
+        # use this as an opportunity to capture error metrics for the groupby variable
+        # create a partial func by pre-filling in the parameters for create_insights
+        insights = partial(utils.create_insights, group_var=groupby,
+                           error_type='MSE')
+
+        acc = self.cat_df.groupby(groupby).apply(insights)
+        # drop the grouping indexing
+        acc.reset_index(drop=True, inplace=True)
+        # append to insights_df
+        return acc
+
+    def continuous_slice(self, group, col=None,
+                         groupby=None,
+                         vartype='Continuous'):
+        """
+        continuous_slice operates on portions of the data that correspond to a particular group of data from the groupby
+        variable. For instance, if working on the wine quality dataset with Type representing your groupby variable, then
+        continuous_slice would operate on 'White' wine data
+        :param group: slice of data with columns, etc.
+        :param col: current continuous variable being operated on
+        :param vartype: continuous
+        :return: transformed data with col data max, errPos mean, errNeg mean, and prediction means for this group
+        """
+        # create percentiles for specific grouping of variables
+        group_vecs = utils.getVectors(group)
+
+        # if more than 100 values in the group, use percentile bins
+        if group.shape[0] > 100:
+            group['fixed_bins'] = np.digitize(group.loc[:, col],
+                                              sorted(list(set(group_vecs.loc[:, col]))), right=True)
+        else:
+            group['fixed_bins'] = group.loc[:, col]
+
+        class_type = {'WhiteBoxSensitivity': WhiteBoxSensitivity.transform_function,
+                     'WhiteBoxError': WhiteBoxError.transform_function}
+
+        # create partial function for error transform (pos/neg split and reshape)
+        trans_partial = partial(class_type[self.__class__.__name__],
+                                col=col,
+                                groupby=groupby,
+                                vartype=vartype)
+
+        # group by bins
+        errors = group.groupby('fixed_bins').apply(trans_partial)
+        # final data prep for continuous errors case
+        # and finalize errors dataframe processing
+        errors.reset_index(drop=True, inplace=True)
+        # drop rows that are all NaN
+        # errors.dropna(how='all', axis=0, inplace = True)
+        # errors.reset_index(drop = True, inplace = True)
+        errors.rename(columns={groupby: 'groupByValue'}, inplace=True)
+        errors['groupByVarName'] = groupby
+        errors['highlight'] = 'N'
+        return errors
 
     def save(self, fpath = ''):
         """
@@ -153,16 +259,12 @@ class WhiteBoxError(WhiteBoxBase):
                  featuredict=None,
                  groupbyvars=None):
 
-        if groupbyvars is None:
-            raise TypeError('groupbyvars cannot be none, must be a list of grouping variables')
-
-        self.groupbyvars = groupbyvars
-
         super(WhiteBoxError, self).__init__(modelobj,
                                       model_df,
                                       ydepend,
                                       cat_df=cat_df,
-                                      featuredict=featuredict)
+                                      featuredict=featuredict,
+                                      groupbyvars=groupbyvars)
 
     @staticmethod
     def transform_function(group,
@@ -202,48 +304,6 @@ class WhiteBoxError(WhiteBoxBase):
 
             return errors
 
-    @staticmethod
-    def continuous_slice(group, col=None,
-                         groupby=None,
-                         vartype='Continuous'):
-        """
-        continuous_slice operates on portions of the data that correspond to a particular group of data from the groupby
-        variable. For instance, if working on the wine quality dataset with Type representing your groupby variable, then
-        continuous_slice would operate on 'White' wine data
-        :param group: slice of data with columns, etc.
-        :param col: current continuous variable being operated on
-        :param vartype: continuous
-        :return: transformed data with col data max, errPos mean, errNeg mean, and prediction means for this group
-        """
-        # create percentiles for specific grouping of variables
-        group_vecs = utils.getVectors(group)
-
-        # if more than 100 values in the group, use percentile bins
-        if group.shape[0] > 100:
-            group['fixed_bins'] = np.digitize(group.loc[:, col],
-                                              sorted(list(set(group_vecs.loc[:, col]))), right=True)
-        else:
-            group['fixed_bins'] = group.loc[:, col]
-
-        # create partial function for error transform (pos/neg split and reshape)
-        trans_partial = partial(WhiteBoxError.transform_function,
-                                col=col,
-                                groupby=groupby,
-                                vartype=vartype)
-
-        # group by bins
-        errors = group.groupby('fixed_bins').apply(trans_partial)
-        # final data prep for continuous errors case
-        # and finalize errors dataframe processing
-        errors.reset_index(drop=True, inplace=True)
-        # drop rows that are all NaN
-        #errors.dropna(how='all', axis=0, inplace = True)
-        # errors.reset_index(drop = True, inplace = True)
-        errors.rename(columns={groupby: 'groupByValue'}, inplace=True)
-        errors['groupByVarName'] = groupby
-        errors['highlight'] = 'N'
-        return errors
-
     def var_check(self,
                   col=None,
                   groupby=None):
@@ -279,7 +339,7 @@ class WhiteBoxError(WhiteBoxBase):
             # set variable type
             vartype = 'Continuous'
             # create partial function to fill in col and vartype of continuous_slice
-            cont_slice_partial = partial(WhiteBoxError.continuous_slice,
+            cont_slice_partial = partial(self.continuous_slice,
                                          col=col,
                                          vartype=vartype,
                                          groupby=groupby)
@@ -296,65 +356,6 @@ class WhiteBoxError(WhiteBoxBase):
         # return json_out
         return json_out
 
-    def create_accuracy(self,
-                     groupby=None):
-        """
-        create error metrics for each slice of the groupby variable. i.e. if groupby is type of wine,
-        create error metric for all white wine, then all red wine.
-        :param groupby: groupby variable -- str -- i.e. 'Type'
-        :return: accuracy dataframe for groupby variable
-        """
-        # use this as an opportunity to capture error metrics for the groupby variable
-        # create a partial func by pre-filling in the parameters for create_insights
-        insights = partial(utils.create_insights, group_var=groupby,
-                           error_type='MSE')
-
-        acc = self.cat_df.groupby(groupby).apply(insights)
-        # drop the grouping indexing
-        acc.reset_index(drop=True, inplace=True)
-        # append to insights_df
-        return acc
-
-    def run(self):
-        # run the prediction function first to assign the errors to the dataframe
-        self.predict()
-        # create placeholder for outputs
-        placeholder = []
-        # create placeholder for all insights
-        insights_df = pd.DataFrame()
-
-        for col in self.cat_df.columns[~self.cat_df.columns.isin(['errors', 'predictedYSmooth', self.ydepend])]:
-
-            # column placeholder
-            colhold = []
-
-            for groupby in self.groupbyvars:
-
-                # check if we are a col that is the groupbyvar3
-                if col != groupby:
-                    json_out = self.var_check(col=col,
-                                            groupby=groupby)
-                    # append to placeholder
-                    colhold.append(json_out)
-
-                else:
-                    # create error metrics for slices of groupby data
-                    acc = self.create_accuracy(groupby=groupby)
-                    # append to insights dataframe placeholder
-                    insights_df = insights_df.append(acc)
-
-            # map all of the same columns errors to the first element and
-            # append to placeholder
-            placeholder.append(utils.flatten_json(colhold))
-
-        # finally convert insights_df into json object
-        insights_json = utils.to_json(insights_df, vartype='Accuracy')
-        # append to outputs
-        placeholder.append(insights_json)
-        # assign placeholder final outputs to class instance
-        self.outputs = placeholder
-
-
 class WhiteBoxSensitivity(WhiteBoxBase):
 
     def __init__(self,
@@ -365,16 +366,12 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                  featuredict=None,
                  groupbyvars=None):
 
-        if groupbyvars is None:
-            raise TypeError('groupbyvars cannot be none, must be a list of grouping variables')
-
-        self.groupbyvars = groupbyvars
-
         super(WhiteBoxSensitivity, self).__init__(modelobj,
                                       model_df,
                                       ydepend,
                                       cat_df=cat_df,
-                                      featuredict=featuredict)
+                                      featuredict=featuredict,
+                                      groupbyvars=groupbyvars)
 
     @staticmethod
     def transform_function(group,
@@ -403,48 +400,6 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                                    groupby: group[groupby].mode(),
                                    'predictedYSmooth': group['diff'].mean()})
 
-        return errors
-
-    @staticmethod
-    def continuous_slice(group, col=None,
-                         groupby=None,
-                         vartype='Continuous'):
-        """
-        continuous_slice operates on portions of the data that correspond to a particular group of data from the groupby
-        variable. For instance, if working on the wine quality dataset with Type representing your groupby variable, then
-        continuous_slice would operate on 'White' wine data
-        :param group: slice of data with columns, etc.
-        :param col: current continuous variable being operated on
-        :param vartype: continuous
-        :return: transformed data with col data max, errPos mean, errNeg mean, and prediction means for this group
-        """
-        # create percentiles for specific grouping of variables
-        group_vecs = utils.getVectors(group)
-
-        # if more than 100 values in the group, use percentile bins
-        if group.shape[0] > 100:
-            group['fixed_bins'] = np.digitize(group.loc[:, col],
-                                              sorted(list(set(group_vecs.loc[:, col]))), right=True)
-        else:
-            group['fixed_bins'] = group.loc[:, col]
-
-        # create partial function for error transform (pos/neg split and reshape)
-        trans_partial = partial(WhiteBoxSensitivity.transform_function,
-                                col=col,
-                                groupby=groupby,
-                                vartype=vartype)
-
-        # group by bins
-        errors = group.groupby('fixed_bins').apply(trans_partial)
-        # final data prep for continuous errors case
-        # and finalize errors dataframe processing
-        errors.reset_index(drop=True, inplace=True)
-        # drop rows that are all NaN
-        #errors.dropna(how='all', axis=0, inplace = True)
-        # errors.reset_index(drop = True, inplace = True)
-        errors.rename(columns={groupby: 'groupByValue'}, inplace=True)
-        errors['groupByVarName'] = groupby
-        errors['highlight'] = 'N'
         return errors
 
     def var_check(self,
@@ -513,7 +468,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
             # calculate difference between actual predictions and new_predictions
             self.cat_df['diff'] = copydf['new_predictions'] - copydf['predictedYSmooth']
             # create partial function to fill in col and vartype of continuous_slice
-            cont_slice_partial = partial(WhiteBoxSensitivity.continuous_slice,
+            cont_slice_partial = partial(self.continuous_slice,
                                          col=col,
                                          vartype=vartype,
                                          groupby=groupby)
@@ -529,62 +484,3 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                                  incremental_val=incremental_val)
         # return json_out
         return json_out
-
-    def create_accuracy(self,
-                     groupby=None):
-        """
-        create error metrics for each slice of the groupby variable. i.e. if groupby is type of wine,
-        create error metric for all white wine, then all red wine.
-        :param groupby: groupby variable -- str -- i.e. 'Type'
-        :return: accuracy dataframe for groupby variable
-        """
-        # use this as an opportunity to capture error metrics for the groupby variable
-        # create a partial func by pre-filling in the parameters for create_insights
-        insights = partial(utils.create_insights, group_var=groupby,
-                           error_type='MSE')
-
-        acc = self.cat_df.groupby(groupby).apply(insights)
-        # drop the grouping indexing
-        acc.reset_index(drop=True, inplace=True)
-        # append to insights_df
-        return acc
-
-    def run(self):
-        # testing run function
-        # run the prediction function first to assign the errors to the dataframe
-        self.predict()
-        # create placeholder for outputs
-        placeholder = []
-        # create placeholder for all insights
-        insights_df = pd.DataFrame()
-
-        for col in self.cat_df.columns[~self.cat_df.columns.isin(['errors', 'predictedYSmooth', self.ydepend])]:
-
-            # column placeholder
-            colhold = []
-
-            for groupby in self.groupbyvars:
-
-                # check if we are a col that is the groupbyvar3
-                if col != groupby:
-                    json_out = self.var_check(col=col,
-                                            groupby=groupby)
-                    # append to placeholder
-                    colhold.append(json_out)
-
-                else:
-                    # create error metrics for slices of groupby data
-                    acc = self.create_accuracy(groupby=groupby)
-                    # append to insights dataframe placeholder
-                    insights_df = insights_df.append(acc)
-
-            # map all of the same columns errors to the first element and
-            # append to placeholder
-            placeholder.append(utils.flatten_json(colhold))
-
-        # finally convert insights_df into json object
-        insights_json = utils.to_json(insights_df, vartype='Accuracy')
-        # append to outputs
-        placeholder.append(insights_json)
-        # assign placeholder final outputs to class instance
-        self.outputs = placeholder

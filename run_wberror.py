@@ -55,7 +55,7 @@ WB = WhiteBoxError(modelobj = modelObjc,
                    groupbyvars = groupbyVars,
                    featuredict = featuredict)
 
-wine_sub.head()
+WB.run()
 
 cat = filter(lambda x: x['Type'] == 'Categorical', WB.outputs)
 cont = filter(lambda x: x['Type'] == 'Continuous', WB.outputs)
