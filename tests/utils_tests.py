@@ -8,10 +8,9 @@ import warnings
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 from whitebox import utils
 
-__author__ = ["Jason Lewris, Daniel Byler, Shruti Panda, Venkat Gangavarapu"]
-__copyright__ = ""
+__author__ = "Jason Lewris, Daniel Byler, Venkat Gangavarapu, Shruti Panda, Shanti Jha"
 __credits__ = ["Brian Ray"]
-__license__ = "GPL"
+__license__ = "MIT"
 __version__ = "0.0.1"
 __maintainer__ = "Jason Lewris"
 __email__ = "jlewris@deloitte.com"
@@ -45,12 +44,12 @@ class TestUtils(unittest.TestCase):
     def test_wbox_html(self):
         # test wbox html is string
         self.assertIsInstance(utils.HTML.wbox_html, str,
-                              'Wbox HTML class is not string. Current type: {}'.format(type(HTML.wbox_html)))
+                              'Wbox HTML class is not string. Current type: {}'.format(type(utils.HTML.wbox_html)))
 
     def test_wbox_html_len(self):
         # test wbox html string length
         self.assertGreater(len(utils.HTML.wbox_html),
-                           100, 'check length of HTML string. Current length: {}'.format(len(HTML.wbox_html)))
+                           100, 'check length of HTML string. Current length: {}'.format(len(utils.HTML.wbox_html)))
 
     def test_to_json(self):
         # test final output of to_json is class dict

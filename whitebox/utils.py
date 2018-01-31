@@ -1,42 +1,17 @@
 #!/usr/bin/env python
-import sys
-
-sys.path.insert(0, '/projects/us_eminence/WhiteBox_Production/')
 
 import pandas as pd
 import math
 import numpy as np
 import warnings
-from itertools import chain
-from whitebox import wbox_error
 
-__author__ = "Jason Lewris, Daniel Byler, Shruti Panda, Venkat Gangavarapu"
-__copyright__ = ""
+__author__ = "Jason Lewris, Daniel Byler, Venkat Gangavarapu, Shruti Panda, Shanti Jha"
 __credits__ = ["Brian Ray"]
-__license__ = "GPL"
+__license__ = "MIT"
 __version__ = "0.0.1"
 __maintainer__ = "Jason Lewris"
 __email__ = "jlewris@deloitte.com"
 __status__ = "Beta"
-
-def flatten_outputs(outputs):
-    """
-    flatten the output list so each datatype key is matched to only one list of data
-    points that have all values instead of separate data dictionaries
-    :param outputs: unflattened outputs in the json format
-    :return: final flattened outputs
-    """
-    # merge and flatten data elements that are the same from on type of data to the next
-    acc = {'Type': 'Accuracy',
-           'Data': list(chain.from_iterable([key['Data'] for key in outputs if key['Type'] == 'Accuracy']))}
-    cont = {'Type': 'Continuous',
-            'Data': list(chain.from_iterable([key['Data'] for key in outputs if key['Type'] == 'Continuous']))}
-    cat = {'Type': 'Categorical',
-           'Data': list(chain.from_iterable([key['Data'] for key in outputs if key['Type'] == 'Categorical']))}
-    # remove any elements that don't have data, i.e. if no categorical data in dataframe
-    finallist = list(filter(lambda x: len(x['Data']) > 0, [acc, cont, cat]))
-
-    return finallist
 
 def getVectors(dataframe):
     """
@@ -99,13 +74,20 @@ def create_insights(group, group_var = None,
                           'Total': group.shape[0]}, index = [0])
     return msedf
 
-def to_json(dataframe, vartype='Continuous'):
+def to_json(dataframe, vartype='Continuous', html_type = 'error',
+            incremental_val=None):
+    # adding html_type
     # convert dataframe values into a json like object for D3 consumption
     assert vartype in ['Continuous', 'Categorical', 'Accuracy'], 'Vartypes should only be continuous, categorical' \
                                                                  'or accuracy'
+    assert html_type in ['error', 'sensitivity'], 'html_type must be error or sensitivity'
 
-    # specify data type
-    json_out = {'Type': vartype}
+    if html_type == 'error':
+        # specify data type
+        json_out = {'Type': vartype}
+    else:
+        json_out = {'Type': vartype,
+                    'Change': incremental_val}
     # create data list
     json_data_out = []
     # iterate over dataframe and convert to dict
@@ -145,20 +127,27 @@ def flatten_json(dictlist):
     return toreturn
 
 class HTML(object):
-    # utility class to hold whitebox files
-    try:
-        wbox_html = open('../HTML/html_error.txt', 'r').read()
-    except IOError as e:
-        wbox_html = open('HTML/html_error.txt', 'r').read()
 
-def createMLErrorHTML(datastring, dependentVar):
+    def get_html(self, htmltype = 'html_error'):
+        assert htmltype in ['html_error', 'html_sensitivity'], 'htmltype must be html_error or html_sensitivity'
+        # utility class to hold whitebox files
+        try:
+            wbox_html = open('../HTML/{}.txt'.format(htmltype), 'r').read()
+            return wbox_html
+        except IOError as e:
+            wbox_html = open('HTML/{}.txt'.format(htmltype), 'r').read()
+            return wbox_html
+
+def createMLErrorHTML(datastring, dependentVar,
+                      htmltype = 'html_error'):
     """
     create WhiteBox error plot html code
     :param datastring: json like object containing data
     :param dependentVar: name of dependent variable
     :return: html string
     """
-    output = HTML.wbox_html.replace('<***>', datastring
+    assert htmltype in ['html_error', 'html_sensitivity'], 'htmltype must be html_error or html_sensitivity'
+    output = HTML().get_html(htmltype=htmltype).replace('<***>', datastring
                                   ).replace('Quality', dependentVar)
 
     return output

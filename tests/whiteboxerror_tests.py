@@ -8,10 +8,9 @@ import numpy as np
 import unittest
 from functools import partial
 
-__author__ = "Jason Lewris, Daniel Byler, Shruti Panda, Venkat Gangavarapu"
-__copyright__ = ""
+__author__ = "Jason Lewris, Daniel Byler, Venkat Gangavarapu, Shruti Panda, Shanti Jha"
 __credits__ = ["Brian Ray"]
-__license__ = "GPL"
+__license__ = "MIT"
 __version__ = "0.0.1"
 __maintainer__ = "Jason Lewris"
 __email__ = "jlewris@deloitte.com"
@@ -68,7 +67,6 @@ class TestWhiteBoxError(unittest.TestCase):
                       ydepend='target',
                       groupbyvars=['Type'],
                            cat_df=self.cat_df)
-
 
         WB.run()
 
