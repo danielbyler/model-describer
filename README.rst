@@ -38,14 +38,13 @@ Error
 ------------
 
 There are a hundred ways to skin an error chart. Almost all of them are reasonable. However, few can be proceeded by the comment
-.. code-block:: python 
 
-#Send To Boss As Attachment With No Additional Editing
+.. code-block:: python
+   #Send To Boss As Attachment With No Additional Editing
 
 We hope our error charts fill that gap for you. These error charts group the level of error by type and show where the error may be less or more for different parts of different variables. Again, only one line of code is required to run it:
 
 .. code-block:: python
-
    err_plot(data  = final_data,dependentVar = dependentVar, outputPath = outputPath, modelObject = Rf,
    groupByVar = [ 'AlgorithmUnderstandingLevel'])
 
