@@ -4,7 +4,7 @@ from sklearn.ensemble import RandomForestRegressor
 import pandas as pd
 from whitebox import utils
 import numpy as np
-from whitebox.wbox_error import WhiteBoxSensitivity
+from whitebox.WhiteBox import WhiteBoxSensitivity
 
 #====================
 # wine quality dataset example
@@ -66,6 +66,7 @@ WB = WhiteBoxSensitivity(modelobj = modelObjc,
 WB.run()
 len(WB.outputs)
 WB.outputs[3]
+
 cat = filter(lambda x: x['Type'] == 'Categorical', WB.outputs)
 cont = filter(lambda x: x['Type'] == 'Continuous', WB.outputs)
 cont

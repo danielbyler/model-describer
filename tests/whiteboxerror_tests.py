@@ -115,7 +115,7 @@ class TestWhiteBoxError(unittest.TestCase):
         WB.predict()
 
         # create partial func
-        cont_slice_partial = partial(WhiteBoxError.continuous_slice,
+        cont_slice_partial = partial(WB.continuous_slice,
                                      col='sepalw',
                                      vartype='Continuous',
                                      groupby='Type')
@@ -139,7 +139,7 @@ class TestWhiteBoxError(unittest.TestCase):
         WB.predict()
 
         # create partial func
-        cont_slice_partial = partial(WhiteBoxError.continuous_slice,
+        cont_slice_partial = partial(WB.continuous_slice,
                                      col='sepalw',
                                      vartype='Continuous',
                                      groupby='Type')

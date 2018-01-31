@@ -29,6 +29,15 @@ class WhiteBoxBase(object):
                  cat_df = None,
                  featuredict = None,
                  groupbyvars = None):
+        """
+        initialize base class
+        :param modelobj: fitted sklearn model object
+        :param model_df: data used for training sklearn object
+        :param ydepend: dependent variable
+        :param cat_df: formatted dataset with categorical dtypes specified, and non-dummy categories
+        :param featuredict: prettty printing and subsetting analysis
+        :param groupbyvars: grouping variables
+        """
 
         # basic parameter checks
         if not hasattr(modelobj, 'predict'):
@@ -126,6 +135,10 @@ class WhiteBoxBase(object):
         pass
 
     def run(self):
+        """
+        main run engine. Iterate over columns specified in featuredict, and perform anlaysis
+        :return: None - does put outputs in place
+        """
         # testing run function
         # run the prediction function first to assign the errors to the dataframe
         self.predict()
