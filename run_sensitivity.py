@@ -71,6 +71,8 @@ cat = filter(lambda x: x['Type'] == 'Categorical', WB.outputs)
 cont = filter(lambda x: x['Type'] == 'Continuous', WB.outputs)
 cont
 
+WB.outputs[0]
+
 WB.__class__
 for val in WB.outputs:
     print(val['Type'])

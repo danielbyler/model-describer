@@ -4,8 +4,7 @@
     <list default="true" id="950ec7f9-784e-43c5-86c0-fda473cdc586" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change beforePath="$PROJECT_DIR$/run_sensitivity.py" afterPath="$PROJECT_DIR$/run_sensitivity.py" />
-      <change beforePath="$PROJECT_DIR$/tests/whiteboxerror_tests.py" afterPath="$PROJECT_DIR$/tests/whiteboxerror_tests.py" />
-      <change beforePath="$PROJECT_DIR$/whitebox/wbox_error.py" afterPath="$PROJECT_DIR$/whitebox/WhiteBox.py" />
+      <change beforePath="$PROJECT_DIR$/whitebox/utils.py" afterPath="$PROJECT_DIR$/whitebox/utils.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -19,13 +18,13 @@
     <SUITE FILE_PATH="coverage/WhiteBox_Production$Unittests_in_whiteboxerror_tests_py.coverage" NAME="Unittests in whiteboxerror_tests.py Coverage Results" MODIFIED="1517362217785" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
   </component>
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.3335455">
+    <splitter split-orientation="horizontal" split-proportion="0.53150856">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="450">
           <file leaf-file-name="run_wberror.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/run_wberror.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="481">
+                <state relative-caret-position="1550">
                   <caret line="66" column="0" lean-forward="false" selection-start-line="66" selection-start-column="0" selection-end-line="66" selection-end-column="0" />
                   <folding>
                     <element signature="e#0#50#0" expanded="true" />
@@ -37,8 +36,8 @@
           <file leaf-file-name="run_sensitivity.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/run_sensitivity.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="599">
-                  <caret line="65" column="8" lean-forward="true" selection-start-line="0" selection-start-column="0" selection-end-line="65" selection-end-column="8" />
+                <state relative-caret-position="774">
+                  <caret line="79" column="57" lean-forward="true" selection-start-line="0" selection-start-column="0" selection-end-line="79" selection-end-column="57" />
                   <folding>
                     <element signature="e#41#91#0" expanded="true" />
                   </folding>
@@ -49,7 +48,7 @@
           <file leaf-file-name="WhiteBox.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/whitebox/WhiteBox.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="201">
+                <state relative-caret-position="8725">
                   <caret line="357" column="36" lean-forward="false" selection-start-line="357" selection-start-column="36" selection-end-line="357" selection-end-column="36" />
                   <folding />
                 </state>
@@ -59,8 +58,8 @@
           <file leaf-file-name="utils.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/whitebox/utils.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="128">
-                  <caret line="131" column="59" lean-forward="false" selection-start-line="131" selection-start-column="43" selection-end-line="131" selection-end-column="59" />
+                <state relative-caret-position="260">
+                  <caret line="85" column="34" lean-forward="false" selection-start-line="85" selection-start-column="34" selection-end-line="85" selection-end-column="34" />
                   <folding>
                     <element signature="e#23#42#0" expanded="true" />
                   </folding>
@@ -83,8 +82,8 @@
           <file leaf-file-name="whiteboxerror_tests.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/tests/whiteboxerror_tests.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="229">
-                  <caret line="140" column="29" lean-forward="true" selection-start-line="140" selection-start-column="29" selection-end-line="140" selection-end-column="29" />
+                <state relative-caret-position="3350">
+                  <caret line="140" column="29" lean-forward="false" selection-start-line="140" selection-start-column="29" selection-end-line="140" selection-end-column="29" />
                   <folding>
                     <element signature="e#23#68#0" expanded="true" />
                   </folding>
@@ -99,7 +98,7 @@
           <file leaf-file-name="WhiteBox.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/whitebox/WhiteBox.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="-565">
+                <state relative-caret-position="-3375">
                   <caret line="139" column="49" lean-forward="false" selection-start-line="139" selection-start-column="49" selection-end-line="139" selection-end-column="49" />
                   <folding />
                 </state>
@@ -126,13 +125,13 @@
         <option value="$PROJECT_DIR$/whitebox/__init__.py" />
         <option value="$PROJECT_DIR$/__init__.py" />
         <option value="$PROJECT_DIR$/tests/utils_tests.py" />
-        <option value="$PROJECT_DIR$/whitebox/utils.py" />
         <option value="$PROJECT_DIR$/HTML/html_sensitivity.txt" />
         <option value="$PROJECT_DIR$/whitebox/wbox_error.py" />
         <option value="$PROJECT_DIR$/run_wberror.py" />
         <option value="$PROJECT_DIR$/tests/whiteboxerror_tests.py" />
         <option value="$PROJECT_DIR$/whitebox/WhiteBox.py" />
         <option value="$PROJECT_DIR$/run_sensitivity.py" />
+        <option value="$PROJECT_DIR$/whitebox/utils.py" />
       </list>
     </option>
   </component>
@@ -164,7 +163,6 @@
     </navigator>
     <panes>
       <pane id="Scratches" />
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -191,6 +189,7 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -309,7 +308,7 @@
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="File Transfer" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32914925" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3281075" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32698768" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.1612542" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3298466" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.18177083" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -341,6 +340,64 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/run_wberror.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1550">
+          <caret line="66" column="0" lean-forward="false" selection-start-line="66" selection-start-column="0" selection-end-line="66" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#50#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/whitebox/utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3200">
+          <caret line="131" column="59" lean-forward="false" selection-start-line="131" selection-start-column="43" selection-end-line="131" selection-end-column="59" />
+          <folding>
+            <element signature="e#23#42#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/utils_tests.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1125">
+          <caret line="51" column="99" lean-forward="false" selection-start-line="51" selection-start-column="99" selection-end-line="51" selection-end-column="99" />
+          <folding>
+            <element signature="e#23#38#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/whiteboxerror_tests.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3350">
+          <caret line="140" column="29" lean-forward="true" selection-start-line="140" selection-start-column="29" selection-end-line="140" selection-end-column="29" />
+          <folding>
+            <element signature="e#23#68#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/run_sensitivity.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1525">
+          <caret line="65" column="8" lean-forward="true" selection-start-line="0" selection-start-column="0" selection-end-line="65" selection-end-column="8" />
+          <folding>
+            <element signature="e#41#91#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/whitebox/WhiteBox.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="8725">
+          <caret line="357" column="36" lean-forward="false" selection-start-line="357" selection-start-column="36" selection-end-line="357" selection-end-column="36" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/run_wberror.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="3200">
@@ -520,27 +577,16 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/whitebox/utils.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="128">
-          <caret line="131" column="59" lean-forward="false" selection-start-line="131" selection-start-column="43" selection-end-line="131" selection-end-column="59" />
-          <folding>
-            <element signature="e#23#42#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/HTML/html_sensitivity.txt">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="463">
           <caret line="23" column="0" lean-forward="true" selection-start-line="23" selection-start-column="0" selection-end-line="23" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/run_wberror.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="481">
+        <state relative-caret-position="1550">
           <caret line="66" column="0" lean-forward="false" selection-start-line="66" selection-start-column="0" selection-end-line="66" selection-end-column="0" />
           <folding>
             <element signature="e#0#50#0" expanded="true" />
@@ -550,8 +596,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/tests/whiteboxerror_tests.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="229">
-          <caret line="140" column="29" lean-forward="true" selection-start-line="140" selection-start-column="29" selection-end-line="140" selection-end-column="29" />
+        <state relative-caret-position="3350">
+          <caret line="140" column="29" lean-forward="false" selection-start-line="140" selection-start-column="29" selection-end-line="140" selection-end-column="29" />
           <folding>
             <element signature="e#23#68#0" expanded="true" />
           </folding>
@@ -560,16 +606,26 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/whitebox/WhiteBox.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="201">
+        <state relative-caret-position="8725">
           <caret line="357" column="36" lean-forward="false" selection-start-line="357" selection-start-column="36" selection-end-line="357" selection-end-column="36" />
           <folding />
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/whitebox/utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="260">
+          <caret line="85" column="34" lean-forward="false" selection-start-line="85" selection-start-column="34" selection-end-line="85" selection-end-column="34" />
+          <folding>
+            <element signature="e#23#42#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/run_sensitivity.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="599">
-          <caret line="65" column="8" lean-forward="true" selection-start-line="0" selection-start-column="0" selection-end-line="65" selection-end-column="8" />
+        <state relative-caret-position="774">
+          <caret line="79" column="57" lean-forward="true" selection-start-line="0" selection-start-column="0" selection-end-line="79" selection-end-column="57" />
           <folding>
             <element signature="e#41#91#0" expanded="true" />
           </folding>

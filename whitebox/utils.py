@@ -82,12 +82,18 @@ def to_json(dataframe, vartype='Continuous', html_type = 'error',
                                                                  'or accuracy'
     assert html_type in ['error', 'sensitivity'], 'html_type must be error or sensitivity'
 
+    if 'highlight' in dataframe.columns:
+        del dataframe['highlight']
+
     if html_type == 'error':
         # specify data type
         json_out = {'Type': vartype}
     else:
+        # convert incremental_val
+        if isinstance(incremental_val, float):
+            incremental_val = round(incremental_val, 2)
         json_out = {'Type': vartype,
-                    'Change': incremental_val}
+                    'Change': str(incremental_val)}
     # create data list
     json_data_out = []
     # iterate over dataframe and convert to dict
