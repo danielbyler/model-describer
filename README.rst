@@ -21,7 +21,7 @@ Sample Outputs
 Impact
 ------------
 
-Currently, many people substitute `variable importance <https://en.wikipedia.org/wiki/Random_forest#Variable_importance>`_  charts for an understanding of how the model works. While genuinely helpful, these plots do not help us understand how different subgroups behave differently under the hood of the model. In the example below (`full notebook here <https://github.com/Data4Gov/WhiteBox_Production/blob/master/examples/Random_Forest_Analysis.ipynb>`_ , all you have to do to produce the interactive chart is this line of code: 
+Currently, many people substitute `variable importance <https://en.wikipedia.org/wiki/Random_forest#Variable_importance>`_  charts for an understanding of how the model works. While genuinely helpful, these plots do not help us understand how different subgroups behave differently under the hood of the model. In the example below (`full notebook here <https://github.com/Data4Gov/WhiteBox_Production/blob/master/examples/Random_Forest_Analysis.ipynb>`_) all you have to do to produce the interactive chart is this line of code: 
 
 .. code-block:: python
 
@@ -38,6 +38,8 @@ Error
 ------------
 
 There are a hundred ways to skin an error chart. Almost all of them are reasonable. However, few can be proceeded by the comment
+.. code-block:: python 
+
 #Send To Boss As Attachment With No Additional Editing
 
 We hope our error charts fill that gap for you. These error charts group the level of error by type and show where the error may be less or more for different parts of different variables. Again, only one line of code is required to run it:
@@ -92,7 +94,7 @@ In many models, categorical variables are present as independent variables. To p
 Managing Output Length
 ----------------------
 
-Many times, models will have hundreds (or more) of independent variables. To downselect those to a more managable number, and improve the quality of the output, we recommend using the featureDict parameter (present in both functions). By feeding in a dictionary like ``{'var1' : 'Gender' , 'var2' : 'Race' }``, you will make the HTML output only print output relating to var1 and var2. Also, instead of displaying the name in your dataframe, the HTML file will display the name you give it in your dictionary. 
+Many times, models will have hundreds (or more) of independent variables. To select a more managable number of variables,use the featureDict parameter (present in both functions). By feeding in a dictionary like ``{'var1' : 'Gender' , 'var2' : 'Race' }``, you will make the HTML output only print output relating to var1 and var2. Also, instead of displaying the name in your dataframe, the HTML file will display the name you give it in your dictionary. 
 
 Supported Machine Learning Libraries
 ====================================
