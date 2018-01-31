@@ -77,4 +77,9 @@ WB.__class__
 for val in WB.outputs:
     print(val['Type'])
 
+import webbrowser
+
+html = open('./output/wine_quality_sensitivity.html', 'r').read()
+webbrowser.open_new_tab(html)
+
 WB.save(fpath = './output/wine_quality_sensitivity.html')
