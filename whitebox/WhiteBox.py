@@ -32,6 +32,7 @@ class WhiteBoxBase(object):
                  cat_df = None,
                  featuredict = None,
                  groupbyvars = None,
+                 aggregate_func=np.mean,
                  verbose=None):
         """
         initialize base class
@@ -110,12 +111,19 @@ class WhiteBoxBase(object):
             logging.info("Logger started....")
 
 
+        try:
+            agg_results = aggregate_func(list(range(100)))
+            if hasattr(agg_results, '__len__'):
+                raise ValueError("""aggregate_func must return scalar""")
+        except Exception as e:
+            raise TypeError("""aggregate_func must work on arrays of data and yield scalar
+                                \nError: {}""".format(e))
 
-        # assin parameters to class instance
+        # assign parameters to class instance
         self.modelobj = modelobj
         self.model_df = model_df.copy(deep = True)
         self.ydepend = ydepend
-
+        self.aggregate_func = aggregate_func
         # subset down cat_df to only those features in featuredict
         self.cat_df = self.cat_df[list(self.featuredict.keys())]
         # instantiate self.outputs
@@ -252,11 +260,8 @@ class WhiteBoxBase(object):
                                             \nGroup size: {}""".format(group.shape))
             group['fixed_bins'] = group.loc[:, col]
 
-        class_type = {'WhiteBoxSensitivity': WhiteBoxSensitivity.transform_function,
-                     'WhiteBoxError': WhiteBoxError.transform_function}
-
         # create partial function for error transform (pos/neg split and reshape)
-        trans_partial = partial(class_type[self.__class__.__name__],
+        trans_partial = partial(self.transform_function,
                                 col=col,
                                 groupby=groupby,
                                 vartype=vartype)
@@ -335,6 +340,10 @@ class WhiteBoxError(WhiteBoxBase):
         if working on dataset with red and white wine, we can disambiguate how sensitive
         the model is to changes in data for each type of wine
 
+    aggregate_func : function
+        function to perform aggregate function to groups of data pertaining to error
+        analysis. I.e. take the median model error for groups data.
+
     verbose : int
         Logging level
 
@@ -354,6 +363,7 @@ class WhiteBoxError(WhiteBoxBase):
                  cat_df=None,
                  featuredict=None,
                  groupbyvars=None,
+                 aggregate_func=np.mean,
                  verbose=0):
 
         """
@@ -363,19 +373,20 @@ class WhiteBoxError(WhiteBoxBase):
         :param cat_df: Pandas Dataframe of raw data - with categorical datatypes
         :param featuredict: Subset and rename columns
         :param groupbyvars: grouping variables
+        :param aggregate_func: numpy aggregate function like np.mean
         :param verbose: Logging level
         """
-
         super(WhiteBoxError, self).__init__(modelobj,
                                       model_df,
                                       ydepend,
                                       cat_df=cat_df,
                                       featuredict=featuredict,
                                       groupbyvars=groupbyvars,
+                                      aggregate_func=aggregate_func,
                                       verbose=verbose)
 
-    @staticmethod
-    def transform_function(group,
+    def transform_function(self,
+                           group,
                            groupby='Type',
                            col=None,
                            vartype='Continuous'):
@@ -410,7 +421,7 @@ class WhiteBoxError(WhiteBoxBase):
                                                      col,
                                                      vartype))
             # return the mean of the columns
-            return toreturn.mean()
+            return self.aggregate_func(toreturn)
         else:
             logging.info(""""Returning continuous aggregate values in transform_function
                                          \nGroup: {}
@@ -423,8 +434,8 @@ class WhiteBoxError(WhiteBoxBase):
             errors = pd.DataFrame({col: toreturn[col].max(),
                                  groupby: toreturn[groupby].mode(),
                                  'predictedYSmooth': toreturn['predictedYSmooth'].mean(),
-                                 'errPos': toreturn['errPos'].mean(),
-                                 'errNeg': toreturn['errNeg'].mean()})
+                                 'errPos': self.aggregate_func(toreturn['errPos']),
+                                 'errNeg': self.aggregate_func(toreturn['errNeg'])})
 
             return errors
 
@@ -447,7 +458,7 @@ class WhiteBoxError(WhiteBoxBase):
             # set variable type
             vartype = 'Categorical'
             # create a partial function from transform_function to fill in column and variable type
-            categorical_partial = partial(WhiteBoxError.transform_function,
+            categorical_partial = partial(self.transform_function,
                                           col=col,
                                           groupby=groupby,
                                           vartype=vartype)
@@ -500,7 +511,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
     model sensitivity based on this adjustment.
 
     Model sensitivity is the difference between original predictions for unadjusted data
-    and synthetic data predictions. 
+    and synthetic data predictions.
 
     Parameters
 
@@ -530,6 +541,10 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         if working on dataset with red and white wine, we can disambiguate how sensitive
         the model is to changes in data for each type of wine
 
+    aggregate_func : function
+        function to perform aggregate function to groups of data pertaining to sensitivity
+        analysis. I.e. take the median model sensitivity for groups of data.
+
     verbose : int
         Logging level
 
@@ -553,6 +568,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                  cat_df=None,
                  featuredict=None,
                  groupbyvars=None,
+                 aggregate_func=np.median,
                  verbose=0,
                  std_num = 1):
         """
@@ -562,6 +578,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         :param cat_df: Pandas Dataframe of raw data - with categorical datatypes
         :param featuredict: Subset and rename columns
         :param groupbyvars: grouping variables
+        :param aggregate_func: function to aggregate sensitivity results by group
         :param verbose: Logging level
         :param std_num: Standard deviation adjustment
         """
@@ -578,10 +595,11 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                                       cat_df=cat_df,
                                       featuredict=featuredict,
                                       groupbyvars=groupbyvars,
+                                      aggregate_func=aggregate_func,
                                       verbose=verbose)
 
-    @staticmethod
-    def transform_function(group,
+    def transform_function(self,
+                           group,
                            groupby='Type',
                            col=None,
                            vartype='Continuous'):
@@ -604,7 +622,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
             # return the max value for the Continuous case
             errors = pd.DataFrame({col: group[col].max(),
                                  groupby: group[groupby].mode(),
-                                 'predictedYSmooth': group['diff'].mean()})
+                                 'predictedYSmooth': self.aggregate_func(group['diff'])})
         else:
             logging.info(""""Returning aggregate values for group of categorical variable in transform_function of WhiteBoxSensitvity.
                                         \nColumn: {}
@@ -613,7 +631,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
             # return the mode for the categorical case
             errors = pd.DataFrame({col: group[col].mode(),
                                    groupby: group[groupby].mode(),
-                                   'predictedYSmooth': group['diff'].mean()})
+                                   'predictedYSmooth': self.aggregate_func(group['diff'])})
 
         return errors
 
@@ -654,7 +672,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
             # calculate difference between actual predictions and new_predictions
             self.cat_df['diff'] = copydf['new_predictions'] - copydf['predictedYSmooth']
             # create a partial function from transform_function to fill in column and variable type
-            categorical_partial = partial(WhiteBoxSensitivity.transform_function,
+            categorical_partial = partial(self.transform_function,
                                           col=col,
                                           groupby=groupby,
                                           vartype=vartype)

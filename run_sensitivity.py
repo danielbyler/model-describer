@@ -59,6 +59,8 @@ modelObjc.fit(finaldf.loc[:, finaldf.columns != yDepend], finaldf.loc[:, yDepend
 
 wine_sub['free.sulfur.dioxide'].median()
 
+np.mean(wine_sub['free.sulfur.dioxide'])
+
 # instantiate whitebox sensitivity
 WB = WhiteBoxSensitivity(modelobj = modelObjc,
                    model_df = finaldf,
@@ -69,19 +71,18 @@ WB = WhiteBoxSensitivity(modelobj = modelObjc,
 # run
 WB.run()
 
-wine_sub['errors'] = np.random.rand(wine_sub.shape[0], 1)
-wine_sub['predictedYSmooth'] = np.random.rand(wine_sub.shape[0], 1)
-wine_sub['diff'] = np.random.rand(wine_sub.shape[0], 1)
-
-results = WB.continuous_slice(wine_sub.groupby('AlcoholContent').get_group('Low'),
-                    groupby='Type',
-                    col='sulphates',
-                    vartype='Continuous')
-
-WB.var_check(col = 'sulphates',
-             groupby='Type')
-
-results.head()
-
 # save the final outputs to disk
 WB.save(fpath = './output/wine_quality_sensitivity.html')
+
+
+def calc(a, b = [1, 2, 3]):
+    return a(b)
+
+np.mean(wine_sub.loc[:, ['density', 'total.sulfur.dioxide', 'pH']])
+
+wine_sub.loc[:, ['density', 'total.sulfur.dioxide', 'pH']].mean()
+
+wine_sub.agg(['mean'])
+
+
+calc(np.mean).shape
