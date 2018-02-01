@@ -21,6 +21,7 @@ __email__ = "jlewris@deloitte.com"
 __status__ = "Beta"
 
 class WhiteBoxBase(object):
+
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
@@ -110,7 +111,7 @@ class WhiteBoxBase(object):
 
 
 
-        # assing parameters to class instance
+        # assin parameters to class instance
         self.modelobj = modelobj
         self.model_df = model_df.copy(deep = True)
         self.ydepend = ydepend
@@ -297,6 +298,55 @@ class WhiteBoxBase(object):
 
 class WhiteBoxError(WhiteBoxBase):
 
+    """
+    Error model analysis.
+
+    In the continuous case with over 100 datapoints for a particular slice of data,
+    calculate percentiles of group of shrink data to 100 datapoints for scalability.
+    Calculate average errors within this region of the data for positive and negative errors.
+
+    In the categorical case, calculate average positive/negative error within region of data
+
+    Parameters
+
+    ----------
+
+    modelobj : sklearn model object
+        Used to create predictions for synthetic data
+
+    model_df : pandas DataFrame
+        Original raw dataset used to train and calibrate modelobj. This can
+        and should in most cases include dummy variables for categorical data columns.
+
+    ydepend : str
+        Y dependent variable used to build modelobj
+
+    cat_df : pandas DataFrame
+        Raw, unadjusted dataframe with categorical columns converted to pandas
+        data type Categorical. These categorical designations are picked up throughout
+        and are important for proper functioning of WhiteBoxSensitvitiy
+
+    featuredict : dict
+        Optional user defined dictionary to clean up column name and subset
+        the outputs to only columns defined in featuredict
+
+    groupbyvars : list
+        grouping variables to analyze impact of model for various groups of data. I.e.
+        if working on dataset with red and white wine, we can disambiguate how sensitive
+        the model is to changes in data for each type of wine
+
+    verbose : int
+        Logging level
+
+    See also
+
+    ------------
+
+    WhiteBoxSensitivity : analyze how the model errors are doing for various groups of data
+    WhiteBoxBase : base class inherited from WhiteBoxSensitivity to perform key functionality
+        and grouping logic
+    """
+
     def __init__(self,
                  modelobj,
                  model_df,
@@ -305,6 +355,16 @@ class WhiteBoxError(WhiteBoxBase):
                  featuredict=None,
                  groupbyvars=None,
                  verbose=0):
+
+        """
+        :param modelobj: sklearn model object
+        :param model_df: Pandas Dataframe used to build/train model
+        :param ydepend: Y dependent variable
+        :param cat_df: Pandas Dataframe of raw data - with categorical datatypes
+        :param featuredict: Subset and rename columns
+        :param groupbyvars: grouping variables
+        :param verbose: Logging level
+        """
 
         super(WhiteBoxError, self).__init__(modelobj,
                                       model_df,
@@ -428,6 +488,64 @@ class WhiteBoxError(WhiteBoxBase):
 
 class WhiteBoxSensitivity(WhiteBoxBase):
 
+    """
+    Sensitivity model analysis.
+
+    In the continuous case, increment values by user defined number of standard
+    deviations, rerun model predictions, and calculate the average differences
+    in original predictions with raw data and new predictions with synthetic data
+    for various groups or slices of the original dataset.
+
+    In the categorical case, convert non modal values to the mode and calculate
+    model sensitivity based on this adjustment.
+
+    Model sensitivity is the difference between original predictions for unadjusted data
+    and synthetic data predictions. 
+
+    Parameters
+
+    ----------
+
+    modelobj : sklearn model object
+        Used to create predictions for synthetic data
+
+    model_df : pandas DataFrame
+        Original raw dataset used to train and calibrate modelobj. This can
+        and should in most cases include dummy variables for categorical data columns.
+
+    ydepend : str
+        Y dependent variable used to build modelobj
+
+    cat_df : pandas DataFrame
+        Raw, unadjusted dataframe with categorical columns converted to pandas
+        data type Categorical. These categorical designations are picked up throughout
+        and are important for proper functioning of WhiteBoxSensitvitiy
+
+    featuredict : dict
+        Optional user defined dictionary to clean up column name and subset
+        the outputs to only columns defined in featuredict
+
+    groupbyvars : list
+        grouping variables to analyze impact of model for various groups of data. I.e.
+        if working on dataset with red and white wine, we can disambiguate how sensitive
+        the model is to changes in data for each type of wine
+
+    verbose : int
+        Logging level
+
+    std_num : int
+        Number of standard deviations to push data for syntehtic variable creation and senstivity analysis. Appropriate
+        values include -3, -2, -1, 1, 2, 3
+
+    See also
+
+    ------------
+
+    WhiteBoxError : analyze how the model errors are doing for various groups of data
+    WhiteBoxBase : base class inherited from WhiteBoxSensitivity to perform key functionality
+        and grouping logic
+    """
+
     def __init__(self,
                  modelobj,
                  model_df,
@@ -435,7 +553,24 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                  cat_df=None,
                  featuredict=None,
                  groupbyvars=None,
-                 verbose=0):
+                 verbose=0,
+                 std_num = 1):
+        """
+        :param modelobj: sklearn model object
+        :param model_df: Pandas Dataframe used to build/train model
+        :param ydepend: Y dependent variable
+        :param cat_df: Pandas Dataframe of raw data - with categorical datatypes
+        :param featuredict: Subset and rename columns
+        :param groupbyvars: grouping variables
+        :param verbose: Logging level
+        :param std_num: Standard deviation adjustment
+        """
+
+        if std_num not in [-3, -2, -1, 1, 2, 3]:
+            raise ValueError("""Standard deviation adjustment needs to be -3, -2, -1, 1, 2, or 3
+                                \nCurrently value: {}""".format(std_num))
+
+        self.std_num = std_num
 
         super(WhiteBoxSensitivity, self).__init__(modelobj,
                                       model_df,
@@ -543,7 +678,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                                                     \nGroup: {}""".format(col, groupby))
             # set variable type
             vartype = 'Continuous'
-            incremental_val = copydf[col].std()
+            incremental_val = copydf[col].std() * self.std_num
             # tweak the currently column by the incremental_val
             copydf[col] = copydf[col] + incremental_val
             # make predictions with the switches to the dataset

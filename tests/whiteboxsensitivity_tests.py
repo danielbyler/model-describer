@@ -180,8 +180,6 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
                               msg="""var check data output not of type list.
                               \nReturned Type: {}""".format(type(var_check['Data'])))
 
-
-
-
-
+if __name__ == '__main__':
+    unittest.main()
 

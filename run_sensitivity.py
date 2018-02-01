@@ -57,6 +57,8 @@ finaldf = pd.concat([wine_sub.select_dtypes(include = [np.number]), dummies], ax
 # fit the model using the dummy dataframe
 modelObjc.fit(finaldf.loc[:, finaldf.columns != yDepend], finaldf.loc[:, yDepend])
 
+wine_sub['free.sulfur.dioxide'].median()
+
 # instantiate whitebox sensitivity
 WB = WhiteBoxSensitivity(modelobj = modelObjc,
                    model_df = finaldf,

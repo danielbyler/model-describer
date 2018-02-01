@@ -338,7 +338,5 @@ class TestWhiteBoxError(unittest.TestCase):
                       msg="""sulphates not found in continuous slice results.
                                                       \nColumns: {}""".format(results.columns))
 
-
-
 if __name__ == '__main__':
     unittest.main()
