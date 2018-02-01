@@ -1,12 +1,13 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-from whitebox.wbox_error import WhiteBoxError
+import unittest
+from functools import partial
 from sklearn.ensemble import RandomForestRegressor
 from sklearn import datasets
 import pandas as pd
 import numpy as np
-import unittest
-from functools import partial
+from whitebox.WhiteBox import WhiteBoxError
 
 __author__ = "Jason Lewris, Daniel Byler, Venkat Gangavarapu, Shruti Panda, Shanti Jha"
 __credits__ = ["Brian Ray"]
@@ -25,12 +26,14 @@ class TestWhiteBoxError(unittest.TestCase):
                                  columns = ['sepall', 'sepalw', 'petall', 'petalw', 'target'])
 
         self.iris['Type'] = ['white'] * 75 + ['red'] * 75
-
+        self.iris['Type2'] = ['blue'] * 75 + ['yellow'] * 75
         # convert sepalw to categorical for testing
         self.iris['Type'] = pd.Categorical(self.iris['Type'])
+        self.iris['Type2'] = pd.Categorical(self.iris['Type2'])
         # create cat_df and convert iris categories to numbers
         self.cat_df = self.iris.copy(deep = True)
         self.iris['Type'] = self.iris['Type'].cat.codes
+        self.iris['Type2'] = self.iris['Type2'].cat.codes
         # set up randomforestregressor
         modelobj = RandomForestRegressor()
 
@@ -87,6 +90,36 @@ class TestWhiteBoxError(unittest.TestCase):
         self.assertIn('errors', WB.cat_df.columns,
                       msg = """errors not in instance cat_df. Only cols present:
                       {}""".format(WB.cat_df.columns))
+
+    def test_wberror_predict_predictedYSmooth_cat_df(self):
+        # test if predictedYSmooth column created after predict method run in whiteboxerror
+        # in cat_df
+        WB = WhiteBoxError(modelobj = self.modelobj,
+                      model_df = self.iris,
+                      ydepend = 'target',
+                      groupbyvars = ['Type'],
+                           cat_df = self.cat_df)
+
+        WB.predict()
+
+        self.assertIn('predictedYSmooth', WB.cat_df.columns,
+                      msg = """predictedYSmooth not in instances cat_df. Only cols present:
+                      {}""".format(WB.cat_df.columns))
+
+    def test_wberror_predict_predictedYSmooth_model_df(self):
+        # test if predictedYSmooth column created after predict method run in whiteboxerror
+        # in model_df
+        WB = WhiteBoxError(modelobj = self.modelobj,
+                      model_df = self.iris,
+                      ydepend = 'target',
+                      groupbyvars = ['Type'],
+                           cat_df = self.cat_df)
+
+        WB.predict()
+
+        self.assertIn('predictedYSmooth', WB.model_df.columns,
+                      msg = """predictedYSmooth not in instances model_df. \nOnly cols present:
+                      {}""".format(WB.model_df.columns))
 
     def test_wberror_predict_predicted(self):
         # test whether predictedYSmooth column is present after whiteboxerror predict method called
@@ -183,6 +216,129 @@ class TestWhiteBoxError(unittest.TestCase):
                          \nDataframe Columns: {}
                          \nFeaturedict Keys: {}""".format(self.iris.columns,
                                                          WB.featuredict.keys()))
+
+    def test_whitebox_var_check_continuous(self):
+        # test case for var_check method of WhiteBoxError - checking outputs
+        iris = self.cat_df.copy(deep=True)
+        iris['errors'] = np.random.rand(iris.shape[0], 1)
+        iris['predictedYSmooth'] = np.random.rand(iris.shape[0], 1)
+
+        WB = WhiteBoxError(modelobj=self.modelobj,
+                           model_df=self.iris,
+                           ydepend='target',
+                           groupbyvars=['Type'],
+                           cat_df=iris,
+                           featuredict=None)
+
+        var_check = WB.var_check(col='sepall',
+                     groupby='Type')
+
+        self.assertIn('Type', var_check.keys(),
+                      msg="""Type not in json output from var_check for continuous variable
+                        \noutput keys: {}""".format(var_check.keys()))
+
+        self.assertEqual(var_check['Type'], 'Continuous',
+                         msg="""var check Type not Continuous for Continuous case.
+                         \nVar check Type: {}""".format(var_check['Type']))
+
+        self.assertIn('Data', var_check.keys(),
+                      msg="""Data key not in var check output.
+                      \nKeys: {}""".format(var_check.keys()))
+
+        self.assertIsInstance(var_check['Data'], list,
+                              msg="""var check data output not of type list.
+                              \nReturned Type: {}""".format(type(var_check['Data'])))
+
+    def test_whitebox_var_check(self):
+        # test case for var_check method for categorical WhiteBoxError - checking outputs
+        iris = self.cat_df.copy(deep=True)
+        iris['errors'] = np.random.rand(iris.shape[0], 1)
+        iris['predictedYSmooth'] = np.random.rand(iris.shape[0], 1)
+
+        WB = WhiteBoxError(modelobj=self.modelobj,
+                           model_df=self.iris,
+                           ydepend='target',
+                           groupbyvars=['Type'],
+                           cat_df=iris,
+                           featuredict=None)
+
+        var_check = WB.var_check(col='Type2',
+                     groupby='Type')
+
+        self.assertIn('Type', var_check.keys(),
+                      msg="""Type not in json output from var_check for categorical variable
+                        \noutput keys: {}""".format(var_check.keys()))
+
+        self.assertEqual(var_check['Type'], 'Categorical',
+                         msg="""var check Type not Continuous for Categorical case.
+                         \nVar check Type: {}""".format(var_check['Type']))
+
+        self.assertIn('Data', var_check.keys(),
+                      msg="""Data key not in var check output.
+                      \nKeys: {}""".format(var_check.keys()))
+
+        self.assertIsInstance(var_check['Data'], list,
+                              msg="""var check data output not of type list.
+                              \nReturned Type: {}""".format(type(var_check['Data'])))
+
+    def test_wbox_class_name(self):
+        # test that WhiteBoxError class name is WhiteBoxError in the __class__.__name__
+        WB = WhiteBoxError(modelobj=self.modelobj,
+                           model_df=self.iris,
+                           ydepend='target',
+                           groupbyvars=['Type'],
+                           cat_df=self.cat_df,
+                           featuredict=None)
+
+        self.assertEqual(WB.__class__.__name__,
+                         'WhiteBoxError',
+                         msg="""Class name expected to be WhiteBoxError.
+                         \nCurrent class name is: {}""".format(WB.__class__.__name__))
+
+    def test_wbox_error_continuous_slice_outputs(self):
+        # test that groupByValue is inserted into continuous slice results
+        # copy iris data
+        iris = self.cat_df.copy(deep=True)
+        iris['errors'] = np.random.rand(iris.shape[0], 1)
+        iris['predictedYSmooth'] = np.random.rand(iris.shape[0], 1)
+
+        WB = WhiteBoxError(modelobj=self.modelobj,
+                           model_df=self.iris,
+                           ydepend='target',
+                           groupbyvars=['Type'],
+                           cat_df=self.cat_df,
+                           featuredict=None)
+
+        results = WB.continuous_slice(iris.groupby('Type').get_group('white'),
+                                      groupby='Type2',
+                                      col='sepall',
+                                      vartype='Continuous')
+
+        self.assertIn('groupByValue', results.columns,
+                      msg="""groupByValue not found in continuous slice results.
+                      \nColumns: {}""".format(results.columns))
+
+        self.assertIn('groupByVarName', results.columns,
+                      msg="""groupByVarName not found in continuous slice results.
+                              \nColumns: {}""".format(results.columns))
+
+        self.assertIn('errNeg', results.columns,
+                      msg="""errNeg not found in continuous slice results.
+                                      \nColumns: {}""".format(results.columns))
+
+        self.assertIn('errPos', results.columns,
+                      msg="""errPos not found in continuous slice results.
+                                      \nColumns: {}""".format(results.columns))
+
+        self.assertIn('predictedYSmooth', results.columns,
+                      msg="""predictedYSmooth not found in continuous slice results.
+                                              \nColumns: {}""".format(results.columns))
+
+        self.assertIn('sepall', results.columns,
+                      msg="""sulphates not found in continuous slice results.
+                                                      \nColumns: {}""".format(results.columns))
+
+
 
 if __name__ == '__main__':
     unittest.main()

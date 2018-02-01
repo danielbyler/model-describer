@@ -2,7 +2,7 @@ from sklearn.ensemble import RandomForestRegressor
 import pandas as pd
 from whitebox import utils
 import numpy as np
-from whitebox.wbox_error import WhiteBoxError
+from whitebox.WhiteBox import WhiteBoxError
 
 #====================
 # wine quality dataset example
@@ -53,9 +53,17 @@ WB = WhiteBoxError(modelobj = modelObjc,
                    ydepend= yDepend,
                    cat_df = wine_sub,
                    groupbyvars = groupbyVars,
-                   featuredict = featuredict)
+                   featuredict = featuredict,
+                   verbose=2)
+
+wine_sub['errors'] = np.random.rand(wine_sub.shape[0], 1)
+wine_sub['predictedYSmooth'] = np.random.rand(wine_sub.shape[0], 1)
 
 WB.run()
+
+len(WB.outputs)
+
+WB.outputs[1]
 
 cat = filter(lambda x: x['Type'] == 'Categorical', WB.outputs)
 cont = filter(lambda x: x['Type'] == 'Continuous', WB.outputs)
@@ -65,13 +73,23 @@ for val in WB.outputs:
 
 WB.save(fpath = './output/wine_quality_test.html')
 
+
+from whitebox import utils
+
+t = [{'Type': 'Continuous', 'Data': [{'val1': 1, 'val2' :2}, {'val1': 1, 'val2': 2}]},
+     {'Type': 'Continuous', 'Data': [{'val1': 1, 'val2': 2}, {'val1': 1, 'val2': 2}]},
+     {'Type': 'Continuous', 'Data': [{'val1': 1, 'val2': 2}, {'val1': 1, 'val2': 2}]}]
+
+results = utils.flatten_json(t)
+results
+len(WB.outputs[0])
 #=================================
 # IRIS Dataset Example
 #
 
 from sklearn import datasets
 ydepend = 'target'
-groupbyvars = ['Type', 'Subtype']
+groupbyvars = ['Type']
 
 
 iris_data = datasets.load_iris()
@@ -101,7 +119,8 @@ WB = WhiteBoxError(modelobj = modelobj,
               model_df = model_df,
               ydepend = ydepend,
               groupbyvars = groupbyvars,
-                   cat_df = df)
+                   cat_df = df,
+                   verbose=0)
 
 WB.featuredict
 WB.run()

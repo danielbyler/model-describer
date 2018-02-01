@@ -1,9 +1,11 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-import pandas as pd
-import math
-import numpy as np
 import warnings
+import logging
+import math
+import pandas as pd
+import numpy as np
 
 __author__ = "Jason Lewris, Daniel Byler, Venkat Gangavarapu, Shruti Panda, Shanti Jha"
 __credits__ = ["Brian Ray"]
@@ -46,6 +48,7 @@ def convert_categorical_independent(dataframe):
     cats = dataframe.select_dtypes(include=['category'])
     # warn user if no categorical variables detected
     if cats.shape[1] == 0:
+        logging.warn("""Pandas categorical variable types not detected""")
         warnings.warn('Pandas categorical variable types not detected', UserWarning)
     # iterate over these columns
     for category in cats.columns:
@@ -116,6 +119,7 @@ def flatten_json(dictlist):
     """
     # make copy of dictlist
     copydict = dictlist[:]
+    print(copydict)
     if len(copydict) > 1:
         for val in copydict[1:]:
             copydict[0]['Data'].extend(val['Data'])

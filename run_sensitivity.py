@@ -54,32 +54,32 @@ featuredict = {'fixed.acidity': 'FIXED ACIDITY',
 dummies = pd.concat([pd.get_dummies(wine_sub.loc[:, col], prefix = col) for col in wine_sub.select_dtypes(include = ['category']).columns], axis = 1)
 finaldf = pd.concat([wine_sub.select_dtypes(include = [np.number]), dummies], axis = 1)
 
+# fit the model using the dummy dataframe
 modelObjc.fit(finaldf.loc[:, finaldf.columns != yDepend], finaldf.loc[:, yDepend])
 
+# instantiate whitebox sensitivity
 WB = WhiteBoxSensitivity(modelobj = modelObjc,
                    model_df = finaldf,
                    ydepend= yDepend,
                    cat_df = wine_sub,
                    groupbyvars = groupbyVars,
                    featuredict = featuredict)
-
+# run
 WB.run()
-len(WB.outputs)
-WB.outputs[3]
 
-cat = filter(lambda x: x['Type'] == 'Categorical', WB.outputs)
-cont = filter(lambda x: x['Type'] == 'Continuous', WB.outputs)
-cont
+wine_sub['errors'] = np.random.rand(wine_sub.shape[0], 1)
+wine_sub['predictedYSmooth'] = np.random.rand(wine_sub.shape[0], 1)
+wine_sub['diff'] = np.random.rand(wine_sub.shape[0], 1)
 
-WB.outputs[0]
+results = WB.continuous_slice(wine_sub.groupby('AlcoholContent').get_group('Low'),
+                    groupby='Type',
+                    col='sulphates',
+                    vartype='Continuous')
 
-WB.__class__
-for val in WB.outputs:
-    print(val['Type'])
+WB.var_check(col = 'sulphates',
+             groupby='Type')
 
-import webbrowser
+results.head()
 
-html = open('./output/wine_quality_sensitivity.html', 'r').read()
-webbrowser.open_new_tab(html)
-
+# save the final outputs to disk
 WB.save(fpath = './output/wine_quality_sensitivity.html')

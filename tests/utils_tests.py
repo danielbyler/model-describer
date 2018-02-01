@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import unittest
 from sklearn import datasets
@@ -40,16 +41,30 @@ class TestUtils(unittest.TestCase):
                          'Original shape: {}'\
                          'Final shape: {}'.format(self.iris.shape,
                                                   getVectors_results.shape))
-    #todo Add unit tests for testing the HTML code for class string and len of string
-    def test_wbox_html(self):
-        # test wbox html is string
-        self.assertIsInstance(utils.HTML.wbox_html, str,
-                              'Wbox HTML class is not string. Current type: {}'.format(type(utils.HTML.wbox_html)))
 
-    def test_wbox_html_len(self):
-        # test wbox html string length
-        self.assertGreater(len(utils.HTML.wbox_html),
-                           100, 'check length of HTML string. Current length: {}'.format(len(utils.HTML.wbox_html)))
+    def test_wbox_html_error(self):
+        # test wbox html is string for html_error
+        html_error = utils.HTML().get_html(htmltype='html_error')
+        self.assertIsInstance(html_error, str,
+                              'Wbox HTML error class is not string. Current type: {}'.format(type(html_error)))
+
+    def test_wbox_html_len_error(self):
+        # test wbox html string length -- html_error
+        html_error = utils.HTML().get_html(htmltype='html_error')
+        self.assertGreater(len(html_error),
+                           100, 'check length of HTML error string. Current length: {}'.format(len(html_error)))
+
+    def test_wbox_html_sensitivity(self):
+        # test wbox html is string for html_sensitivity
+        html_sensitivity = utils.HTML().get_html(htmltype='html_sensitivity')
+        self.assertIsInstance(html_sensitivity, str,
+                              'Wbox HTML sensitivity class is not string. Current type: {}'.format(type(html_sensitivity)))
+
+    def test_wbox_html_len_sensitivity(self):
+        # test wbox html string length -- html_sensitivity
+        html_sensitivity = utils.HTML().get_html(htmltype='html_sensitivity')
+        self.assertGreater(len(html_sensitivity),
+                           100, 'check length of HTML sensitivity string. Current length: {}'.format(len(html_sensitivity)))
 
     def test_to_json(self):
         # test final output of to_json is class dict
@@ -141,6 +156,33 @@ class TestUtils(unittest.TestCase):
         self.assertIn(ydepend, output,
                       msg = 'Dependent variable ({}) not found in final output' \
                             'datastring'.format(ydepend))
+
+    def test_flatten_json(self):
+        # test the flattening of flatten_json utility function
+        test_data = [{'Type': 'Continuous', 'Data': [{'val1': 1, 'val2' :2}, {'val1': 1, 'val2': 2}]},
+                    {'Type': 'Continuous', 'Data': [{'val1': 1, 'val2': 2}, {'val1': 1, 'val2': 2}]},
+                    {'Type': 'Continuous', 'Data': [{'val1': 1, 'val2': 2}, {'val1': 1, 'val2': 2}]}]
+
+        flat = utils.flatten_json(test_data)
+
+        self.assertEqual(len(flat), 2,
+                         msg = """Flatten json not flattening in expected format. Took list of length 3 and retured 
+                         object without length of 2.
+                         \nReturned length: {}
+                         \nReturned type: {}""".format(len(flat), type(flat)))
+
+    def test_flatten_json_return_type(self):
+        # test the type of the returned object from flatten_json
+        test_data = [{'Type': 'Continuous', 'Data': [{'val1': 1, 'val2': 2}, {'val1': 1, 'val2': 2}]},
+                     {'Type': 'Continuous', 'Data': [{'val1': 1, 'val2': 2}, {'val1': 1, 'val2': 2}]},
+                     {'Type': 'Continuous', 'Data': [{'val1': 1, 'val2': 2}, {'val1': 1, 'val2': 2}]}]
+
+        flat = utils.flatten_json(test_data)
+
+        self.assertIsInstance(flat, dict,
+                              msg = """Returned object from flatten_json not dict object.
+                              \nReturn class: {}""".format(type(flat)))
+
 
 if __name__ == '__main__':
     unittest.main()
