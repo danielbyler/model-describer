@@ -203,7 +203,7 @@ class WhiteBoxBase(object):
             # map all of the same columns errors to the first element and
             # append to placeholder
             # dont append if placeholder is empty due to col being the same as groupby
-            if len(placeholder) > 0:
+            if len(colhold) > 0:
                 placeholder.append(utils.flatten_json(colhold))
 
         logging.info('Converting accuracy outputs to json format')
@@ -490,6 +490,7 @@ class WhiteBoxError(WhiteBoxBase):
             errors.rename(columns=self.featuredict, inplace=True)
 
         # json out
+
         errors = errors.replace(np.nan, 'null')
         # convert to json structure
         json_out = utils.to_json(errors, vartype=vartype, html_type='error',

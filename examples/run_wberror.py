@@ -9,7 +9,7 @@ from whitebox.WhiteBox import WhiteBoxError
 # featuredict - cat and continuous variables
 
 # read in wine quality dataset
-wine = pd.read_csv('./data/winequality.csv')
+wine = pd.read_csv('./examples/datasets/winequality.csv')
 # init randomforestregressor
 modelObjc = RandomForestRegressor()
 
@@ -54,15 +54,12 @@ WB = WhiteBoxError(modelobj = modelObjc,
                    cat_df = wine_sub,
                    groupbyvars = groupbyVars,
                    featuredict = featuredict,
-                   verbose=2)
-
-wine_sub['errors'] = np.random.rand(wine_sub.shape[0], 1)
-wine_sub['predictedYSmooth'] = np.random.rand(wine_sub.shape[0], 1)
+                   verbose=None)
 
 WB.run()
-
+WB.outputs
 len(WB.outputs)
-
+WB.outputs
 WB.outputs[1]
 
 cat = filter(lambda x: x['Type'] == 'Categorical', WB.outputs)
