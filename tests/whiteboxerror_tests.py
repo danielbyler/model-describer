@@ -85,7 +85,7 @@ class TestWhiteBoxError(unittest.TestCase):
                       groupbyvars = ['Type'],
                            cat_df = self.cat_df)
 
-        WB.predict()
+        WB._predict()
 
         self.assertIn('errors', WB.cat_df.columns,
                       msg = """errors not in instance cat_df. Only cols present:
@@ -100,7 +100,7 @@ class TestWhiteBoxError(unittest.TestCase):
                       groupbyvars = ['Type'],
                            cat_df = self.cat_df)
 
-        WB.predict()
+        WB._predict()
 
         self.assertIn('predictedYSmooth', WB.cat_df.columns,
                       msg = """predictedYSmooth not in instances cat_df. Only cols present:
@@ -115,7 +115,7 @@ class TestWhiteBoxError(unittest.TestCase):
                       groupbyvars = ['Type'],
                            cat_df = self.cat_df)
 
-        WB.predict()
+        WB._predict()
 
         self.assertIn('predictedYSmooth', WB.model_df.columns,
                       msg = """predictedYSmooth not in instances model_df. \nOnly cols present:
@@ -129,7 +129,7 @@ class TestWhiteBoxError(unittest.TestCase):
                       groupbyvars = ['Type'],
                            cat_df = self.cat_df)
 
-        WB.predict()
+        WB._predict()
 
         self.assertIn('predictedYSmooth', WB.cat_df.columns,
                       msg = """predictedYSmooth not in instance cat_df. Only cols present:
@@ -145,10 +145,10 @@ class TestWhiteBoxError(unittest.TestCase):
                            groupbyvars=['Type'],
                            cat_df=self.cat_df)
 
-        WB.predict()
+        WB._predict()
 
         # create partial func
-        cont_slice_partial = partial(WB.continuous_slice,
+        cont_slice_partial = partial(WB._continuous_slice,
                                      col='sepalw',
                                      vartype='Continuous',
                                      groupby='Type')
@@ -169,10 +169,10 @@ class TestWhiteBoxError(unittest.TestCase):
                            groupbyvars=['Type'],
                            cat_df=self.cat_df)
 
-        WB.predict()
+        WB._predict()
 
         # create partial func
-        cont_slice_partial = partial(WB.continuous_slice,
+        cont_slice_partial = partial(WB._continuous_slice,
                                      col='sepalw',
                                      vartype='Continuous',
                                      groupby='Type')
@@ -230,7 +230,7 @@ class TestWhiteBoxError(unittest.TestCase):
                            cat_df=iris,
                            featuredict=None)
 
-        var_check = WB.var_check(col='sepall',
+        var_check = WB._var_check(col='sepall',
                      groupby='Type')
 
         self.assertIn('Type', var_check.keys(),
@@ -262,7 +262,7 @@ class TestWhiteBoxError(unittest.TestCase):
                            cat_df=iris,
                            featuredict=None)
 
-        var_check = WB.var_check(col='Type2',
+        var_check = WB._var_check(col='Type2',
                      groupby='Type')
 
         self.assertIn('Type', var_check.keys(),
@@ -309,7 +309,7 @@ class TestWhiteBoxError(unittest.TestCase):
                            cat_df=self.cat_df,
                            featuredict=None)
 
-        results = WB.continuous_slice(iris.groupby('Type').get_group('white'),
+        results = WB._continuous_slice(iris.groupby('Type').get_group('white'),
                                       groupby='Type2',
                                       col='sepall',
                                       vartype='Continuous')

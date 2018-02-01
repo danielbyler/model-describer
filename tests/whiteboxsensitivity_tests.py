@@ -64,7 +64,7 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
                            cat_df=self.cat_df,
                            featuredict=None)
 
-        results = WB.continuous_slice(iris.groupby('Type').get_group('white'),
+        results = WB._continuous_slice(iris.groupby('Type').get_group('white'),
                                       groupby='Subtype',
                                       col='sepall',
                                       vartype='Continuous')
@@ -118,7 +118,7 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
 
         WB.run()
 
-        var_check = WB.var_check(col='sepall',
+        var_check = WB._var_check(col='sepall',
                      groupby='Type')
 
         self.assertIn('Type', var_check.keys(),
@@ -157,7 +157,7 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
 
         WB.run()
 
-        var_check = WB.var_check(col='Subtype',
+        var_check = WB._var_check(col='Subtype',
                      groupby='Type')
 
         self.assertIn('Type', var_check.keys(),

@@ -133,7 +133,7 @@ class WhiteBoxBase(object):
             raise ValueError("""groupbyvars must be a list of grouping variables and cannot be None""")
         self.groupbyvars = list(groupbyvars)
 
-    def predict(self):
+    def _predict(self):
         """
         create predictions based on trained model object, dataframe, and dependent variables
         :return: dataframe with prediction column
@@ -154,12 +154,12 @@ class WhiteBoxBase(object):
         return self.cat_df
 
     @abc.abstractmethod
-    def transform_function(self, group):
+    def _transform_function(self, group):
         # method to operate on slices of data within groups
         pass
 
     @abc.abstractmethod
-    def var_check(self, col=None,
+    def _var_check(self, col=None,
                   groupby=None):
         # method to check which type of variable the column is and perform operations specific
         # to that variable type
@@ -172,7 +172,7 @@ class WhiteBoxBase(object):
         """
         # testing run function
         # run the prediction function first to assign the errors to the dataframe
-        self.predict()
+        self._predict()
         # create placeholder for outputs
         placeholder = []
         # create placeholder for all insights
@@ -188,7 +188,7 @@ class WhiteBoxBase(object):
                                 \nGroupby: {}\n""".format(col, groupby))
                 # check if we are a col that is the groupbyvar3
                 if col != groupby:
-                    json_out = self.var_check(col=col,
+                    json_out = self._var_check(col=col,
                                             groupby=groupby)
                     # append to placeholder
                     colhold.append(json_out)
@@ -196,7 +196,7 @@ class WhiteBoxBase(object):
                 else:
                     logging.info("""Creating accuracy metric for groupby variable: {}""".format(groupby))
                     # create error metrics for slices of groupby data
-                    acc = self.create_accuracy(groupby=groupby)
+                    acc = self._create_accuracy(groupby=groupby)
                     # append to insights dataframe placeholder
                     insights_df = insights_df.append(acc)
 
@@ -214,7 +214,7 @@ class WhiteBoxBase(object):
         # assign placeholder final outputs to class instance
         self.outputs = placeholder
 
-    def create_accuracy(self,
+    def _create_accuracy(self,
                      groupby=None):
         """
         create error metrics for each slice of the groupby variable. i.e. if groupby is type of wine,
@@ -233,13 +233,13 @@ class WhiteBoxBase(object):
         # append to insights_df
         return acc
 
-    def continuous_slice(self, group, col=None,
+    def _continuous_slice(self, group, col=None,
                          groupby=None,
                          vartype='Continuous'):
         """
-        continuous_slice operates on portions of the data that correspond to a particular group of data from the groupby
+        _continuous_slice operates on portions of the data that correspond to a particular group of data from the groupby
         variable. For instance, if working on the wine quality dataset with Type representing your groupby variable, then
-        continuous_slice would operate on 'White' wine data
+        _continuous_slice would operate on 'White' wine data
         :param group: slice of data with columns, etc.
         :param col: current continuous variable being operated on
         :param vartype: continuous
@@ -261,7 +261,7 @@ class WhiteBoxBase(object):
             group['fixed_bins'] = group.loc[:, col]
 
         # create partial function for error transform (pos/neg split and reshape)
-        trans_partial = partial(self.transform_function,
+        trans_partial = partial(self._transform_function,
                                 col=col,
                                 groupby=groupby,
                                 vartype=vartype)
@@ -385,7 +385,7 @@ class WhiteBoxError(WhiteBoxBase):
                                       aggregate_func=aggregate_func,
                                       verbose=verbose)
 
-    def transform_function(self,
+    def _transform_function(self,
                            group,
                            groupby='Type',
                            col=None,
@@ -439,7 +439,7 @@ class WhiteBoxError(WhiteBoxBase):
 
             return errors
 
-    def var_check(self,
+    def _var_check(self,
                   col=None,
                   groupby=None):
         """
@@ -458,7 +458,7 @@ class WhiteBoxError(WhiteBoxBase):
             # set variable type
             vartype = 'Categorical'
             # create a partial function from transform_function to fill in column and variable type
-            categorical_partial = partial(self.transform_function,
+            categorical_partial = partial(self._transform_function,
                                           col=col,
                                           groupby=groupby,
                                           vartype=vartype)
@@ -479,8 +479,8 @@ class WhiteBoxError(WhiteBoxBase):
                                         \nGroup: {}""".format(col, groupby))
             # set variable type
             vartype = 'Continuous'
-            # create partial function to fill in col and vartype of continuous_slice
-            cont_slice_partial = partial(self.continuous_slice,
+            # create partial function to fill in col and vartype of _continuous_slice
+            cont_slice_partial = partial(self._continuous_slice,
                                          col=col,
                                          vartype=vartype,
                                          groupby=groupby)
@@ -599,7 +599,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                                       aggregate_func=aggregate_func,
                                       verbose=verbose)
 
-    def transform_function(self,
+    def _transform_function(self,
                            group,
                            groupby='Type',
                            col=None,
@@ -636,7 +636,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
 
         return errors
 
-    def var_check(self,
+    def _var_check(self,
                   col=None,
                   groupby=None):
         """
@@ -673,7 +673,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
             # calculate difference between actual predictions and new_predictions
             self.cat_df['diff'] = copydf['new_predictions'] - copydf['predictedYSmooth']
             # create a partial function from transform_function to fill in column and variable type
-            categorical_partial = partial(self.transform_function,
+            categorical_partial = partial(self._transform_function,
                                           col=col,
                                           groupby=groupby,
                                           vartype=vartype)
@@ -705,8 +705,8 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                                                                                                   'predictedYSmooth'])])
             # calculate difference between actual predictions and new_predictions
             self.cat_df['diff'] = copydf['new_predictions'] - copydf['predictedYSmooth']
-            # create partial function to fill in col and vartype of continuous_slice
-            cont_slice_partial = partial(self.continuous_slice,
+            # create partial function to fill in col and vartype of _continuous_slice
+            cont_slice_partial = partial(self._continuous_slice,
                                          col=col,
                                          vartype=vartype,
                                          groupby=groupby)
