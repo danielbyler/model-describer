@@ -17,13 +17,14 @@ __maintainer__ = "Jason Lewris"
 __email__ = "jlewris@deloitte.com"
 __status__ = "Beta"
 
+
 class TestWhiteBoxError(unittest.TestCase):
 
     def setUp(self):
         # load iris data for testing WhiteBox functionality
         iris_data = datasets.load_iris()
         self.iris = pd.DataFrame(data=np.c_[iris_data['data'], iris_data['target']],
-                                 columns = ['sepall', 'sepalw', 'petall', 'petalw', 'target'])
+                                 columns=['sepall', 'sepalw', 'petall', 'petalw', 'target'])
 
         self.iris['Type'] = ['white'] * 75 + ['red'] * 75
         self.iris['Type2'] = ['blue'] * 75 + ['yellow'] * 75
@@ -31,7 +32,7 @@ class TestWhiteBoxError(unittest.TestCase):
         self.iris['Type'] = pd.Categorical(self.iris['Type'])
         self.iris['Type2'] = pd.Categorical(self.iris['Type2'])
         # create cat_df and convert iris categories to numbers
-        self.cat_df = self.iris.copy(deep = True)
+        self.cat_df = self.iris.copy(deep=True)
         self.iris['Type'] = self.iris['Type'].cat.codes
         self.iris['Type2'] = self.iris['Type2'].cat.codes
         # set up randomforestregressor
@@ -52,109 +53,116 @@ class TestWhiteBoxError(unittest.TestCase):
 
         error_message = ''
         try:
-            WhiteBoxError(modelobj = modelobj,
-                          model_df = df,
-                          ydepend = 'col1',
-                          cat_df = df,
-                          groupbyvars = ['col2'])
+            WhiteBoxError(
+                            modelobj=modelobj,
+                            model_df=df,
+                            ydepend='col1',
+                            cat_df=df,
+                            groupbyvars=['col2'])
         except Exception as e:
             error_message += str(e)
 
-            self.assertIn('not fitted', error_message,
-                      """WhiteBoxError not correctly detecting unfitted models""")
+            self.assertIn(
+                            'not fitted', 
+                            error_message,
+                            """WhiteBoxError not correctly detecting unfitted models""")
 
     def test_run_outputs(self):
         # test whether outputs are assigned to instance after run
-        WB = WhiteBoxError(modelobj=self.modelobj,
-                      model_df=self.iris,
-                      ydepend='target',
-                      groupbyvars=['Type'],
-                           cat_df=self.cat_df)
+        wb = WhiteBoxError(
+                            modelobj=self.modelobj,
+                            model_df=self.iris,
+                            ydepend='target',
+                            groupbyvars=['Type'],
+                            cat_df=self.cat_df)
 
-        WB.run()
+        wb.run()
 
-        self.assertIsInstance(WB.outputs, list,
-                              msg = """WhiteBoxError is not producing list of outputs after run
-                                       \nProducing class: {}""".format(type(WB.outputs)))
+        self.assertIsInstance(wb.outputs, list,
+                              msg="""WhiteBoxError is not producing list of outputs after run
+                                       \nProducing class: {}""".format(type(wb.outputs)))
 
     def test_wberror_predict_errors(self):
         # test if error column created after predict method run in whiteboxerror
-        WB = WhiteBoxError(modelobj = self.modelobj,
-                      model_df = self.iris,
-                      ydepend = 'target',
-                      groupbyvars = ['Type'],
-                           cat_df = self.cat_df)
+        wb = WhiteBoxError(
+                            modelobj=self.modelobj,
+                            model_df=self.iris,
+                            ydepend='target',
+                            groupbyvars=['Type'],
+                            cat_df=self.cat_df)
 
-        WB._predict()
+        wb._predict()
 
-        self.assertIn('errors', WB.cat_df.columns,
-                      msg = """errors not in instance cat_df. Only cols present:
-                      {}""".format(WB.cat_df.columns))
+        self.assertIn('errors', wb.cat_df.columns,
+                      msg="""errors not in instance cat_df. Only cols present:
+                      {}""".format(wb.cat_df.columns))
 
     def test_wberror_predict_predictedYSmooth_cat_df(self):
         # test if predictedYSmooth column created after predict method run in whiteboxerror
         # in cat_df
-        WB = WhiteBoxError(modelobj = self.modelobj,
-                      model_df = self.iris,
-                      ydepend = 'target',
-                      groupbyvars = ['Type'],
-                           cat_df = self.cat_df)
+        wb = WhiteBoxError(
+                            modelobj=self.modelobj,
+                            model_df=self.iris,
+                            ydepend='target',
+                            groupbyvars=['Type'],
+                            cat_df=self.cat_df)
 
-        WB._predict()
+        wb._predict()
 
-        self.assertIn('predictedYSmooth', WB.cat_df.columns,
-                      msg = """predictedYSmooth not in instances cat_df. Only cols present:
-                      {}""".format(WB.cat_df.columns))
+        self.assertIn('predictedYSmooth', wb.cat_df.columns,
+                      msg="""predictedYSmooth not in instances cat_df. Only cols present:
+                      {}""".format(wb.cat_df.columns))
 
     def test_wberror_predict_predictedYSmooth_model_df(self):
         # test if predictedYSmooth column created after predict method run in whiteboxerror
         # in model_df
-        WB = WhiteBoxError(modelobj = self.modelobj,
-                      model_df = self.iris,
-                      ydepend = 'target',
-                      groupbyvars = ['Type'],
-                           cat_df = self.cat_df)
+        wb = WhiteBoxError(
+                            modelobj=self.modelobj,
+                            model_df=self.iris,
+                            ydepend='target',
+                            groupbyvars=['Type'],
+                            cat_df=self.cat_df)
 
-        WB._predict()
+        wb._predict()
 
-        self.assertIn('predictedYSmooth', WB.model_df.columns,
-                      msg = """predictedYSmooth not in instances model_df. \nOnly cols present:
-                      {}""".format(WB.model_df.columns))
+        self.assertIn('predictedYSmooth', wb.model_df.columns,
+                      msg="""predictedYSmooth not in instances model_df. \nOnly cols present:
+                      {}""".format(wb.model_df.columns))
 
     def test_wberror_predict_predicted(self):
         # test whether predictedYSmooth column is present after whiteboxerror predict method called
-        WB = WhiteBoxError(modelobj = self.modelobj,
-                      model_df = self.iris,
-                      ydepend = 'target',
-                      groupbyvars = ['Type'],
-                           cat_df = self.cat_df)
+        wb = WhiteBoxError(
+                            modelobj=self.modelobj,
+                            model_df=self.iris,
+                            ydepend='target',
+                            groupbyvars=['Type'],
+                            cat_df=self.cat_df)
 
-        WB._predict()
+        wb._predict()
 
-        self.assertIn('predictedYSmooth', WB.cat_df.columns,
-                      msg = """predictedYSmooth not in instance cat_df. Only cols present:
-                      {}""".format(WB.cat_df.columns))
-
+        self.assertIn('predictedYSmooth', wb.cat_df.columns,
+                      msg="""predictedYSmooth not in instance cat_df. Only cols present:
+                      {}""".format(wb.cat_df.columns))
 
     def test_wberror_transform_errPos(self):
         # test whether errNeg column is present after running whiteboxerror transform_function
         # on slice of data
-        WB = WhiteBoxError(modelobj=self.modelobj,
+        wb = WhiteBoxError(modelobj=self.modelobj,
                            model_df=self.iris,
                            ydepend='target',
                            groupbyvars=['Type'],
                            cat_df=self.cat_df)
 
-        WB._predict()
+        wb._predict()
 
         # create partial func
-        cont_slice_partial = partial(WB._continuous_slice,
+        cont_slice_partial = partial(wb._continuous_slice,
                                      col='sepalw',
                                      vartype='Continuous',
                                      groupby='Type')
 
         # run transform function
-        errors = WB.cat_df.groupby(['Type']).apply(cont_slice_partial)
+        errors = wb.cat_df.groupby(['Type']).apply(cont_slice_partial)
 
         self.assertIn('errPos', errors.columns,
                       msg="""errPos not in errordf after transform_function. Only cols present:
@@ -163,22 +171,22 @@ class TestWhiteBoxError(unittest.TestCase):
     def test_wberror_transform_errNeg(self):
         # test whether errNeg column is present after running whiteboxerror transform_function
         # on slice of data
-        WB = WhiteBoxError(modelobj=self.modelobj,
+        wb = WhiteBoxError(modelobj=self.modelobj,
                            model_df=self.iris,
                            ydepend='target',
                            groupbyvars=['Type'],
                            cat_df=self.cat_df)
 
-        WB._predict()
+        wb._predict()
 
         # create partial func
-        cont_slice_partial = partial(WB._continuous_slice,
+        cont_slice_partial = partial(wb._continuous_slice,
                                      col='sepalw',
                                      vartype='Continuous',
                                      groupby='Type')
 
         # run transform function
-        errors = WB.cat_df.groupby(['Type']).apply(cont_slice_partial)
+        errors = wb.cat_df.groupby(['Type']).apply(cont_slice_partial)
 
         self.assertIn('errNeg', errors.columns,
                       msg="""errNeg not in errordf after transform_function. Only cols present:
@@ -190,32 +198,33 @@ class TestWhiteBoxError(unittest.TestCase):
                        'target': 'target',
                        'sepall': 'sepall'}
 
-        WB = WhiteBoxError(modelobj=self.modelobj,
+        wb = WhiteBoxError(modelobj=self.modelobj,
                            model_df=self.iris,
                            ydepend='target',
                            groupbyvars=['Type'],
                            cat_df=self.cat_df,
-                           featuredict = featuredict)
+                           featuredict=featuredict)
 
-        self.assertListEqual(featuredict.keys(), WB.cat_df.columns.values.tolist(),
-                             """Featuredict and WB instance columns dont match.
+        self.assertListEqual(featuredict.keys(), wb.cat_df.columns.values.tolist(),
+                             """Featuredict and wb instance columns dont match.
                              \nFeaturedict: {}
-                             \nWB Instance cat df: {}""".format(featuredict.keys(), WB.cat_df.columns.values.tolist()))
+                             \nwb Instance cat df: {}""".format(featuredict.keys(), wb.cat_df.columns.values.tolist()))
 
     def test_whitebox_no_featuredict(self):
-        WB = WhiteBoxError(modelobj=self.modelobj,
+        wb = WhiteBoxError(modelobj=self.modelobj,
                            model_df=self.iris,
                            ydepend='target',
                            groupbyvars=['Type'],
                            cat_df=self.cat_df,
                            featuredict=None)
 
-        self.assertEqual(self.iris.shape[1], len(WB.featuredict.keys()),
+        self.assertEqual(self.iris.shape[1], len(wb.featuredict.keys()),
                          """When featuredict is not present, featuredict is not being
                          populated correctly with dataframe columns.
                          \nDataframe Columns: {}
-                         \nFeaturedict Keys: {}""".format(self.iris.columns,
-                                                         WB.featuredict.keys()))
+                         \nFeaturedict Keys: {}""".format(
+                                                            self.iris.columns,
+                                                            wb.featuredict.keys()))
 
     def test_whitebox_var_check_continuous(self):
         # test case for var_check method of WhiteBoxError - checking outputs
@@ -223,15 +232,16 @@ class TestWhiteBoxError(unittest.TestCase):
         iris['errors'] = np.random.rand(iris.shape[0], 1)
         iris['predictedYSmooth'] = np.random.rand(iris.shape[0], 1)
 
-        WB = WhiteBoxError(modelobj=self.modelobj,
+        wb = WhiteBoxError(modelobj=self.modelobj,
                            model_df=self.iris,
                            ydepend='target',
                            groupbyvars=['Type'],
                            cat_df=iris,
                            featuredict=None)
 
-        var_check = WB._var_check(col='sepall',
-                     groupby='Type')
+        var_check = wb._var_check(
+                                    col='sepall',
+                                    groupby='Type')
 
         self.assertIn('Type', var_check.keys(),
                       msg="""Type not in json output from var_check for continuous variable
@@ -255,15 +265,16 @@ class TestWhiteBoxError(unittest.TestCase):
         iris['errors'] = np.random.rand(iris.shape[0], 1)
         iris['predictedYSmooth'] = np.random.rand(iris.shape[0], 1)
 
-        WB = WhiteBoxError(modelobj=self.modelobj,
+        wb = WhiteBoxError(modelobj=self.modelobj,
                            model_df=self.iris,
                            ydepend='target',
                            groupbyvars=['Type'],
                            cat_df=iris,
                            featuredict=None)
 
-        var_check = WB._var_check(col='Type2',
-                     groupby='Type')
+        var_check = wb._var_check(
+                                    col='Type2',
+                                    groupby='Type')
 
         self.assertIn('Type', var_check.keys(),
                       msg="""Type not in json output from var_check for categorical variable
@@ -283,17 +294,17 @@ class TestWhiteBoxError(unittest.TestCase):
 
     def test_wbox_class_name(self):
         # test that WhiteBoxError class name is WhiteBoxError in the __class__.__name__
-        WB = WhiteBoxError(modelobj=self.modelobj,
+        wb = WhiteBoxError(modelobj=self.modelobj,
                            model_df=self.iris,
                            ydepend='target',
                            groupbyvars=['Type'],
                            cat_df=self.cat_df,
                            featuredict=None)
 
-        self.assertEqual(WB.__class__.__name__,
+        self.assertEqual(wb.__class__.__name__,
                          'WhiteBoxError',
                          msg="""Class name expected to be WhiteBoxError.
-                         \nCurrent class name is: {}""".format(WB.__class__.__name__))
+                         \nCurrent class name is: {}""".format(wb.__class__.__name__))
 
     def test_wbox_error_continuous_slice_outputs(self):
         # test that groupByValue is inserted into continuous slice results
@@ -302,17 +313,18 @@ class TestWhiteBoxError(unittest.TestCase):
         iris['errors'] = np.random.rand(iris.shape[0], 1)
         iris['predictedYSmooth'] = np.random.rand(iris.shape[0], 1)
 
-        WB = WhiteBoxError(modelobj=self.modelobj,
+        wb = WhiteBoxError(modelobj=self.modelobj,
                            model_df=self.iris,
                            ydepend='target',
                            groupbyvars=['Type'],
                            cat_df=self.cat_df,
                            featuredict=None)
 
-        results = WB._continuous_slice(iris.groupby('Type').get_group('white'),
-                                      groupby='Type2',
-                                      col='sepall',
-                                      vartype='Continuous')
+        results = wb._continuous_slice(
+                                        iris.groupby('Type').get_group('white'),
+                                        groupby='Type2',
+                                        col='sepall',
+                                        vartype='Continuous')
 
         self.assertIn('groupByValue', results.columns,
                       msg="""groupByValue not found in continuous slice results.
@@ -337,6 +349,7 @@ class TestWhiteBoxError(unittest.TestCase):
         self.assertIn('sepall', results.columns,
                       msg="""sulphates not found in continuous slice results.
                                                       \nColumns: {}""".format(results.columns))
+
 
 if __name__ == '__main__':
     unittest.main()

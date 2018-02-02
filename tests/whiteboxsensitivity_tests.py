@@ -17,6 +17,7 @@ __maintainer__ = "Jason Lewris"
 __email__ = "jlewris@deloitte.com"
 __status__ = "Beta"
 
+
 class TestWhiteBoxSensitivity(unittest.TestCase):
 
     def setUp(self):
@@ -57,17 +58,19 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
         iris['predictedYSmooth'] = np.random.rand(iris.shape[0], 1)
         iris['diff'] = np.random.rand(iris.shape[0], 1)
 
-        WB = WhiteBoxSensitivity(modelobj=self.modelobj,
-                           model_df=self.model_df,
-                           ydepend='target',
-                           groupbyvars=['Type'],
-                           cat_df=self.cat_df,
-                           featuredict=None)
+        wb = WhiteBoxSensitivity(
+                                    modelobj=self.modelobj,
+                                    model_df=self.model_df,
+                                    ydepend='target',
+                                    groupbyvars=['Type'],
+                                    cat_df=self.cat_df,
+                                    featuredict=None)
 
-        results = WB._continuous_slice(iris.groupby('Type').get_group('white'),
-                                      groupby='Subtype',
-                                      col='sepall',
-                                      vartype='Continuous')
+        results = wb._continuous_slice(
+                                        iris.groupby('Type').get_group('white'),
+                                        groupby='Subtype',
+                                        col='sepall',
+                                        vartype='Continuous')
 
         self.assertIn('groupByValue', results.columns,
                       msg="""groupByValue not found in continuous slice results.
@@ -87,17 +90,18 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
 
     def test_wbox_class_name(self):
         # test that WhiteBoxError class name is WhiteBoxError in the __class__.__name__
-        WB = WhiteBoxSensitivity(modelobj=self.modelobj,
-                           model_df=self.model_df,
-                           ydepend='target',
-                           groupbyvars=['Type'],
-                           cat_df=self.cat_df,
-                           featuredict=None)
+        wb = WhiteBoxSensitivity(
+                                    modelobj=self.modelobj,
+                                    model_df=self.model_df,
+                                    ydepend='target',
+                                    groupbyvars=['Type'],
+                                    cat_df=self.cat_df,
+                                    featuredict=None)
 
-        self.assertEqual(WB.__class__.__name__,
+        self.assertEqual(wb.__class__.__name__,
                          'WhiteBoxSensitivity',
                          msg="""Class name expected to be WhiteBoxError.
-                         \nCurrent class name is: {}""".format(WB.__class__.__name__))
+                         \nCurrent class name is: {}""".format(wb.__class__.__name__))
 
     def test_whitebox_var_check(self):
         # test case for var_check method of WhiteBoxError - checking outputs
@@ -109,16 +113,17 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
         modeldf = self.model_df.copy(deep=True)
         modeldf['predictedYSmooth'] = np.random.rand(modeldf.shape[0], 1)
 
-        WB = WhiteBoxSensitivity(modelobj=self.modelobj,
-                           model_df=self.model_df,
-                           ydepend='target',
-                           groupbyvars=['Type'],
-                           cat_df=self.cat_df,
-                           featuredict=None)
+        wb = WhiteBoxSensitivity(
+                                    modelobj=self.modelobj,
+                                    model_df=self.model_df,
+                                    ydepend='target',
+                                    groupbyvars=['Type'],
+                                    cat_df=self.cat_df,
+                                    featuredict=None)
 
-        WB.run()
+        wb.run()
 
-        var_check = WB._var_check(col='sepall',
+        var_check = wb._var_check(col='sepall',
                      groupby='Type')
 
         self.assertIn('Type', var_check.keys(),
@@ -148,17 +153,19 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
         iris['predictedYSmooth'] = np.random.rand(iris.shape[0], 1)
         iris['diff'] = np.random.rand(iris.shape[0], 1)
 
-        WB = WhiteBoxSensitivity(modelobj=self.modelobj,
-                           model_df=self.model_df,
-                           ydepend='target',
-                           groupbyvars=['Type'],
-                           cat_df=self.cat_df,
-                           featuredict=None)
+        wb = WhiteBoxSensitivity(
+                                    modelobj=self.modelobj,
+                                    model_df=self.model_df,
+                                    ydepend='target',
+                                    groupbyvars=['Type'],
+                                    cat_df=self.cat_df,
+                                    featuredict=None)
 
-        WB.run()
+        wb.run()
 
-        var_check = WB._var_check(col='Subtype',
-                     groupby='Type')
+        var_check = wb._var_check(
+                                    col='Subtype',
+                                    groupby='Type')
 
         self.assertIn('Type', var_check.keys(),
                       msg="""Type not in json output from var_check for categorical variable
@@ -179,6 +186,7 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
         self.assertIsInstance(var_check['Data'], list,
                               msg="""var check data output not of type list.
                               \nReturned Type: {}""".format(type(var_check['Data'])))
+
 
 if __name__ == '__main__':
     unittest.main()

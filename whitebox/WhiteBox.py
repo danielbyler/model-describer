@@ -11,7 +11,8 @@ import pandas as pd
 from pandas.api.types import is_categorical_dtype
 from whitebox import utils
 
-__author__ = "Jason Lewris, Daniel Byler, Venkat Gangavarapu, Shruti Panda, Shanti Jha"
+__author__ = """Jason Lewris, Daniel Byler, Venkat Gangavarapu, 
+                Shruti Panda, Shanti Jha"""
 __credits__ = ["Brian Ray"]
 __license__ = "MIT"
 __version__ = "0.0.1"
@@ -19,26 +20,29 @@ __maintainer__ = "Jason Lewris"
 __email__ = "jlewris@deloitte.com"
 __status__ = "Beta"
 
+
 class WhiteBoxBase(object):
 
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def __init__(self,
-                 modelobj,
-                 model_df,
-                 ydepend,
-                 cat_df = None,
-                 featuredict = None,
-                 groupbyvars = None,
-                 aggregate_func=np.mean,
-                 verbose=None):
+    def __init__(
+                    self,
+                    modelobj,
+                    model_df,
+                    ydepend,
+                    cat_df=None,
+                    featuredict=None,
+                    groupbyvars=None,
+                    aggregate_func=np.mean,
+                    verbose=None):
         """
         initialize base class
         :param modelobj: fitted sklearn model object
         :param model_df: data used for training sklearn object
         :param ydepend: dependent variable
-        :param cat_df: formatted dataset with categorical dtypes specified, and non-dummy categories
+        :param cat_df: formatted dataset with categorical dtypes specified,
+                       and non-dummy categories
         :param featuredict: prettty printing and subsetting analysis
         :param groupbyvars: grouping variables
         :param verbose: set verbose level -- 0 = debug, 1 = warning, 2 = error
@@ -46,9 +50,11 @@ class WhiteBoxBase(object):
 
         # basic parameter checks
         if not hasattr(modelobj, 'predict'):
-            raise ValueError("""modelObj does not have predict method.
-                                WhiteBoxError only works with model objects with predict method""")
-        # need to ensure modelobj has previously been fitted, otherwise raise NotFittedError
+            raise ValueError("""modelObj does not have predict method. 
+                                WhiteBoxError only works with model 
+                                objects with predict method""")
+        # need to ensure modelobj has previously been fitted, otherwise
+        # raise NotFittedError
         try:
             # try predicting on model dataframe
             modelobj.predict(model_df.loc[:, model_df.columns != ydepend])
@@ -61,14 +67,16 @@ class WhiteBoxBase(object):
                                 WhiteBoxError only works with dataframe objects""")
 
         if featuredict is not None and not isinstance(featuredict, dict):
-            raise TypeError("""When used Featuredict needs to be of type dictionary. Keys are original column
-                               names and values are formatted column names:
-                               \n{sloppy.name.here: Sloppy Name}""")
-        # toggle featuredict depending on whether user specifys cat_df and leaves featuredict blank
+            raise TypeError("""When used Featuredict needs to be of type dictionary. 
+                                Keys are original column
+                                names and values are formatted column names:
+                                \n{sloppy.name.here: Sloppy Name}""")
+        # toggle featuredict depending on whether user specifys cat_df and leaves
+        # featuredict blank
         if featuredict is None and cat_df is not None:
-            self.featuredict = {col : col for col in cat_df.columns}
+            self.featuredict = {col: col for col in cat_df.columns}
         elif featuredict is None:
-            self.featuredict = {col : col for col in model_df.columns}
+            self.featuredict = {col: col for col in model_df.columns}
         else:
             self.featuredict = featuredict
 
@@ -76,26 +84,35 @@ class WhiteBoxBase(object):
             # check tthat the number of rows from cat_df matches that of model_df
             if model_df.shape[0] != cat_df.shape[0]:
                 raise StandardError("""Misaligned rows. \norig_df shape: {}
-                                        \ndummy_df shape: {}""".format(model_df.shape[0],
-                                                                                        cat_df.shape[0]))
+                                        \ndummy_df shape: {}
+                                        """.format(
+                                                    model_df.shape[0],
+                                                    cat_df.shape[0]))
             # assign cat_df to class instance and subset to featuredict keys
-            self.cat_df = cat_df[list(self.featuredict.keys())].copy(deep = True)
+            self.cat_df = cat_df[list(self.featuredict.keys())].copy(deep=True)
 
         else:
             # check that cat_df is not none and if it's not a pandas dataframe, throw warning
             if not isinstance(cat_df, type(None)):
-                warnings.warn("""cat_df is not None and not a pd.core.frame.DataFrame. Default becomes model_df
-                              and may not be intended user behavior""", UserWarning)
+                warnings.warn(
+                                """cat_df is not None and not a 
+                                pd.core.frame.DataFrame. 
+                                Default becomes model_df
+                                and may not be intended user behavior""",
+                                UserWarning)
             # assign cat_df to class instance and subset based on featuredict keys
-            self.cat_df = model_df[list(self.featuredict.keys())].copy(deep = True)
+            self.cat_df = model_df[list(self.featuredict.keys())].copy(deep=True)
         # check that ydepend variable is of string type
         if not isinstance(ydepend, str):
-            raise TypeError("""ydepend not string, dependent variable must be single column name""")
+            raise TypeError("""ydepend not string, dependent variable 
+                                must be single column name""")
         # check verbose log level if not None
         if verbose:
 
             if verbose not in [0, 1, 2]:
-                raise ValueError("""Verbose flag must be set to level 0, 1 or 2.
+                raise ValueError(
+                                """Verbose flag must be set to 
+                                level 0, 1 or 2.
                                 \nLevel 0: Debug
                                 \nLevel 1: Warning
                                 \nLevel 2: Info""")
@@ -105,22 +122,26 @@ class WhiteBoxBase(object):
                         1: logging.WARNING,
                         2: logging.INFO}
 
-            logging.basicConfig(format="""%(asctime)s:[%(filename)s:%(lineno)s - %(funcName)20s()]
-                                          %(levelname)s:\n%(message)s""", level=log_dict[verbose])
+            logging.basicConfig(
+                                format="""%(asctime)s:[%(filename)s:%(lineno)s - 
+                                %(funcName)20s()]
+                                %(levelname)s:\n%(message)s""",
+                                level=log_dict[verbose])
             logging.info("Logger started....")
-
 
         try:
             agg_results = aggregate_func(list(range(100)))
             if hasattr(agg_results, '__len__'):
                 raise ValueError("""aggregate_func must return scalar""")
         except Exception as e:
-            raise TypeError("""aggregate_func must work on arrays of data and yield scalar
-                                \nError: {}""".format(e))
+            raise TypeError(
+                            """aggregate_func must work on 
+                            arrays of data and yield scalar
+                            \nError: {}""".format(e))
 
         # assign parameters to class instance
         self.modelobj = modelobj
-        self.model_df = model_df.copy(deep = True)
+        self.model_df = model_df.copy(deep=True)
         self.ydepend = ydepend
         self.aggregate_func = aggregate_func
         # subset down cat_df to only those features in featuredict
@@ -129,7 +150,9 @@ class WhiteBoxBase(object):
         self.outputs = False
         # check groupby vars
         if not groupbyvars:
-            raise ValueError("""groupbyvars must be a list of grouping variables and cannot be None""")
+            raise ValueError(
+                            """groupbyvars must be a list of grouping 
+                            variables and cannot be None""")
         self.groupbyvars = list(groupbyvars)
 
     def _predict(self):
@@ -140,7 +163,8 @@ class WhiteBoxBase(object):
         logging.info("""Creating predictions using modelobj.
                         \nModelobj class name: {}""".format(self.modelobj.__class__.__name__))
         # create predictions
-        preds = self.modelobj.predict(self.model_df.loc[:, self.model_df.columns != self.ydepend])#self.model_df.loc[:, self.model_df.columns != self.ydepend])
+        preds = self.modelobj.predict(
+                                    self.model_df.loc[:, self.model_df.columns != self.ydepend])
         # calculate error
         diff = preds - self.cat_df.loc[:, self.ydepend]
         # assign errors
@@ -158,16 +182,25 @@ class WhiteBoxBase(object):
         pass
 
     @abc.abstractmethod
-    def _var_check(self, col=None,
-                  groupby=None):
-        # method to check which type of variable the column is and perform operations specific
-        # to that variable type
+    def _var_check(
+                    self,
+                    col=None,
+                    groupby=None):
+        """
+        _var_check tests for categorical or continuous variable and performs operations
+        dependent upon the var type
+        :param col: current column being operated on
+        :param groupby: current groupby level
+        :return: NA
+        """
         pass
 
-    def _create_accuracy(self,
-                     groupby=None):
+    def _create_accuracy(
+                            self,
+                            groupby=None):
         """
-        create error metrics for each slice of the groupby variable. i.e. if groupby is type of wine,
+        create error metrics for each slice of the groupby variable.
+        i.e. if groupby is type of wine,
         create error metric for all white wine, then all red wine.
         :param groupby: groupby variable -- str -- i.e. 'Type'
         :return: accuracy dataframe for groupby variable
@@ -183,31 +216,41 @@ class WhiteBoxBase(object):
         # append to insights_df
         return acc
 
-    def _continuous_slice(self, group, col=None,
-                         groupby=None,
-                         vartype='Continuous'):
+    def _continuous_slice(
+                        self,
+                        group,
+                        col=None,
+                        groupby=None,
+                        vartype='Continuous'):
         """
-        _continuous_slice operates on portions of the data that correspond to a particular group of data from the groupby
-        variable. For instance, if working on the wine quality dataset with Type representing your groupby variable, then
+        _continuous_slice operates on portions of the data that correspond
+        to a particular group of data from the groupby
+        variable. For instance, if working on the wine quality dataset with
+        Type representing your groupby variable, then
         _continuous_slice would operate on 'White' wine data
         :param group: slice of data with columns, etc.
         :param col: current continuous variable being operated on
         :param vartype: continuous
-        :return: transformed data with col data max, errPos mean, errNeg mean, and prediction means for this group
+        :return: transformed data with col data max, errPos mean, errNeg mean,
+                and prediction means for this group
         """
         # check right vartype
-        assert vartype in ['Continuous', 'Categorical'], 'Vartype must be Categorical or Continuous'
+        assert vartype in ['Continuous', 'Categorical'], """Vartype must be 
+                            Categorical or Continuous"""
         # create percentiles for specific grouping of variables of interest
         group_vecs = utils.getVectors(group)
         # test
         # if more than 100 values in the group, use percentile bins
         if group.shape[0] > 100:
-            logging.info("""Creating percentile bins for current continuous grouping""")
+            logging.info("""Creating percentile bins for current 
+                            continuous grouping""")
             group['fixed_bins'] = np.digitize(group.loc[:, col],
-                                              sorted(list(set(group_vecs.loc[:, col]))), right=True)
+                                              sorted(list(set(group_vecs.loc[:, col]))),
+                                              right=True)
         else:
-            logging.warning("""Slice of data less than 100 continuous observations, using raw data as opposed to percentile groups.
-                                            \nGroup size: {}""".format(group.shape))
+            logging.warning("""Slice of data less than 100 continuous observations, 
+                                using raw data as opposed to percentile groups.
+                                \nGroup size: {}""".format(group.shape))
             group['fixed_bins'] = group.loc[:, col]
 
         # create partial function for error transform (pos/neg split and reshape)
@@ -229,7 +272,8 @@ class WhiteBoxBase(object):
 
     def run(self):
         """
-        main run engine. Iterate over columns specified in featuredict, and perform anlaysis
+        main run engine. Iterate over columns specified in featuredict,
+        and perform anlaysis
         :return: None - does put outputs in place
         """
         # testing run function
@@ -239,8 +283,12 @@ class WhiteBoxBase(object):
         placeholder = []
         # create placeholder for all insights
         insights_df = pd.DataFrame()
-        logging.info('Running main program. Iterating over columns and applying functions depednent on datatype')
-        for col in self.cat_df.columns[~self.cat_df.columns.isin(['errors', 'predictedYSmooth', self.ydepend])]:
+        logging.info("""Running main program. Iterating over 
+                    columns and applying functions depednent on datatype""")
+        for col in self.cat_df.columns[
+                                        ~self.cat_df.columns.isin(['errors',
+                                                                   'predictedYSmooth',
+                                                                   self.ydepend])]:
 
             # column placeholder
             colhold = []
@@ -250,13 +298,16 @@ class WhiteBoxBase(object):
                                 \nGroupby: {}\n""".format(col, groupby))
                 # check if we are a col that is the groupbyvar3
                 if col != groupby:
-                    json_out = self._var_check(col=col,
-                                            groupby=groupby)
+                    json_out = self._var_check(
+                                                col=col,
+                                                groupby=groupby)
                     # append to placeholder
                     colhold.append(json_out)
 
                 else:
-                    logging.info("""Creating accuracy metric for groupby variable: {}""".format(groupby))
+                    logging.info(
+                                """Creating accuracy metric for 
+                                groupby variable: {}""".format(groupby))
                     # create error metrics for slices of groupby data
                     acc = self._create_accuracy(groupby=groupby)
                     # append to insights dataframe placeholder
@@ -276,15 +327,17 @@ class WhiteBoxBase(object):
         # assign placeholder final outputs to class instance
         self.outputs = placeholder
 
-    def save(self, fpath = ''):
+    def save(self, fpath=''):
         """
         save html output to disc
         :param fpath: file path to save html file to
         :return: None
         """
         if not self.outputs:
-            RuntimeError('Must run WhiteBoxError.run() on data to store outputs')
-            logging.warning("""Must run WhiteBoxError.run() before calling save method""")
+            RuntimeError("""Must run WhiteBoxError.run() 
+                        on data to store outputs""")
+            logging.warning("""Must run WhiteBoxError.run() 
+                            before calling save method""")
 
         # change html output based on used class
         called_class = self.__class__.__name__
@@ -293,12 +346,15 @@ class WhiteBoxBase(object):
                      'WhiteBoxError': 'html_error'}
         logging.info("""creating html output for type: {}""".format(html_type[called_class]))
         # create HTML output
-        html_out = utils.createMLErrorHTML(str(self.outputs), self.ydepend,
-                                            htmltype = html_type[called_class])
+        html_out = utils.createMLErrorHTML(
+                                            str(self.outputs),
+                                            self.ydepend,
+                                            htmltype=html_type[called_class])
         # save html_out to disk
         with open(fpath, 'w') as outfile:
             logging.info("""Writing html file out to disk""")
             outfile.write(html_out)
+
 
 class WhiteBoxError(WhiteBoxBase):
 
@@ -355,15 +411,16 @@ class WhiteBoxError(WhiteBoxBase):
         and grouping logic
     """
 
-    def __init__(self,
-                 modelobj,
-                 model_df,
-                 ydepend,
-                 cat_df=None,
-                 featuredict=None,
-                 groupbyvars=None,
-                 aggregate_func=np.mean,
-                 verbose=0):
+    def __init__(
+                    self,
+                    modelobj,
+                    model_df,
+                    ydepend,
+                    cat_df=None,
+                    featuredict=None,
+                    groupbyvars=None,
+                    aggregate_func=np.mean,
+                    verbose=0):
 
         """
         :param modelobj: sklearn model object
@@ -375,7 +432,8 @@ class WhiteBoxError(WhiteBoxBase):
         :param aggregate_func: numpy aggregate function like np.mean
         :param verbose: Logging level
         """
-        super(WhiteBoxError, self).__init__(modelobj,
+        super(WhiteBoxError, self).__init__(
+                                            modelobj,
                                             model_df,
                                             ydepend,
                                             cat_df=cat_df,
@@ -384,11 +442,12 @@ class WhiteBoxError(WhiteBoxBase):
                                             aggregate_func=aggregate_func,
                                             verbose=verbose)
 
-    def _transform_function(self,
-                           group,
-                           groupby='Type',
-                           col=None,
-                           vartype='Continuous'):
+    def _transform_function(
+                            self,
+                            group,
+                            groupby='Type',
+                            col=None,
+                            vartype='Continuous'):
         """
         transform slice of data by separating our pos/neg errors, aggregating up to the mean of the slice
         and returning transformed dataset
@@ -430,17 +489,19 @@ class WhiteBoxError(WhiteBoxBase):
                                                                  group.shape,
                                                                  col,
                                                                  vartype))
-            errors = pd.DataFrame({col: toreturn[col].max(),
-                                 groupby: toreturn[groupby].mode(),
-                                 'predictedYSmooth': toreturn['predictedYSmooth'].mean(),
-                                 'errPos': self.aggregate_func(toreturn['errPos']),
-                                 'errNeg': self.aggregate_func(toreturn['errNeg'])})
+            errors = pd.DataFrame({
+                                    col: toreturn[col].max(),
+                                    groupby: toreturn[groupby].mode(),
+                                    'predictedYSmooth': toreturn['predictedYSmooth'].mean(),
+                                    'errPos': self.aggregate_func(toreturn['errPos']),
+                                    'errNeg': self.aggregate_func(toreturn['errNeg'])})
 
             return errors
 
-    def _var_check(self,
-                  col=None,
-                  groupby=None):
+    def _var_check(
+                    self,
+                    col=None,
+                    groupby=None):
         """
         handle continuous and categorical variable types
         :param col: specific column being operated on within dataset -- str
@@ -492,10 +553,14 @@ class WhiteBoxError(WhiteBoxBase):
 
         errors = errors.replace(np.nan, 'null')
         # convert to json structure
-        json_out = utils.to_json(errors, vartype=vartype, html_type='error',
-                                 incremental_val=None)
+        json_out = utils.to_json(
+                                    errors,
+                                    vartype=vartype,
+                                    html_type='error',
+                                    incremental_val=None)
         # return json_out
         return json_out
+
 
 class WhiteBoxSensitivity(WhiteBoxBase):
 
@@ -570,7 +635,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                  groupbyvars=None,
                  aggregate_func=np.median,
                  verbose=0,
-                 std_num = 1):
+                 std_num=1):
         """
         :param modelobj: sklearn model object
         :param model_df: Pandas Dataframe used to build/train model
@@ -589,7 +654,8 @@ class WhiteBoxSensitivity(WhiteBoxBase):
 
         self.std_num = std_num
 
-        super(WhiteBoxSensitivity, self).__init__(modelobj,
+        super(WhiteBoxSensitivity, self).__init__(
+                                                    modelobj,
                                                     model_df,
                                                     ydepend,
                                                     cat_df=cat_df,
@@ -598,11 +664,12 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                                                     aggregate_func=aggregate_func,
                                                     verbose=verbose)
 
-    def _transform_function(self,
-                           group,
-                           groupby='Type',
-                           col=None,
-                           vartype='Continuous'):
+    def _transform_function(
+                            self,
+                            group,
+                            groupby='Type',
+                            col=None,
+                            vartype='Continuous'):
         """
         transform slice of data by separating our pos/neg errors, aggregating up to the mean of the slice
         and returning transformed dataset
@@ -620,9 +687,10 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                             \nGroup: {}
                             \nGroup shape: {}""".format(col, groupby, group.shape))
             # return the max value for the Continuous case
-            errors = pd.DataFrame({col: group[col].max(),
-                                 groupby: group[groupby].mode(),
-                                 'predictedYSmooth': self.aggregate_func(group['diff'])})
+            errors = pd.DataFrame({
+                                    col: group[col].max(),
+                                    groupby: group[groupby].mode(),
+                                    'predictedYSmooth': self.aggregate_func(group['diff'])})
         else:
             logging.info(""""Returning aggregate values for group of categorical variable in transform_function of WhiteBoxSensitvity.
                                         \nColumn: {}
@@ -635,9 +703,10 @@ class WhiteBoxSensitivity(WhiteBoxBase):
 
         return errors
 
-    def _var_check(self,
-                  col=None,
-                  groupby=None):
+    def _var_check(
+                    self,
+                    col=None,
+                    groupby=None):
         """
         handle continuous and categorical variable types
         :param col: specific column being operated on within dataset -- str
