@@ -11,7 +11,6 @@ import pandas as pd
 from pandas.api.types import is_categorical_dtype
 from whitebox import utils
 
-
 __author__ = "Jason Lewris, Daniel Byler, Venkat Gangavarapu, Shruti Panda, Shanti Jha"
 __credits__ = ["Brian Ray"]
 __license__ = "MIT"
@@ -165,55 +164,6 @@ class WhiteBoxBase(object):
         # to that variable type
         pass
 
-    def run(self):
-        """
-        main run engine. Iterate over columns specified in featuredict, and perform anlaysis
-        :return: None - does put outputs in place
-        """
-        # testing run function
-        # run the prediction function first to assign the errors to the dataframe
-        self._predict()
-        # create placeholder for outputs
-        placeholder = []
-        # create placeholder for all insights
-        insights_df = pd.DataFrame()
-        logging.info('Running main program. Iterating over columns and applying functions depednent on datatype')
-        for col in self.cat_df.columns[~self.cat_df.columns.isin(['errors', 'predictedYSmooth', self.ydepend])]:
-
-            # column placeholder
-            colhold = []
-
-            for groupby in self.groupbyvars:
-                logging.info("""Currently working on column: {}
-                                \nGroupby: {}\n""".format(col, groupby))
-                # check if we are a col that is the groupbyvar3
-                if col != groupby:
-                    json_out = self._var_check(col=col,
-                                            groupby=groupby)
-                    # append to placeholder
-                    colhold.append(json_out)
-
-                else:
-                    logging.info("""Creating accuracy metric for groupby variable: {}""".format(groupby))
-                    # create error metrics for slices of groupby data
-                    acc = self._create_accuracy(groupby=groupby)
-                    # append to insights dataframe placeholder
-                    insights_df = insights_df.append(acc)
-
-            # map all of the same columns errors to the first element and
-            # append to placeholder
-            # dont append if placeholder is empty due to col being the same as groupby
-            if len(colhold) > 0:
-                placeholder.append(utils.flatten_json(colhold))
-
-        logging.info('Converting accuracy outputs to json format')
-        # finally convert insights_df into json object
-        insights_json = utils.to_json(insights_df, vartype='Accuracy')
-        # append to outputs
-        placeholder.append(insights_json)
-        # assign placeholder final outputs to class instance
-        self.outputs = placeholder
-
     def _create_accuracy(self,
                      groupby=None):
         """
@@ -276,6 +226,55 @@ class WhiteBoxBase(object):
         errors.rename(columns={groupby: 'groupByValue'}, inplace=True)
         errors['groupByVarName'] = groupby
         return errors
+
+    def run(self):
+        """
+        main run engine. Iterate over columns specified in featuredict, and perform anlaysis
+        :return: None - does put outputs in place
+        """
+        # testing run function
+        # run the prediction function first to assign the errors to the dataframe
+        self._predict()
+        # create placeholder for outputs
+        placeholder = []
+        # create placeholder for all insights
+        insights_df = pd.DataFrame()
+        logging.info('Running main program. Iterating over columns and applying functions depednent on datatype')
+        for col in self.cat_df.columns[~self.cat_df.columns.isin(['errors', 'predictedYSmooth', self.ydepend])]:
+
+            # column placeholder
+            colhold = []
+
+            for groupby in self.groupbyvars:
+                logging.info("""Currently working on column: {}
+                                \nGroupby: {}\n""".format(col, groupby))
+                # check if we are a col that is the groupbyvar3
+                if col != groupby:
+                    json_out = self._var_check(col=col,
+                                            groupby=groupby)
+                    # append to placeholder
+                    colhold.append(json_out)
+
+                else:
+                    logging.info("""Creating accuracy metric for groupby variable: {}""".format(groupby))
+                    # create error metrics for slices of groupby data
+                    acc = self._create_accuracy(groupby=groupby)
+                    # append to insights dataframe placeholder
+                    insights_df = insights_df.append(acc)
+
+            # map all of the same columns errors to the first element and
+            # append to placeholder
+            # dont append if placeholder is empty due to col being the same as groupby
+            if len(colhold) > 0:
+                placeholder.append(utils.flatten_json(colhold))
+
+        logging.info('Converting accuracy outputs to json format')
+        # finally convert insights_df into json object
+        insights_json = utils.to_json(insights_df, vartype='Accuracy')
+        # append to outputs
+        placeholder.append(insights_json)
+        # assign placeholder final outputs to class instance
+        self.outputs = placeholder
 
     def save(self, fpath = ''):
         """
@@ -377,13 +376,13 @@ class WhiteBoxError(WhiteBoxBase):
         :param verbose: Logging level
         """
         super(WhiteBoxError, self).__init__(modelobj,
-                                      model_df,
-                                      ydepend,
-                                      cat_df=cat_df,
-                                      featuredict=featuredict,
-                                      groupbyvars=groupbyvars,
-                                      aggregate_func=aggregate_func,
-                                      verbose=verbose)
+                                            model_df,
+                                            ydepend,
+                                            cat_df=cat_df,
+                                            featuredict=featuredict,
+                                            groupbyvars=groupbyvars,
+                                            aggregate_func=aggregate_func,
+                                            verbose=verbose)
 
     def _transform_function(self,
                            group,
@@ -591,13 +590,13 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         self.std_num = std_num
 
         super(WhiteBoxSensitivity, self).__init__(modelobj,
-                                      model_df,
-                                      ydepend,
-                                      cat_df=cat_df,
-                                      featuredict=featuredict,
-                                      groupbyvars=groupbyvars,
-                                      aggregate_func=aggregate_func,
-                                      verbose=verbose)
+                                                    model_df,
+                                                    ydepend,
+                                                    cat_df=cat_df,
+                                                    featuredict=featuredict,
+                                                    groupbyvars=groupbyvars,
+                                                    aggregate_func=aggregate_func,
+                                                    verbose=verbose)
 
     def _transform_function(self,
                            group,
