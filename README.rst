@@ -1,5 +1,5 @@
 .. -*- mode: rst -*-
-
+[![Build Status](https://travis-ci.com/Data4Gov/WhiteBox_Production.svg?token=1GNkopDprh4icqumn6Mz&branch=master)](https://travis-ci.com/Data4Gov/WhiteBox_Production)
 WhiteBox: One line of code to make 'black box' machine learning models interpretable to humans. 
 ===============================================================================================
 
