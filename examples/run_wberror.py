@@ -117,7 +117,7 @@ WB = WhiteBoxError(modelobj = modelobj,
               ydepend = ydepend,
               groupbyvars = groupbyvars,
                    cat_df = df,
-                   verbose=0)
+                   verbose=None)
 
 WB.featuredict
 WB.run()
