@@ -28,7 +28,7 @@ class TestUtils(unittest.TestCase):
 
     def test_getVectors_shape(self):
         # test final output of getVectors being length 100
-        getvectors_results = utils.getVectors(self.iris)
+        getvectors_results = utils.getvectors(self.iris)
         self.assertEqual(getvectors_results.shape[0], 100,
                          """Final shape of getVectors dataframe
                             is not 100 percentiles. Current shape: {}""".format(getvectors_results.shape[0])
@@ -36,7 +36,7 @@ class TestUtils(unittest.TestCase):
 
     def test_getVectors_col_shape(self):
         # test final output of getVectors widths (columns) match original input
-        getvectors_results = utils.getVectors(self.iris)
+        getvectors_results = utils.getvectors(self.iris)
         self.assertEqual(getvectors_results.shape[1], self.iris.shape[1],
                          """Final shape of getVectors return columns 
                                 does not match orig. input
@@ -47,25 +47,25 @@ class TestUtils(unittest.TestCase):
 
     def test_wbox_html_error(self):
         # test wbox html is string for html_error
-        html_error = utils.HTML().get_html(htmltype='html_error')
+        html_error = utils.HTML.get_html(htmltype='html_error')
         self.assertIsInstance(html_error, str,
                               'Wbox HTML error class is not string. Current type: {}'.format(type(html_error)))
 
     def test_wbox_html_len_error(self):
         # test wbox html string length -- html_error
-        html_error = utils.HTML().get_html(htmltype='html_error')
+        html_error = utils.HTML.get_html(htmltype='html_error')
         self.assertGreater(len(html_error),
                            100, 'check length of HTML error string. Current length: {}'.format(len(html_error)))
 
     def test_wbox_html_sensitivity(self):
         # test wbox html is string for html_sensitivity
-        html_sensitivity = utils.HTML().get_html(htmltype='html_sensitivity')
+        html_sensitivity = utils.HTML.get_html(htmltype='html_sensitivity')
         self.assertIsInstance(html_sensitivity, str,
                               'Wbox HTML sensitivity class is not string. Current type: {}'.format(type(html_sensitivity)))
 
     def test_wbox_html_len_sensitivity(self):
         # test wbox html string length -- html_sensitivity
-        html_sensitivity = utils.HTML().get_html(htmltype='html_sensitivity')
+        html_sensitivity = utils.HTML.get_html(htmltype='html_sensitivity')
         self.assertGreater(
                             len(html_sensitivity),
                             100,
@@ -158,7 +158,7 @@ class TestUtils(unittest.TestCase):
         # set up sample dependent variable
         ydepend = 'TESTVARIABLE'
         datastring = "{'Type': 'Categorical', 'Data': [1, 2, 3]}"
-        output = utils.createMLErrorHTML(datastring, ydepend)
+        output = utils.createmlerror_html(datastring, ydepend)
 
         self.assertIn(ydepend, output,
                       msg="""Dependent variable ({}) not found in final output

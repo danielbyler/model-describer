@@ -15,27 +15,34 @@ __maintainer__ = "Jason Lewris"
 __email__ = "jlewris@deloitte.com"
 __status__ = "Beta"
 
-def getVectors(dataframe):
+
+def getvectors(dataframe):
     """
-    getVectors calculates the percentiles 1 through 100 for data in each columns of dataframe.
+    getVectors calculates the percentiles 1 through 100 for data in
+    each columns of dataframe.
     For categorical data, the mode is used.
     :param dataframe: pandas dataframe object
     :return: pandas dataframe object with percentiles
     """
     # ensure dataframe is pandas dataframe object
-    assert isinstance(dataframe, pd.DataFrame), 'Supports pandas dataframe, current class type is {}'.format(type(dataframe))
-    # calculate the percentiles for numerical data and use the mode for categorical, string data
-    allresults = dataframe.describe(percentiles=np.linspace(0.01, 1, num=100), include=[np.number])# , 'category', 'O'])
+    assert isinstance(dataframe, pd.DataFrame), """Supports pandas 
+                                                    dataframe, current class 
+                                                    type is {}""".format(type(dataframe))
+    # calculate the percentiles for numerical data and use the mode for
+    # categorical, string data
+    allresults = dataframe.describe(percentiles=np.linspace(0.01, 1, num=100),
+                                    include=[np.number])
 
     # if top (or mode) in index
     if 'top' in allresults.index:
         # Pull out the percentiles for numerical data otherwise use the mode
-        tempVec = allresults.apply(lambda x: x['top'] if math.isnan(x['mean']) else x.filter(regex='[0-9]{1,2}\%',
+        tempvec = allresults.apply(lambda x: x['top'] if math.isnan(x['mean']) else x.filter(regex='[0-9]{1,2}\%',
                                                                                              axis=0), axis=0)
     else:
-        tempVec = allresults.filter(regex='[0-9]{1,2}\%', axis=0)
+        tempvec = allresults.filter(regex='[0-9]{1,2}\%', axis=0)
 
-    return(tempVec)
+    return tempvec
+
 
 def convert_categorical_independent(dataframe):
     """
@@ -43,7 +50,8 @@ def convert_categorical_independent(dataframe):
     :param dataframe: dataframe to perform adjustment on
     :return: dataframe that has converted strings to numbers
     """
-    dataframe = dataframe.copy(deep = True) # we want to change the data, not copy and change
+    # we want to change the data, not copy and change
+    dataframe = dataframe.copy(deep=True)
     # convert all category datatypes into numeric
     cats = dataframe.select_dtypes(include=['category'])
     # warn user if no categorical variables detected
@@ -56,16 +64,19 @@ def convert_categorical_independent(dataframe):
 
     return dataframe
 
-def create_insights(group, group_var = None,
-                    error_type = 'MSE'):
+
+def create_insights(
+                    group,
+                    group_var=None,
+                    error_type='MSE'):
     """
     create_insights develops various error metrics such as MSE, RMSE, MAE, etc.
     :param group: the grouping object from the pandas groupby
     :param group_var: the column that is being grouped on
     :return: dataframe with error metrics
     """
-    assert error_type in ['MSE', 'RMSE', 'MAE'], 'Currently only supports'\
-                                                ' MAE, MSE, RMSE'
+    assert error_type in ['MSE', 'RMSE', 'MAE'], """Currently only supports
+                                                 MAE, MSE, RMSE"""
     errors = group['errors']
     error_dict = {'MSE': np.mean(errors ** 2),
                   'RMSE': (np.mean(errors ** 2)) ** (1 / 2),
@@ -74,15 +85,19 @@ def create_insights(group, group_var = None,
     msedf = pd.DataFrame({'groupByValue': group.name,
                           'groupByVarName': group_var,
                           error_type: error_dict[error_type],
-                          'Total': group.shape[0]}, index = [0])
+                          'Total': group.shape[0]}, index=[0])
     return msedf
 
-def to_json(dataframe, vartype='Continuous', html_type = 'error',
-            incremental_val=None):
+
+def to_json(
+                dataframe,
+                vartype='Continuous',
+                html_type='error',
+                incremental_val=None):
     # adding html_type
     # convert dataframe values into a json like object for D3 consumption
-    assert vartype in ['Continuous', 'Categorical', 'Accuracy'], 'Vartypes should only be continuous, categorical' \
-                                                                 'or accuracy'
+    assert vartype in ['Continuous', 'Categorical', 'Accuracy'], """Vartypes should only be continuous, 
+                                                                    categorical or accuracy"""
     assert html_type in ['error', 'sensitivity'], 'html_type must be error or sensitivity'
 
     if 'highlight' in dataframe.columns:
@@ -107,6 +122,7 @@ def to_json(dataframe, vartype='Continuous', html_type = 'error',
     json_out['Data'] = json_data_out
 
     return json_out
+
 
 def flatten_json(dictlist):
     """
@@ -136,28 +152,34 @@ def flatten_json(dictlist):
                                         \nOutput class type: {}""".format(type(toreturn))
     return toreturn
 
-class HTML(object):
 
-    def get_html(self, htmltype = 'html_error'):
+class HTML(object):
+    @staticmethod
+    def get_html(htmltype='html_error'):
         assert htmltype in ['html_error', 'html_sensitivity'], 'htmltype must be html_error or html_sensitivity'
         # utility class to hold whitebox files
         try:
             wbox_html = open('../HTML/{}.txt'.format(htmltype), 'r').read()
             return wbox_html
-        except IOError as e:
+        except IOError:
             wbox_html = open('HTML/{}.txt'.format(htmltype), 'r').read()
             return wbox_html
 
-def createMLErrorHTML(datastring, dependentVar,
-                      htmltype = 'html_error'):
+
+def createmlerror_html(
+                        datastring,
+                        dependentvar,
+                        htmltype='html_error'):
     """
     create WhiteBox error plot html code
     :param datastring: json like object containing data
-    :param dependentVar: name of dependent variable
+    :param dependentvar: name of dependent variable
     :return: html string
     """
-    assert htmltype in ['html_error', 'html_sensitivity'], 'htmltype must be html_error or html_sensitivity'
-    output = HTML().get_html(htmltype=htmltype).replace('<***>', datastring
-                                  ).replace('Quality', dependentVar)
+    assert htmltype in ['html_error', 'html_sensitivity'], """htmltype must be html_error 
+                                                                or html_sensitivity"""
+    output = HTML().get_html(htmltype=htmltype).replace('<***>',
+                                                        datastring
+                                                        ).replace('Quality', dependentvar)
 
     return output

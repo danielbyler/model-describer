@@ -2,13 +2,15 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import abc
 import warnings
+from abc import abstractmethod, ABCMeta
 from functools import partial
+
 import numpy as np
-from sklearn.exceptions import NotFittedError
-import pandas as pd
+from pandas import core, DataFrame, concat
 from pandas.api.types import is_categorical_dtype
+from sklearn.exceptions import NotFittedError
+
 from whitebox import utils
 
 __author__ = """Jason Lewris, Daniel Byler, Venkat Gangavarapu, 
@@ -23,9 +25,9 @@ __status__ = "Beta"
 
 class WhiteBoxBase(object):
 
-    __metaclass__ = abc.ABCMeta
+    __metaclass__ = ABCMeta
 
-    @abc.abstractmethod
+    @abstractmethod
     def __init__(
                     self,
                     modelobj,
@@ -62,7 +64,7 @@ class WhiteBoxBase(object):
             # raise exception and not fitted error
             raise Exception('{}\nPlease fit model: {}'.format(e, modelobj.__class__))
 
-        if not isinstance(model_df, pd.core.frame.DataFrame):
+        if not isinstance(model_df, core.frame.DataFrame):
             raise TypeError("""model_df variable not pandas dataframe.
                                 WhiteBoxError only works with dataframe objects""")
 
@@ -80,7 +82,7 @@ class WhiteBoxBase(object):
         else:
             self.featuredict = featuredict
 
-        if isinstance(cat_df, pd.core.frame.DataFrame):
+        if isinstance(cat_df, core.frame.DataFrame):
             # check tthat the number of rows from cat_df matches that of model_df
             if model_df.shape[0] != cat_df.shape[0]:
                 raise StandardError("""Misaligned rows. \norig_df shape: {}
@@ -176,12 +178,12 @@ class WhiteBoxBase(object):
         # return
         return self.cat_df
 
-    @abc.abstractmethod
+    @abstractmethod
     def _transform_function(self, group):
         # method to operate on slices of data within groups
         pass
 
-    @abc.abstractmethod
+    @abstractmethod
     def _var_check(
                     self,
                     col=None,
@@ -238,7 +240,7 @@ class WhiteBoxBase(object):
         assert vartype in ['Continuous', 'Categorical'], """Vartype must be 
                             Categorical or Continuous"""
         # create percentiles for specific grouping of variables of interest
-        group_vecs = utils.getVectors(group)
+        group_vecs = utils.getvectors(group)
         # test
         # if more than 100 values in the group, use percentile bins
         if group.shape[0] > 100:
@@ -282,7 +284,7 @@ class WhiteBoxBase(object):
         # create placeholder for outputs
         placeholder = []
         # create placeholder for all insights
-        insights_df = pd.DataFrame()
+        insights_df = DataFrame()
         logging.info("""Running main program. Iterating over 
                     columns and applying functions depednent on datatype""")
         for col in self.cat_df.columns[
@@ -346,7 +348,7 @@ class WhiteBoxBase(object):
                      'WhiteBoxError': 'html_error'}
         logging.info("""creating html output for type: {}""".format(html_type[called_class]))
         # create HTML output
-        html_out = utils.createMLErrorHTML(
+        html_out = utils.createmlerror_html(
                                             str(self.outputs),
                                             self.ydepend,
                                             htmltype=html_type[called_class])
@@ -463,11 +465,11 @@ class WhiteBoxError(WhiteBoxBase):
         # split out positive vs negative errors
         errors = group_copy['errors']
         # create separate columns for pos or neg errors
-        errors = pd.concat([errors[errors > 0], errors[errors < 0]], axis=1)
+        errors = concat([errors[errors > 0], errors[errors < 0]], axis=1)
         # rename error columns
         errors.columns = ['errPos', 'errNeg']
         # merge back with original data
-        toreturn = pd.concat([group_copy.loc[:, group_copy.columns != 'errors'], errors], axis=1)
+        toreturn = concat([group_copy.loc[:, group_copy.columns != 'errors'], errors], axis=1)
         # return the mean
         if vartype == 'Categorical':
             logging.info(""""Returning mean values for group of categorical variable in transform_function
@@ -489,7 +491,7 @@ class WhiteBoxError(WhiteBoxBase):
                                                                  group.shape,
                                                                  col,
                                                                  vartype))
-            errors = pd.DataFrame({
+            errors = DataFrame({
                                     col: toreturn[col].max(),
                                     groupby: toreturn[groupby].mode(),
                                     'predictedYSmooth': toreturn['predictedYSmooth'].mean(),
@@ -687,7 +689,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                             \nGroup: {}
                             \nGroup shape: {}""".format(col, groupby, group.shape))
             # return the max value for the Continuous case
-            errors = pd.DataFrame({
+            errors = DataFrame({
                                     col: group[col].max(),
                                     groupby: group[groupby].mode(),
                                     'predictedYSmooth': self.aggregate_func(group['diff'])})
@@ -697,8 +699,8 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                                         \nGroup: {}
                                         \nGroup shape: {}""".format(col, groupby, group.shape))
             # return the mode for the categorical case
-            errors = pd.DataFrame({col: group[col].mode(),
-                                   groupby: group[groupby].mode(),
+            errors = DataFrame({col: group[col].mode(),
+                                groupby: group[groupby].mode(),
                                    'predictedYSmooth': self.aggregate_func(group['diff'])})
 
         return errors
