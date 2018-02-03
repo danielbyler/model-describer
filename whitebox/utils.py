@@ -178,7 +178,7 @@ def createmlerror_html(
     """
     assert htmltype in ['html_error', 'html_sensitivity'], """htmltype must be html_error 
                                                                 or html_sensitivity"""
-    output = HTML().get_html(htmltype=htmltype).replace('<***>',
+    output = HTML.get_html(htmltype=htmltype).replace('<***>',
                                                         datastring
                                                         ).replace('Quality', dependentvar)
 

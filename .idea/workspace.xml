@@ -3,6 +3,9 @@
   <component name="ChangeListManager">
     <list default="true" id="950ec7f9-784e-43c5-86c0-fda473cdc586" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change beforePath="$PROJECT_DIR$/HTML/html_error.txt" afterPath="$PROJECT_DIR$/whitebox/HTML/html_error.txt" />
+      <change beforePath="$PROJECT_DIR$/HTML/html_sensitivity.txt" afterPath="$PROJECT_DIR$/whitebox/HTML/html_sensitivity.txt" />
+      <change beforePath="$PROJECT_DIR$/whitebox/utils.py" afterPath="$PROJECT_DIR$/whitebox/utils.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -13,74 +16,19 @@
   </component>
   <component name="CoverageDataManager">
     <SUITE FILE_PATH="coverage/WhiteBox_Production$Unittests_in_utils_tests_py.coverage" NAME="Unittests in utils_tests.py Coverage Results" MODIFIED="1517527638054" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
-    <SUITE FILE_PATH="coverage/WhiteBox_Production$tests.coverage" NAME="tests Coverage Results" MODIFIED="1517624525045" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/WhiteBox_Production$Unittests_in_test_utils_tests_py.coverage" NAME="Unittests in test_utils_tests.py Coverage Results" MODIFIED="1517630040005" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/WhiteBox_Production$tests.coverage" NAME="tests Coverage Results" MODIFIED="1517629984562" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/WhiteBox_Production$Unittests_in_whiteboxerror_tests_py.coverage" NAME="Unittests in whiteboxerror_tests.py Coverage Results" MODIFIED="1517527627036" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/WhiteBox_Production$Unittests_in_whiteboxsensitivity_tests_py.coverage" NAME="Unittests in whiteboxsensitivity_tests.py Coverage Results" MODIFIED="1517527644531" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
   </component>
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.7533235">
+    <splitter split-orientation="horizontal" split-proportion="0.62220806">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="450">
-          <file leaf-file-name="test_whiteboxerror_tests.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/tests/test_whiteboxerror_tests.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="-6172">
-                  <caret line="81" column="60" lean-forward="false" selection-start-line="81" selection-start-column="60" selection-end-line="81" selection-end-column="60" />
-                  <folding>
-                    <element signature="e#47#62#0" expanded="true" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="test_whiteboxsensitivity_tests.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/tests/test_whiteboxsensitivity_tests.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="-2793">
-                  <caret line="57" column="15" lean-forward="false" selection-start-line="57" selection-start-column="14" selection-end-line="57" selection-end-column="15" />
-                  <folding>
-                    <element signature="e#47#62#0" expanded="true" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="test_utils_tests.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/tests/test_utils_tests.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="-697">
-                  <caret line="164" column="26" lean-forward="false" selection-start-line="164" selection-start-column="26" selection-end-line="164" selection-end-column="26" />
-                  <folding>
-                    <element signature="e#47#62#0" expanded="true" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name=".travis.yml" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/.travis.yml">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="225">
-                  <caret line="9" column="13" lean-forward="false" selection-start-line="9" selection-start-column="13" selection-end-line="9" selection-end-column="13" />
-                  <folding />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="setup.py" pinned="false" current-in-tab="true">
-            <entry file="file://$PROJECT_DIR$/setup.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="125">
-                  <caret line="5" column="38" lean-forward="false" selection-start-line="5" selection-start-column="38" selection-end-line="5" selection-end-column="38" />
-                  <folding />
-                </state>
-              </provider>
-            </entry>
-          </file>
           <file leaf-file-name="README.rst" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/README.rst">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="311">
+                <state relative-caret-position="825">
                   <caret line="116" column="0" lean-forward="false" selection-start-line="116" selection-start-column="0" selection-end-line="116" selection-end-column="0" />
                   <folding />
                 </state>
@@ -109,11 +57,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="utils.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="utils.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/whitebox/utils.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="450">
-                  <caret line="18" column="4" lean-forward="false" selection-start-line="18" selection-start-column="4" selection-end-line="18" selection-end-column="4" />
+                <state relative-caret-position="300">
+                  <caret line="166" column="0" lean-forward="true" selection-start-line="166" selection-start-column="0" selection-end-line="166" selection-end-column="0" />
                   <folding>
                     <element signature="e#47#62#0" expanded="true" />
                   </folding>
@@ -188,7 +136,6 @@
         <option value="$PROJECT_DIR$/tests/whiteboxerror_tests.py" />
         <option value="$PROJECT_DIR$/tests/tests.py" />
         <option value="$PROJECT_DIR$/requirements.txt" />
-        <option value="$PROJECT_DIR$/whitebox/utils.py" />
         <option value="$PROJECT_DIR$/whitebox/WhiteBox.py" />
         <option value="$PROJECT_DIR$/tests/utils_tests.py" />
         <option value="$PROJECT_DIR$/README.rst" />
@@ -196,6 +143,7 @@
         <option value="$PROJECT_DIR$/.travis.yml" />
         <option value="$PROJECT_DIR$/.pypirc" />
         <option value="$PROJECT_DIR$/setup.py" />
+        <option value="$PROJECT_DIR$/whitebox/utils.py" />
       </list>
     </option>
   </component>
@@ -208,8 +156,8 @@
   <component name="ProjectFrameBounds" extendedState="6">
     <option name="x" value="-11" />
     <option name="y" value="-11" />
-    <option name="width" value="859" />
-    <option name="height" value="751" />
+    <option name="width" value="1942" />
+    <option name="height" value="1056" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -254,6 +202,16 @@
               <item name="WhiteBox_Production" type="b2602c69:ProjectViewProjectNode" />
               <item name="WhiteBox_Production" type="462c0819:PsiDirectoryNode" />
             </path>
+            <path>
+              <item name="WhiteBox_Production" type="b2602c69:ProjectViewProjectNode" />
+              <item name="WhiteBox_Production" type="462c0819:PsiDirectoryNode" />
+              <item name="tests" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="WhiteBox_Production" type="b2602c69:ProjectViewProjectNode" />
+              <item name="WhiteBox_Production" type="462c0819:PsiDirectoryNode" />
+              <item name="whitebox" type="462c0819:PsiDirectoryNode" />
+            </path>
           </expand>
           <select />
         </subPane>
@@ -265,6 +223,11 @@
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="settings.editor.selected.configurable" value="configurable.group.project" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Git\WhiteBox_Production\whitebox" />
+    </key>
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -278,7 +241,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.tests">
+  <component name="RunManager">
     <configuration name="tests" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -351,9 +314,9 @@
     </list>
     <recent_temporary>
       <list size="4">
-        <item index="0" class="java.lang.String" itemvalue="Python.tests" />
-        <item index="1" class="java.lang.String" itemvalue="Python tests.Unittests in test_whiteboxsensitivity_tests.py" />
-        <item index="2" class="java.lang.String" itemvalue="Python tests.Unittests in test_utils_tests.py" />
+        <item index="0" class="java.lang.String" itemvalue="Python tests.Unittests in test_utils_tests.py" />
+        <item index="1" class="java.lang.String" itemvalue="Python.tests" />
+        <item index="2" class="java.lang.String" itemvalue="Python tests.Unittests in test_whiteboxsensitivity_tests.py" />
         <item index="3" class="java.lang.String" itemvalue="Python tests.Unittests in test_whiteboxerror_tests.py" />
       </list>
     </recent_temporary>
@@ -375,8 +338,8 @@
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="Unittests_in_utils_tests_py - 2018.02.01 at 15h 39m 44s.xml">
-      <configuration name="Unittests in utils_tests.py" configurationId="tests" />
+    <history-entry file="Unittests_in_test_utils_tests_py - 2018.02.02 at 22h 54m 01s.xml">
+      <configuration name="Unittests in test_utils_tests.py" configurationId="tests" />
     </history-entry>
     <history-entry file="Unittests_in_utils_tests_py - 2018.02.01 at 18h 27m 19s.xml">
       <configuration name="Unittests in utils_tests.py" configurationId="tests" />
@@ -414,9 +377,9 @@
       <window_info id="File Transfer" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32914925" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3030647" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.28331468" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.593505" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.29479167" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.18701008" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25531915" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.18385416" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="R Packages" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Docker" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="R Graphics" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -713,14 +676,14 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/HTML/html_error.txt">
+    <entry file="file://$PROJECT_DIR$/whitebox/HTML/html_error.txt">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="38025">
           <caret line="10" column="216400" lean-forward="true" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="216400" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/HTML/html_sensitivity.txt">
+    <entry file="file://$PROJECT_DIR$/whitebox/HTML/html_sensitivity.txt">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="884">
           <caret line="25" column="0" lean-forward="true" selection-start-line="25" selection-start-column="0" selection-end-line="25" selection-end-column="0" />
@@ -756,29 +719,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/whitebox/WhiteBox.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-10472">
-          <caret line="350" column="44" lean-forward="false" selection-start-line="350" selection-start-column="44" selection-end-line="350" selection-end-column="44" />
-          <folding>
-            <element signature="e#47#61#0" expanded="true" />
-            <marker date="1517617695368" expanded="true" signature="1934:2011" ph="..." />
-            <marker date="1517617695368" expanded="true" signature="7107:7136" ph="..." />
-            <marker date="1517617695368" expanded="true" signature="20320:20896" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/whitebox/utils.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="450">
-          <caret line="18" column="4" lean-forward="false" selection-start-line="18" selection-start-column="4" selection-end-line="18" selection-end-column="4" />
-          <folding>
-            <element signature="e#47#62#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/tests/tests.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="100">
@@ -789,49 +729,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/README.rst">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="311">
-          <caret line="116" column="0" lean-forward="false" selection-start-line="116" selection-start-column="0" selection-end-line="116" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/tests/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tests/test_utils_tests.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-697">
-          <caret line="164" column="26" lean-forward="false" selection-start-line="164" selection-start-column="26" selection-end-line="164" selection-end-column="26" />
-          <folding>
-            <element signature="e#47#62#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tests/test_whiteboxerror_tests.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-6172">
-          <caret line="81" column="60" lean-forward="false" selection-start-line="81" selection-start-column="60" selection-end-line="81" selection-end-column="60" />
-          <folding>
-            <element signature="e#47#62#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tests/test_whiteboxsensitivity_tests.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-2793">
-          <caret line="57" column="15" lean-forward="false" selection-start-line="57" selection-start-column="14" selection-end-line="57" selection-end-column="15" />
-          <folding>
-            <element signature="e#47#62#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -853,9 +755,70 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/setup.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="125">
-          <caret line="5" column="38" lean-forward="false" selection-start-line="5" selection-start-column="38" selection-end-line="5" selection-end-column="38" />
+        <state relative-caret-position="75">
+          <caret line="3" column="20" lean-forward="false" selection-start-line="3" selection-start-column="20" selection-end-line="3" selection-end-column="20" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/test_utils_tests.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-697">
+          <caret line="164" column="26" lean-forward="false" selection-start-line="164" selection-start-column="26" selection-end-line="164" selection-end-column="26" />
+          <folding>
+            <element signature="e#47#62#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/test_whiteboxsensitivity_tests.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2793">
+          <caret line="57" column="15" lean-forward="false" selection-start-line="57" selection-start-column="14" selection-end-line="57" selection-end-column="15" />
+          <folding>
+            <element signature="e#47#62#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/test_whiteboxerror_tests.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-6172">
+          <caret line="81" column="60" lean-forward="false" selection-start-line="81" selection-start-column="60" selection-end-line="81" selection-end-column="60" />
+          <folding>
+            <element signature="e#47#62#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/whitebox/WhiteBox.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-10472">
+          <caret line="350" column="44" lean-forward="false" selection-start-line="350" selection-start-column="44" selection-end-line="350" selection-end-column="44" />
+          <folding>
+            <element signature="e#47#61#0" expanded="true" />
+            <marker date="1517617695368" expanded="true" signature="1934:2011" ph="..." />
+            <marker date="1517617695368" expanded="true" signature="7107:7136" ph="..." />
+            <marker date="1517617695368" expanded="true" signature="20320:20896" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/README.rst">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="825">
+          <caret line="116" column="0" lean-forward="false" selection-start-line="116" selection-start-column="0" selection-end-line="116" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/whitebox/utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="300">
+          <caret line="166" column="0" lean-forward="true" selection-start-line="166" selection-start-column="0" selection-end-line="166" selection-end-column="0" />
+          <folding>
+            <element signature="e#47#62#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
