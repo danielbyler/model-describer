@@ -57,7 +57,7 @@ WB = WhiteBoxError(modelobj = modelObjc,
                    verbose=None)
 
 WB.run()
-WB.outputs
+len(WB.outputs)
 len(WB.outputs)
 WB.outputs
 WB.outputs[1]
