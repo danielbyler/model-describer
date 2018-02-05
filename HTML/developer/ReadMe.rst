@@ -3,7 +3,7 @@
 UI Developer Toolkit:
 =====================
 
-WhiteBox consists of two discrete parts- calculations done in Python to create the `_underlying data <https://github.com/Data4Gov/WhiteBox_Production/tree/master/whitebox>`_ and the D3 code that forms the charts and text from that data. The production D3 code WhiteBox is minified which makes it difficult for potential contributors to read and edit. To make it easier for others to contribute to this project, this folder contains a developer friendly version of the code which will help developers modify the visuals. 
+WhiteBox consists of two discrete parts- calculations done in Python to create the `underlying data <https://github.com/Data4Gov/WhiteBox_Production/tree/master/whitebox>`_ and the D3 code that forms the charts and text from that data. The production D3 code WhiteBox is minified which makes it difficult for potential contributors to read and edit. To make it easier for others to contribute to this project, this folder contains a developer friendly version of the code which will help developers modify the visuals. 
 
 The following steps and requirements show how to create the necessary minified code for both of WhiteBox’s main chart types (error and impact). 
 
