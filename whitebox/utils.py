@@ -162,7 +162,9 @@ class HTML(object):
             wbox_html = open('./whitebox/HTML/{}.txt'.format(htmltype), 'r').read()
             return wbox_html
         except IOError:
-            wbox_html = open('HTML/{}.txt'.format(htmltype), 'r').read()
+            import os
+            print(os.getcwd())
+            wbox_html = open('../HTML/{}.txt'.format(htmltype), 'r').read()
             return wbox_html
 
 
