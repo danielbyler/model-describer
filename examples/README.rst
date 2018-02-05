@@ -1,6 +1,6 @@
 .. -*- mode: rst -*-
 
-Impact Plot Parameters
+WhiteBox Parameters
 ======================
 
 model_df : pandas DataFrame, required
