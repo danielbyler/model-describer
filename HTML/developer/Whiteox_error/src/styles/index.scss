@@ -1,0 +1,353 @@
+/**********************************************
+
+(c) DSAS | 2017
+Author: Venkatesh Gangavarapu
+***********************************************/
+@import 'normalize';
+@mixin noSelect(){
+    user-select: none!important;
+    -moz-user-select: none!important;
+    -webkit-user-select: none!important;
+    -o-user-select: none!important;
+    -ms-user-select: none!important;
+    -moz-user-select: none!important;
+    -webkit: none!important
+}
+
+
+
+
+*, *:after,*:before{
+	box-sizing: border-box;
+
+  //For iOS tap glitch fix
+  -webkit-tap-highlight-color:transparent;
+}
+
+
+svg{
+  overflow: visible !important;
+}
+
+html,body{
+  background-color: #fff;
+	font-family: 'Open Sans', sans-serif;
+	//@include noSelect;
+}
+
+#App{
+  overflow: hidden;
+  width: 100%;
+}
+
+.filt-cont{
+    width: 24%;
+    height: 50px;
+    float: left;
+    margin-top: 22px;
+}
+
+.dropdown{
+    width: 100%;
+    color: #53565A;
+    position: relative;
+    display: inline-block;
+    margin-left: 1%;
+    margin-top: 10px;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #fff;
+    z-index: 1;
+    width: 100%;
+    border: 1px solid #00A3E0;
+    border-radius: 2px;
+    border-top: none;
+    overflow: auto;
+    max-height: 300px;
+}
+
+.dropdown-content a {
+    color: #53565A;
+    padding: 3px 5px;
+    text-decoration: none;
+    display: block;
+    cursor: pointer;
+}
+
+.dropdown-content a:hover {background-color: #00A3E0}
+
+/* Show the dropdown menu on hover */
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.dropbtn {
+    color: #53565A;
+    background-color: #fff;
+    font-size: 14px;
+    border: none;
+    text-align: left;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    cursor: pointer; 
+    width: 100%;
+    height: 30px;
+    border: 1px solid #00A3E0;
+}
+.drpbtn:focus{
+    outline: none;
+}
+.heatMapContainer{
+    height: 150px;
+    width: 74%;
+    margin-left: 1%;
+    padding-top: 5px;
+    margin-top: 10px;
+    float: left;
+}
+#tooltip {
+    position: absolute;
+    width: auto;
+    text-align: center;
+    border-radius: 5px;
+    pointer-events: none;
+    background-color: rgba(255, 255, 255, 1);
+    padding: 8px 8px 8px 8px;
+    z-index: 100;
+    font-size: 14px;
+    max-width:300px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 4px 4px 6px rgba(0, 0, 0, 0.2);
+    span {
+        font-weight: bold;
+        font-size: 17px;
+    }
+    z-index: 1000;
+}
+.Title {
+    color: #000;
+    font-size: 16px;
+    font-weight: 600;
+    padding: 12px;
+    text-align: center;
+    text-decoration: underline;
+    width: 99%;
+    float: left;
+}
+
+.Source {
+    font-weight: 300;
+    font-size: 14px;
+    padding-left: 12px;
+    padding-right: 12px;
+    text-align: left;
+    p {
+        margin: 2px;
+    }
+}
+
+svg text {
+    font-size: 14px;
+    fill: #53565A;
+    font-weight: 400;
+}
+.app{ 
+    width: 74%;
+    float:left;
+}
+.Chartcontainer{
+    margin-top: 150px;
+    width: 100%;
+    float: left;
+}
+.summary{
+    padding-top: 5px;
+    margin-top: 2px;
+    height: 150px;
+    box-shadow: rgba(0, 0, 0, 0.247059) 2px 2px 4px; 
+    position: fixed;
+    width: 98%;
+    top: 48px;
+    background-color: #fff;
+    margin-left: 1%;
+    z-index: 1000;
+}
+.Chartcontainer button{
+    max-width: 200px;
+    height: 30px;
+    border: none;
+    margin-left: 20px;
+	font-family: 'Open Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+}
+.Chartcontainer button:focus{
+    outline:0;
+}
+.tick{
+    font-weight: 700;
+}
+.tick line{
+    
+    opacity: 0.15;
+}
+.Chartcontainer button:hover{
+    background-color: #fff;
+    color: #000;
+}
+
+.legend{
+    width: 90%;
+    margin-left: 5%;
+    display: inline-flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    float: left;
+}
+
+.legend-btn{
+    width: 200px;
+    border: 2px solid #53565a!important;
+    border-radius: 2px;
+}
+.label{
+    font-size: 12px;
+    font-weight: 700;
+}
+.chart-lev{
+    margin-top: 50px;
+    width: 98%;
+    box-shadow: rgba(0, 0, 0, 0.247059) 2px 2px 4px; 
+    margin-left: 1%;
+    display: inline-block;
+}
+.desc{
+    width: 24%;
+    float: left;
+    margin-left: 1%;
+}
+.desc-text{
+    height: 320px;
+    width: 98%;
+    margin-top: 40px;
+    padding: 5px;
+    font-size: 14px;
+    text-align: justify;
+    overflow-y: auto;
+}
+.desc-text ul{
+    padding-left: 10px;
+}
+.rect{
+    border: 2px solid #53565A;
+}
+
+
+.heading{
+    position: fixed;
+    margin-left: 1%;
+    width: 98%;
+    height: 50px;
+    text-align: center;
+    font-size: 36px;
+    color: #00A3E0!important;
+    font-weight: 800;
+    box-shadow: rgba(0, 0, 0, 0.247059) 2px 2px 4px; 
+    z-index: 999;
+    background-color: #fff;
+}
+
+.heading a{
+    
+    color: #00A3E0;
+}
+
+.heading a:focus{ 
+    color: #00A3E0;
+}
+
+.perc-check{
+    height: 50px;
+    width: 98%;
+    margin-left: 1%;
+    display: block;
+  position: relative;
+  padding-left: 5px;
+  margin-top: 12px;
+  cursor: pointer;
+  font-size: 16px;
+    color: #53565A;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+.perc-check input{
+    position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+.perc-checkinput{
+    position: absolute; // take it out of document flow
+    opacity: 0; // hide it
+    &+label {
+        position: relative;
+        cursor: pointer;
+        padding: 0;
+        width:20px;
+        height: 20px;
+    }
+    // Box.
+    &+label:before {
+        content: '';
+        margin-right: 10px;
+        display: inline-block;
+        vertical-align: text-top;
+        width: 20px;
+        height: 20px;
+        background: #00A3E0;
+        color:#86BC25;
+        border: 1px solid #fff;
+        border-radius: 2px;
+    }
+    // Box hover
+    &:hover+label:before {
+        background: #00A3E0;
+        color: #00A3E0;
+    }
+    // Box focus
+    
+    // Box checked
+    &:checked+label:before {
+        color:#00A3E0;
+        background: #00A3E0;
+        border: 1px solid #fff;
+        border-radius: 2px;
+    }
+    // Disabled state label.
+    &:disabled+label {
+        color: #63666A;
+        cursor: auto;
+    }
+    // Disabled box.
+    &:disabled+label:before {
+        box-shadow: none;
+        background: #00A3E0;
+    }
+    // Checkmark. Could be replaced with an image
+    &:checked+label:after {
+        content: '';
+        position: absolute;
+        left: 4px;
+        top: 8px;
+        background: white;
+        width: 3px;
+        height: 3px;
+        box-shadow: 2px 0 0 white, 4px 0 0 white, 4px -2px 0 white, 4px -4px 0 white, 4px -6px 0 white, 4px -8px 0 white;
+        transform: rotate(45deg);
+    }
+}
