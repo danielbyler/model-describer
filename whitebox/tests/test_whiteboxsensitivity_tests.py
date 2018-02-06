@@ -6,6 +6,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn import datasets
 import pandas as pd
 import numpy as np
+
 from whitebox.whitebox import WhiteBoxSensitivity
 
 
@@ -189,5 +190,7 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    from os import sys, path
+    sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
     unittest.main()
 

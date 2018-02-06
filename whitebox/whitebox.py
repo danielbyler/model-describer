@@ -8,7 +8,7 @@ import numpy as np
 from pandas import DataFrame, concat
 from pandas.api.types import is_categorical_dtype
 
-from whitebox import utils
+import utils
 from whitebox_base import WhiteBoxBase
 
 __author__ = """Jason Lewris, Daniel Byler, Venkat Gangavarapu, 
