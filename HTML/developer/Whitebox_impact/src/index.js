@@ -620,13 +620,16 @@ function loopVariables(varInd) {
     var width = appHelper.getWidth() * 0.74 - margin.left - margin.right;
     var height = 300 - margin.top - margin.bottom;
     var chartLevel = mainApp.append("div").attr("class", "chart-lev").attr("id", "topchlvl-" + varX.replace(/[^a-zA-Z]/g, "")).style("height", "430px")
-    var title = chartLevel.append('div').attr('class', 'Title')
     var main = chartLevel.append("div").attr("class", "app").attr("id", "chlvl-" + varX.replace(/[^a-zA-Z]/g, ""))
-    var legendGroup = main.append("div").attr("class", "legend").attr("width", width - 100).attr("height", height - 100)
+    
+    
 
     var filterContainer = main.append('div').attr('class', 'Filtercontainer')
     var total = main.append('div').attr('class', 'Total')
     var chartContainer = main.append('div').attr('class', 'Chartcont')
+    
+    var title = chartContainer.append('div').attr('class', 'Title')
+    var legendGroup = chartContainer.append("div").attr("class", "legend").attr("width", width - 100).attr("height", height - 100)
     var narrative = chartLevel.append('div').attr('class', 'desc').style("height", "560px")
     var narrativeText = narrative.append("div").attr('class', 'desc-text').html("Few Insights will come here")
     var source = main.append('div').attr('class', 'Source')
@@ -676,7 +679,7 @@ function loopVariables(varInd) {
     function initializeAreaChart() {
         //creating the svg for the area chart
         svg = appHelper.createChart(chartContainer, width);
-        appHelper.setTitle(title, "Impact of Increasing " + varX + " by " + changePar + (AppData[varInd]['Change'].indexOf("Default") >= 0 ? " (1 standard deviation) " : "") + " on " + yVar);
+        appHelper.setTitle(title, "Impact of changing " + varX + " by " + changePar + (AppData[varInd]['Change'].indexOf("Default") >= 0 ? " (1 standard deviation) " : "") + " on " + yVar);
         svg.selectAll('*').remove();
         svg.attr('width', width);
         
@@ -980,7 +983,7 @@ function loopVariables(varInd) {
                 var filt = chartRawData.filter(function (d) {
                     return d[varX] == closestXValue
                 })
-                tooltip.html("Within the <span>" + d.key + " </span> group, the model believes that increasing <span>" + varX + "</span> from <span> " + appHelper.formatLabel(filt[0][varX]) + " </span> to <span>" + (appHelper.formatLabel(parseFloat(filt[0][varX]) + parseFloat(changePar))) + "</span> leads to, on average, a <span>" + Math.abs(appHelper.formatLabel(filt[0][d.key])) + (appHelper.formatLabel(filt[0][d.key]) >= 0 ? " increase" : " decrease") + "</span> in " + yVar)
+                tooltip.html("Within the <span>" + d.key + " </span> group, the model believes that "+(changePar>=0?"increasing":"decreasing")+" <span>" + varX + "</span> from <span> " + appHelper.formatLabel(filt[0][varX]) + " </span> to <span>" + (appHelper.formatLabel(parseFloat(filt[0][varX]) + parseFloat(changePar))) + "</span> leads to, on average, a <span>" + Math.abs(appHelper.formatLabel(filt[0][d.key])) + (appHelper.formatLabel(filt[0][d.key]) >= 0 ? " increase" : " decrease") + "</span> in " + yVar)
 
             }
 
@@ -1002,7 +1005,7 @@ function loopVariables(varInd) {
                 })
                 tooltip.attr('class', "colorClass" + varInd + i);
                 tooltip.transition().duration(200).delay(100).style("opacity", 1);
-                tooltip.html("Within the <span>" + d.key + " </span> group, the model believes that increasing <span>" + varX + "</span> from <span> " + appHelper.formatLabel(filt[0][varX]) + " </span> to <span>" + (appHelper.formatLabel(parseFloat(filt[0][varX]) + parseFloat(changePar))) + "</span> leads to, on average, a <span>" + Math.abs(appHelper.formatLabel(filt[0][d.key])) + (appHelper.formatLabel(filt[0][d.key]) >= 0 ? " increase" : " decrease") + "</span> in " + yVar)
+                tooltip.html("Within the <span>" + d.key + " </span> group, the model believes that "+(changePar>=0?"increasing":"decreasing")+" <span>" + varX + "</span> from <span> " + appHelper.formatLabel(filt[0][varX]) + " </span> to <span>" + (appHelper.formatLabel(parseFloat(filt[0][varX]) + parseFloat(changePar))) + "</span> leads to, on average, a <span>" + Math.abs(appHelper.formatLabel(filt[0][d.key])) + (appHelper.formatLabel(filt[0][d.key]) >= 0 ? " increase" : " decrease") + "</span> in " + yVar)
                     .style("left", function () {
                         var tooltipWidth = this.getBoundingClientRect().width;
                         var currentMouseX = d3.event.pageX;
@@ -1243,7 +1246,7 @@ function loopVariables(varInd) {
                 tooltip.attr('class', "colorClass" + varInd + i);
                 tooltip.transition().duration(200).delay(100).style("opacity", 1);
 
-                tooltip.html("Within the <span>" + d.key + " </span> group, the model believes that increasing <span>" + varX + "</span> from <span> " + d['parent'] + " </span> to <span>" + changePar + "</span> leads to, on average, a <span>" + Math.abs(appHelper.formatLabel(d.value)) + (appHelper.formatLabel(d.value) >= 0 ? " increase" : " decrease") + "</span> in " + yVar)
+                tooltip.html("Within the <span>" + d.key + " </span> group, the model believes that changing <span>" + varX + "</span> from <span> " + d['parent'] + " </span> to <span>" + changePar + "</span> leads to, on average, a <span>" + Math.abs(appHelper.formatLabel(d.value)) + (appHelper.formatLabel(d.value) >= 0 ? " increase" : " decrease") + "</span> in " + yVar)
                     .style("left", function () {
                         var tooltipWidth = this.getBoundingClientRect().width;
                         var currentMouseX = d3.event.pageX;
@@ -1266,7 +1269,7 @@ function loopVariables(varInd) {
             function mousemove(d, i) {
                 tooltip.attr('class', "colorClass" + varInd + i);
                 tooltip.transition().duration(200).delay(100).style("opacity", 1);
-                tooltip.html("Within the <span>" + d.key + " </span> group, the model believes that increasing <span>" + varX + "</span> from <span> " + d['parent'] + " </span> to <span>" + changePar + "</span> leads to, on average, a <span>" + Math.abs(appHelper.formatLabel(d.value)) + (appHelper.formatLabel(d.value) >= 0 ? " increase" : " decrease") + "</span> in " + yVar)
+                tooltip.html("Within the <span>" + d.key + " </span> group, the model believes that changing <span>" + varX + "</span> from <span> " + d['parent'] + " </span> to <span>" + changePar + "</span> leads to, on average, a <span>" + Math.abs(appHelper.formatLabel(d.value)) + (appHelper.formatLabel(d.value) >= 0 ? " increase" : " decrease") + "</span> in " + yVar)
                     .style("left", function () {
                         var tooltipWidth = this.getBoundingClientRect().width;
                         var currentMouseX = d3.event.pageX;
@@ -1337,7 +1340,7 @@ function loopVariables(varInd) {
             function wrap(text, width) {
                 text.each(function () {
                     var text = d3.select(this),
-                        words = text.text().split(/\s+/).reverse(),
+                        words = (text.text()+" → "+changePar).split(/\s+/).reverse(),
                         word,
                         line = [],
                         lineNumber = 0,

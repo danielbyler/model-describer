@@ -24,15 +24,7 @@ export default class AppHelper {
         label = label.replace(/\.0$/, '')
         return label
     }
-    function formatLabelNew(label) {
-        var format = d3.format(".2s")
-        console.log(format(label))
-        labelStr = label+""
-        labelDec = "."+labelStr.split(".")
-        labelDec = (labelDec).toPrecision(3)
-        console.log(labelDec)
-        return Math.floor(label)+labelDec
-    }
+    
     //function to create a svg element
     createChart(parent, width) {
         var chart = parent.append('svg');

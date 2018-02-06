@@ -600,10 +600,12 @@ function loopVariables(varInd) {
     var chartLevel = mainApp.append("div").attr("class", "chart-lev").attr("id", "chlvl-" + varX.replace(/[^a-zA-Z]/g, "")).style("height", "430px")
     var title = chartLevel.append('div').attr('class', 'Title')
     var main = chartLevel.append("div").attr("class", "app").attr("id", varX.replace(/[^a-zA-Z]/g, ""))
-    var legendGroup = main.append("div").attr("class", "legend").attr("width", width - 100).attr("height", height - 100)
+    
     var filterContainer = main.append('div').attr('class', 'Filtercontainer')
     var total = main.append('div').attr('class', 'Total')
     var chartContainer = main.append('div').attr('class', 'Chartcont')
+    var title = chartContainer.append('div').attr('class', 'Title')
+    var legendGroup = chartContainer.append("div").attr("class", "legend").attr("width", width - 100).attr("height", height - 100)
     var narrative = chartLevel.append('div').attr('class', 'desc').style("height", "560px")
     var narrativeText = narrative
         .append("div")
