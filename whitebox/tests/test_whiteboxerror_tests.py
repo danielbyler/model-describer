@@ -10,11 +10,13 @@ import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 
 try:
-    from ..whitebox import WhiteBoxError
+    import sys
+    sys.path.insert(0, "/home/travis/build/Data4Gov/WhiteBox_Production")
+    from whitebox.whitebox import WhiteBoxError
 except:
     from .whitebox.whitebox import WhiteBoxError
 finally:
-    from whitebox.whitebox import WhiteBoxSensitivity
+    from whitebox.whitebox import WhiteBoxError
 
 __author__ = "Jason Lewris, Daniel Byler, Venkat Gangavarapu, Shruti Panda, Shanti Jha"
 __credits__ = ["Brian Ray"]
