@@ -9,6 +9,7 @@ import logging
 import numpy as np
 from pandas import core, DataFrame, concat
 from sklearn.exceptions import NotFittedError
+from sklearn.preprocessing import LabelBinarizer
 
 from whitebox import utils
 
@@ -36,6 +37,7 @@ class WhiteBoxBase(object):
                     featuredict=None,
                     groupbyvars=None,
                     aggregate_func=np.mean,
+                    dominate_class = 'Red',
                     verbose=None):
         """
         initialize base class
@@ -46,6 +48,8 @@ class WhiteBoxBase(object):
                        and non-dummy categories
         :param featuredict: prettty printing and subsetting analysis
         :param groupbyvars: grouping variables
+        :param dominate_class: in the case of binary classification, class of interest
+            to measure probabilities from
         :param verbose: set verbose level -- 0 = debug, 1 = warning, 2 = error
         """
 
@@ -156,6 +160,17 @@ class WhiteBoxBase(object):
                             variables and cannot be None""")
         self.groupbyvars = list(groupbyvars)
 
+        # determine if in classification problem or regression problem
+        if hasattr(self.modelobj, 'predict_proba'):
+            # if classification setting, secure the predicted class probabilities
+            self.predict_engine = getattr(self.modelobj, 'predict_proba')
+            self.model_type = 'classification'
+            self.dominate_class = dominate_class
+        else:
+            # use the regular predict function
+            self.predict_engine = getattr(self.modelobj, 'predict')
+            self.model_type = 'regression'
+
     def _predict(self):
         """
         create predictions based on trained model object, dataframe, and dependent variables
@@ -164,10 +179,27 @@ class WhiteBoxBase(object):
         logging.info("""Creating predictions using modelobj.
                         \nModelobj class name: {}""".format(self.modelobj.__class__.__name__))
         # create predictions
-        preds = self.modelobj.predict(
+        preds = self.predict_engine(
                                     self.model_df.loc[:, self.model_df.columns != self.ydepend])
-        # calculate error
-        diff = preds - self.cat_df.loc[:, self.ydepend]
+
+        if self.model_type == 'regression':
+            # calculate error
+            diff = preds - self.cat_df.loc[:, self.ydepend]
+        elif self.model_type == 'classification':
+            # get index of dominate class
+            dominate_index = np.where(self.modelobj.classes_ == self.dominate_class)[0][0]
+            # assign the predictions
+            preds = preds[:, dominate_index].tolist()
+            # create a lookup of class labels to numbers
+            class_lookup = {class_: num for num, class_ in enumerate(self.modelobj.classes_)}
+            # convert the ydepend column to numeric
+            actual = self.cat_df.loc[:, self.ydepend].apply(lambda x: class_lookup[x])
+            # calculate the difference between actual and predicted probabilities
+            diff = [abs(actual[idx] - pred) for idx, pred in enumerate(preds)]
+        else:
+            raise RuntimeError(""""unsupported model type
+                                    \nInput Model Type: {}""".format(self.model_type))
+
         # assign errors
         self.cat_df['errors'] = diff
         # assign predictions
