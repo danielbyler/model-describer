@@ -9,4 +9,4 @@ install:
   - pip install -r requirements.txt
 # command to run tests
 script:
-  - python ./whitebox/tests/tests.py
+  - cd whitebox/tests && python tests.py
