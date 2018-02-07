@@ -1,7 +1,6 @@
 from whitebox.whitebox import WhiteBoxError
 from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
-import os
 import numpy as np
 
 df = pd.read_csv('docs/datasets/winequality.csv')
@@ -31,12 +30,9 @@ WB = WhiteBoxError(clf,
                    featuredict=None,
                    groupbyvars=['AlcoholContent'],
                    aggregate_func=np.mean,
-                   dominate_class='Red',
                    verbose=None
                    )
 
 WB.run()
-
-WB.cat_df.head()
 
 WB.save('./output/WINEQUALITY_CLASSIFICATION.html')

@@ -85,7 +85,7 @@ class WhiteBoxError(WhiteBoxBase):
                     featuredict=None,
                     groupbyvars=None,
                     aggregate_func=np.mean,
-                    dominate_class='White',
+                    error_type='MSE',
                     verbose=0):
 
         """
@@ -108,8 +108,11 @@ class WhiteBoxError(WhiteBoxBase):
                                             featuredict=featuredict,
                                             groupbyvars=groupbyvars,
                                             aggregate_func=aggregate_func,
-                                            dominate_class=dominate_class,
+                                            error_type=error_type,
                                             verbose=verbose)
+
+        import pandas as pd
+        self.allerrors = pd.DataFrame()
 
     def _transform_function(
                             self,
@@ -131,6 +134,13 @@ class WhiteBoxError(WhiteBoxBase):
         group_copy = group.copy(deep=True)
         # split out positive vs negative errors
         errors = group_copy['errors']
+        # check if classification
+        if self.model_type == 'classification':
+            # get user defined aggregate (central values) value of the errors
+            agg_errors = self.aggregate_func(errors)
+            # subtract the aggregate value for the group from the errors
+            errors = errors.apply(lambda x: agg_errors-x)
+
         # create separate columns for pos or neg errors
         errors = concat([errors[errors > 0], errors[errors < 0]], axis=1)
         # rename error columns
@@ -161,10 +171,12 @@ class WhiteBoxError(WhiteBoxBase):
             errors = DataFrame({
                                     col: toreturn[col].max(),
                                     groupby: toreturn[groupby].mode(),
-                                    'predictedYSmooth': toreturn['predictedYSmooth'].mean(),
+                                    'predictedYSmooth': self.aggregate_func(toreturn['predictedYSmooth']),
                                     'errPos': self.aggregate_func(toreturn['errPos']),
                                     'errNeg': self.aggregate_func(toreturn['errNeg'])})
 
+
+            self.allerrors = self.allerrors.append(errors)
             return errors
 
     def _var_check(
@@ -303,8 +315,10 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                  featuredict=None,
                  groupbyvars=None,
                  aggregate_func=np.median,
+                 error_type='MSE',
+                 std_num=0.5,
                  verbose=0,
-                 std_num=1):
+                 ):
         """
         :param modelobj: sklearn model object
         :param model_df: Pandas Dataframe used to build/train model
@@ -317,9 +331,9 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         :param std_num: Standard deviation adjustment
         """
 
-        if std_num not in [-3, -2, -1, 1, 2, 3]:
-            raise ValueError("""Standard deviation adjustment needs to be -3, -2, -1, 1, 2, or 3
-                                \nCurrently value: {}""".format(std_num))
+        if std_num > 3 or std_num < -3:
+            raise ValueError("""Standard deviation adjustment must be between -3 and 3
+                                \nCurrent value: {}""".format(std_num))
 
         self.std_num = std_num
 
@@ -331,6 +345,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                                                     featuredict=featuredict,
                                                     groupbyvars=groupbyvars,
                                                     aggregate_func=aggregate_func,
+                                                    error_type=error_type,
                                                     verbose=verbose)
 
     def _transform_function(
@@ -349,7 +364,6 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         """
         assert 'errors' in group.columns, 'errors needs to be present in dataframe slice'
         assert vartype in ['Continuous', 'Categorical'], 'variable type needs to be continuous or categorical'
-        print(group.head())
         if vartype == 'Continuous':
             logging.info(""""Returning aggregate values for group of continuous variable in transform_function of WhiteBoxSensitivity.
                             \nColumn: {}
@@ -368,7 +382,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
             # return the mode for the categorical case
             errors = DataFrame({col: group[col].mode(),
                                 groupby: group[groupby].mode(),
-                                   'predictedYSmooth': self.aggregate_func(group['diff'])})
+                                'predictedYSmooth': self.aggregate_func(group['diff'])})
 
         return errors
 
@@ -396,7 +410,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
             # pull out the categorical dummy columns that match the current column
             all_type_cols = copydf.filter(regex='{}_*'.format(col)).columns
             # find the mode from the original cat_df for this column
-            incremental_val = self.cat_df[col].mode().values[0]
+            incremental_val = str(self.cat_df[col].mode().values[0])
             # find the columns within all_type_cols related to the mode_val
             mode_col = list(filter(lambda x: incremental_val in x, all_type_cols))
             # convert mode cols to all 1's
@@ -405,8 +419,12 @@ class WhiteBoxSensitivity(WhiteBoxBase):
             non_mode_col = list(filter(lambda x: incremental_val not in x, all_type_cols))
             copydf.loc[:, non_mode_col] = 0
             # make predictions with the switches to the dataset
-            copydf['new_predictions'] = self.modelobj.predict(copydf.loc[:, ~copydf.columns.isin([self.ydepend,
-                                                                                                  'predictedYSmooth'])])
+            if self.model_type == 'classification':
+                copydf['new_predictions'] = self.predict_engine(copydf.loc[:, ~copydf.columns.isin([self.ydepend,
+                                                                                                    'predictedYSmooth'])])[:,1]
+            if self.model_type == 'regression':
+                copydf['new_predictions'] = self.predict_engine(copydf.loc[:, ~copydf.columns.isin([self.ydepend,
+                                                                                                      'predictedYSmooth'])])
             # calculate difference between actual predictions and new_predictions
             self.cat_df['diff'] = copydf['new_predictions'] - copydf['predictedYSmooth']
             # create a partial function from transform_function to fill in column and variable type
@@ -438,8 +456,12 @@ class WhiteBoxSensitivity(WhiteBoxBase):
             # tweak the currently column by the incremental_val
             copydf[col] = copydf[col] + incremental_val
             # make predictions with the switches to the dataset
-            copydf['new_predictions'] = self.modelobj.predict(copydf.loc[:, ~copydf.columns.isin([self.ydepend,
-                                                                                                  'predictedYSmooth'])])
+            if self.model_type == 'classification':
+                copydf['new_predictions'] = self.predict_engine(copydf.loc[:, ~copydf.columns.isin([self.ydepend,
+                                                                                                    'predictedYSmooth'])])[:, 1]
+            if self.model_type == 'regression':
+                copydf['new_predictions'] = self.predict_engine(copydf.loc[:, ~copydf.columns.isin([self.ydepend,
+                                                                                                    'predictedYSmooth'])])
             # calculate difference between actual predictions and new_predictions
             self.cat_df['diff'] = copydf['new_predictions'] - copydf['predictedYSmooth']
             # create partial function to fill in col and vartype of _continuous_slice

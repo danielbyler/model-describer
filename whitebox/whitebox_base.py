@@ -9,9 +9,12 @@ import logging
 import numpy as np
 from pandas import core, DataFrame, concat
 from sklearn.exceptions import NotFittedError
-from sklearn.preprocessing import LabelBinarizer
 
-from whitebox import utils
+from utils import (prob_acc,
+                   create_insights,
+                   getvectors, flatten_json,
+                   to_json, createmlerror_html,
+                   Settings)
 
 __author__ = """Jason Lewris, Daniel Byler, Venkat Gangavarapu, 
                 Shruti Panda, Shanti Jha"""
@@ -37,7 +40,7 @@ class WhiteBoxBase(object):
                     featuredict=None,
                     groupbyvars=None,
                     aggregate_func=np.mean,
-                    dominate_class = 'Red',
+                    error_type='MSE',
                     verbose=None):
         """
         initialize base class
@@ -48,8 +51,7 @@ class WhiteBoxBase(object):
                        and non-dummy categories
         :param featuredict: prettty printing and subsetting analysis
         :param groupbyvars: grouping variables
-        :param dominate_class: in the case of binary classification, class of interest
-            to measure probabilities from
+        :param error_type: Aggregate error metric i.e. MSE, MAE, RMSE
         :param verbose: set verbose level -- 0 = debug, 1 = warning, 2 = error
         """
 
@@ -144,7 +146,12 @@ class WhiteBoxBase(object):
                             arrays of data and yield scalar
                             \nError: {}""".format(e))
 
+        if error_type not in Settings.supported_agg_errors:
+            raise ValueError("""Supported aggregate error metrics are MSE, MAE, RMSE
+                            \nInput value: {} not supported""".format(error_type))
+
         # assign parameters to class instance
+        self.error_type = error_type
         self.modelobj = modelobj
         self.model_df = model_df.copy(deep=True)
         self.ydepend = ydepend
@@ -165,7 +172,6 @@ class WhiteBoxBase(object):
             # if classification setting, secure the predicted class probabilities
             self.predict_engine = getattr(self.modelobj, 'predict_proba')
             self.model_type = 'classification'
-            self.dominate_class = dominate_class
         else:
             # use the regular predict function
             self.predict_engine = getattr(self.modelobj, 'predict')
@@ -186,16 +192,14 @@ class WhiteBoxBase(object):
             # calculate error
             diff = preds - self.cat_df.loc[:, self.ydepend]
         elif self.model_type == 'classification':
-            # get index of dominate class
-            dominate_index = np.where(self.modelobj.classes_ == self.dominate_class)[0][0]
-            # assign the predictions
-            preds = preds[:, dominate_index].tolist()
+            # select the prediction probabilities for the class labeled 1
+            preds = preds[:, 1].tolist()
             # create a lookup of class labels to numbers
             class_lookup = {class_: num for num, class_ in enumerate(self.modelobj.classes_)}
             # convert the ydepend column to numeric
             actual = self.cat_df.loc[:, self.ydepend].apply(lambda x: class_lookup[x])
             # calculate the difference between actual and predicted probabilities
-            diff = [abs(actual[idx] - pred) for idx, pred in enumerate(preds)]
+            diff = [prob_acc(true_class=actual[idx], pred_prob=pred) for idx, pred in enumerate(preds)]
         else:
             raise RuntimeError(""""unsupported model type
                                     \nInput Model Type: {}""".format(self.model_type))
@@ -240,8 +244,12 @@ class WhiteBoxBase(object):
         """
         # use this as an opportunity to capture error metrics for the groupby variable
         # create a partial func by pre-filling in the parameters for create_insights
-        insights = partial(utils.create_insights, group_var=groupby,
-                           error_type='MSE')
+        if self.model_type == 'classification':
+            error_type = 'RAW'
+        if self.model_type == 'regression':
+            error_type = self.error_type
+        insights = partial(create_insights, group_var=groupby,
+                           error_type=error_type)
 
         acc = self.cat_df.groupby(groupby).apply(insights)
         # drop the grouping indexing
@@ -271,7 +279,7 @@ class WhiteBoxBase(object):
         assert vartype in ['Continuous', 'Categorical'], """Vartype must be 
                             Categorical or Continuous"""
         # create percentiles for specific grouping of variables of interest
-        group_vecs = utils.getvectors(group)
+        group_vecs = getvectors(group)
         # test
         # if more than 100 values in the group, use percentile bins
         if group.shape[0] > 100:
@@ -350,11 +358,11 @@ class WhiteBoxBase(object):
             # append to placeholder
             # dont append if placeholder is empty due to col being the same as groupby
             if len(colhold) > 0:
-                placeholder.append(utils.flatten_json(colhold))
+                placeholder.append(flatten_json(colhold))
 
         logging.info('Converting accuracy outputs to json format')
         # finally convert insights_df into json object
-        insights_json = utils.to_json(insights_df, vartype='Accuracy')
+        insights_json = to_json(insights_df, vartype='Accuracy')
         # append to outputs
         placeholder.append(insights_json)
         # assign placeholder final outputs to class instance
@@ -374,23 +382,21 @@ class WhiteBoxBase(object):
 
         # change html output based on used class
         called_class = self.__class__.__name__
-        # create html type dict
-        html_type = {'WhiteBoxSensitivity': 'html_sensitivity',
-                     'WhiteBoxError': 'html_error'}
-        logging.info("""creating html output for type: {}""".format(html_type[called_class]))
+
+        logging.info("""creating html output for type: {}""".format(Settings.html_type[called_class]))
 
         # tweak self.ydepend if classification case (add dominate class)
         if self.model_type == 'classification':
-            ydepend_out = '{}: {}'.format(self.ydepend, self.dominate_class)
+            ydepend_out = '{}: {}'.format(self.ydepend, self.modelobj.classes_[1])
         else:
             # regression case
             ydepend_out = self.ydepend
 
         # create HTML output
-        html_out = utils.createmlerror_html(
+        html_out = createmlerror_html(
                                             str(self.outputs),
                                             ydepend_out,
-                                            htmltype=html_type[called_class])
+                                            htmltype=Settings.html_type[called_class])
         # save html_out to disk
         with open(fpath, 'w') as outfile:
             logging.info("""Writing html file out to disk""")

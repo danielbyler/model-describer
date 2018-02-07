@@ -7,6 +7,8 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn import datasets
 import pandas as pd
 import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+
 from whitebox.whitebox import WhiteBoxError
 
 __author__ = "Jason Lewris, Daniel Byler, Venkat Gangavarapu, Shruti Panda, Shanti Jha"
@@ -305,6 +307,20 @@ class TestWhiteBoxError(unittest.TestCase):
                          'WhiteBoxError',
                          msg="""Class name expected to be WhiteBoxError.
                          \nCurrent class name is: {}""".format(wb.__class__.__name__))
+
+    def test_wbox_modelobj_switch(self):
+        # test that whitebox can accurately detect classification model
+        clf = RandomForestClassifier()
+        wb = WhiteBoxError(modelobj=clf,
+                           model_df=self.iris,
+                           ydepend='target',
+                           groupbyvars=['Type'],
+                           cat_df=self.cat_df,
+                           featuredict=None)
+
+        self.assertEqual(wb.model_type, 'classification',
+                         """WhiteBoxBase unable to detect classification model.
+                         \nAssigned: {} as model type""".format(wb.model_type))
 
     def test_wbox_error_continuous_slice_outputs(self):
         # test that groupByValue is inserted into continuous slice results

@@ -15,6 +15,15 @@ __maintainer__ = "Jason Lewris"
 __email__ = "jlewris@deloitte.com"
 __status__ = "Beta"
 
+class Settings(object):
+    # currently supported aggregate metrics
+    supported_agg_errors = ['MSE', 'MAE', 'RMSE', 'RAW']
+    # placeholder class swithc - if Sensitivity then pull in html_sensitivity code
+    # if Error then pull in html_error code
+    html_type = {'WhiteBoxSensitivity': 'html_sensitivity',
+                 'WhiteBoxError': 'html_error'}
+
+
 
 def getvectors(dataframe):
     """
@@ -75,12 +84,13 @@ def create_insights(
     :param group_var: the column that is being grouped on
     :return: dataframe with error metrics
     """
-    assert error_type in ['MSE', 'RMSE', 'MAE'], """Currently only supports
-                                                 MAE, MSE, RMSE"""
+    assert error_type in ['MSE', 'RMSE', 'MAE', 'RAW'], """Currently only supports
+                                                 MAE, MSE, RMSE, RAW"""
     errors = group['errors']
     error_dict = {'MSE': np.mean(errors ** 2),
                   'RMSE': (np.mean(errors ** 2)) ** (1 / 2),
-                  'MAE': np.sum(np.absolute(errors))/group.shape[0]}
+                  'MAE': np.sum(np.absolute(errors))/group.shape[0],
+                  'RAW': np.mean(errors)}
 
     msedf = pd.DataFrame({'groupByValue': group.name,
                           'groupByVarName': group_var,
@@ -151,6 +161,15 @@ def flatten_json(dictlist):
     assert isinstance(toreturn, dict), """flatten_json output object not of class dict.
                                         \nOutput class type: {}""".format(type(toreturn))
     return toreturn
+
+def prob_acc(true_class=0, pred_prob=0.2):
+    """
+    return the prediction error
+    :param true_class: true class label (0 or 1)
+    :param pred_prob: predicted probability
+    :return: error
+    """
+    return (true_class * (1-pred_prob)) + ((1-true_class)*pred_prob)
 
 
 class HTML(object):
