@@ -13,6 +13,8 @@ try:
     from ..whitebox import WhiteBoxError
 except:
     from .whitebox.whitebox import WhiteBoxError
+finally:
+    from whitebox.whitebox import WhiteBoxSensitivity
 
 __author__ = "Jason Lewris, Daniel Byler, Venkat Gangavarapu, Shruti Panda, Shanti Jha"
 __credits__ = ["Brian Ray"]

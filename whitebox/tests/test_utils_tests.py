@@ -7,7 +7,13 @@ import pandas as pd
 import numpy as np
 import warnings
 from sklearn.metrics import mean_squared_error, mean_absolute_error
-from whitebox import utils
+
+try:
+    from ..whitebox import WhiteBoxSensitivity
+except:
+    from .whitebox.whitebox import WhiteBoxSensitivity
+finally:
+    from whitebox.whitebox import WhiteBoxSensitivity
 
 __author__ = "Jason Lewris, Daniel Byler, Venkat Gangavarapu, Shruti Panda, Shanti Jha"
 __credits__ = ["Brian Ray"]

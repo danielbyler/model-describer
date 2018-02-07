@@ -11,6 +11,8 @@ try:
     from ..whitebox import WhiteBoxSensitivity
 except:
     from .whitebox.whitebox import WhiteBoxSensitivity
+finally:
+    from whitebox.whitebox import WhiteBoxSensitivity
 
 
 __author__ = "Jason Lewris, Daniel Byler, Venkat Gangavarapu, Shruti Panda, Shanti Jha"
