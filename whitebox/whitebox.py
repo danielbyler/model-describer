@@ -85,6 +85,7 @@ class WhiteBoxError(WhiteBoxBase):
                     featuredict=None,
                     groupbyvars=None,
                     aggregate_func=np.mean,
+                    dominate_class='White',
                     verbose=0):
 
         """
@@ -95,6 +96,8 @@ class WhiteBoxError(WhiteBoxBase):
         :param featuredict: Subset and rename columns
         :param groupbyvars: grouping variables
         :param aggregate_func: numpy aggregate function like np.mean
+        :param dominate_class: in the case of binary classification, class of interest
+            to measure probabilities from
         :param verbose: Logging level
         """
         super(WhiteBoxError, self).__init__(
@@ -105,6 +108,7 @@ class WhiteBoxError(WhiteBoxBase):
                                             featuredict=featuredict,
                                             groupbyvars=groupbyvars,
                                             aggregate_func=aggregate_func,
+                                            dominate_class=dominate_class,
                                             verbose=verbose)
 
     def _transform_function(

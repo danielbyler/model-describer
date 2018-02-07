@@ -1,9 +1,10 @@
 from whitebox.whitebox import WhiteBoxError
 from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
+import os
+import numpy as np
 
-# read in data
-df = pd.read_csv('../datasets/winequality.csv')
+df = pd.read_csv('docs/datasets/winequality.csv')
 
 # set up y var
 # set up some params
@@ -21,3 +22,21 @@ y = model_df.loc[:, ydepend]
 # build model
 clf = RandomForestClassifier(max_depth=2, random_state=0)
 clf.fit(x, y)
+
+
+WB = WhiteBoxError(clf,
+                   model_df=model_df,
+                   ydepend=ydepend,
+                   cat_df=df,
+                   featuredict=None,
+                   groupbyvars=['AlcoholContent'],
+                   aggregate_func=np.mean,
+                   dominate_class='Red',
+                   verbose=None
+                   )
+
+WB.run()
+
+WB.cat_df.head()
+
+WB.save('./output/WINEQUALITY_CLASSIFICATION.html')

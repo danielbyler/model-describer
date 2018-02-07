@@ -378,10 +378,18 @@ class WhiteBoxBase(object):
         html_type = {'WhiteBoxSensitivity': 'html_sensitivity',
                      'WhiteBoxError': 'html_error'}
         logging.info("""creating html output for type: {}""".format(html_type[called_class]))
+
+        # tweak self.ydepend if classification case (add dominate class)
+        if self.model_type == 'classification':
+            ydepend_out = '{}: {}'.format(self.ydepend, self.dominate_class)
+        else:
+            # regression case
+            ydepend_out = self.ydepend
+
         # create HTML output
         html_out = utils.createmlerror_html(
                                             str(self.outputs),
-                                            self.ydepend,
+                                            ydepend_out,
                                             htmltype=html_type[called_class])
         # save html_out to disk
         with open(fpath, 'w') as outfile:
