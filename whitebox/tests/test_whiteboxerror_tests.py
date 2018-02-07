@@ -210,10 +210,15 @@ class TestWhiteBoxError(unittest.TestCase):
                            cat_df=self.cat_df,
                            featuredict=featuredict)
 
-        self.assertListEqual(featuredict.keys(), wb.cat_df.columns.values.tolist(),
+        if not isinstance(featuredict.keys(), list):
+            featuredictkeys = list(featuredict.keys())
+        else:
+            featuredictkeys = featuredict.keys()
+
+        self.assertListEqual(featuredictkeys, wb.cat_df.columns.values.tolist(),
                              """Featuredict and wb instance columns dont match.
                              \nFeaturedict: {}
-                             \nwb Instance cat df: {}""".format(featuredict.keys(), wb.cat_df.columns.values.tolist()))
+                             \nwb Instance cat df: {}""".format(featuredictkeys, wb.cat_df.columns.values.tolist()))
 
     def test_whitebox_no_featuredict(self):
         wb = WhiteBoxError(modelobj=self.modelobj,
@@ -314,6 +319,10 @@ class TestWhiteBoxError(unittest.TestCase):
     def test_wbox_modelobj_switch(self):
         # test that whitebox can accurately detect classification model
         clf = RandomForestClassifier()
+
+        clf.fit(self.iris.loc[:, self.iris.columns != 'target'],
+                self.iris.loc[:, 'target'])
+
         wb = WhiteBoxError(modelobj=clf,
                            model_df=self.iris,
                            ydepend='target',

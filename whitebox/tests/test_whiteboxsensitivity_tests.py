@@ -7,7 +7,10 @@ from sklearn import datasets
 import pandas as pd
 import numpy as np
 
-from whitebox.whitebox import WhiteBoxSensitivity
+try:
+    from ..whitebox import WhiteBoxSensitivity
+except:
+    from .whitebox.whitebox import WhiteBoxSensitivity
 
 
 __author__ = "Jason Lewris, Daniel Byler, Venkat Gangavarapu, Shruti Panda, Shanti Jha"
