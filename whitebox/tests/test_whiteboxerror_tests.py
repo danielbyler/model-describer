@@ -9,7 +9,10 @@ import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 
-from whitebox.whitebox import WhiteBoxError
+try:
+    from whitebox.whitebox import WhiteBoxError
+except:
+    from whitebox import WhiteBoxError
 
 __author__ = "Jason Lewris, Daniel Byler, Venkat Gangavarapu, Shruti Panda, Shanti Jha"
 __credits__ = ["Brian Ray"]
