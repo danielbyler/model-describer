@@ -2,7 +2,7 @@ from sklearn.ensemble import RandomForestRegressor
 import pandas as pd
 from whitebox import utils
 import numpy as np
-from .whitebox import WhiteBoxError
+from whitebox.whitebox import WhiteBoxError
 
 #====================
 # wine quality dataset example

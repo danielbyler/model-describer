@@ -322,6 +322,20 @@ class TestWhiteBoxError(unittest.TestCase):
                          """WhiteBoxBase unable to detect classification model.
                          \nAssigned: {} as model type""".format(wb.model_type))
 
+    def test_wbox_modelobj_switch_regression(self):
+        # test that whitebox can accurately detect regression model
+        clf = RandomForestClassifier()
+        wb = WhiteBoxError(modelobj=self.modelobj,
+                           model_df=self.iris,
+                           ydepend='target',
+                           groupbyvars=['Type'],
+                           cat_df=self.cat_df,
+                           featuredict=None)
+
+        self.assertEqual(wb.model_type, 'regression',
+                         """WhiteBoxBase unable to detect classification model.
+                         \nAssigned: {} as model type""".format(wb.model_type))
+
     def test_wbox_error_continuous_slice_outputs(self):
         # test that groupByValue is inserted into continuous slice results
         # copy iris data
