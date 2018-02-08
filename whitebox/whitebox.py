@@ -8,7 +8,7 @@ import numpy as np
 from pandas import DataFrame, concat
 from pandas.api.types import is_categorical_dtype
 
-import utils
+from whitebox.utils import to_json
 from whitebox_base import WhiteBoxBase
 
 __author__ = """Jason Lewris, Daniel Byler, Venkat Gangavarapu, 
@@ -234,7 +234,7 @@ class WhiteBoxError(WhiteBoxBase):
 
         errors = errors.replace(np.nan, 'null')
         # convert to json structure
-        json_out = utils.to_json(
+        json_out = to_json(
                                     errors,
                                     vartype=vartype,
                                     html_type='error',
@@ -478,7 +478,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         sensitivity = sensitivity.replace(np.nan, 'null')
         logging.info("""Converting output to json type using to_json utility function""")
         # convert to json structure
-        json_out = utils.to_json(sensitivity, vartype=vartype, html_type = 'sensitivity',
+        json_out = to_json(sensitivity, vartype=vartype, html_type = 'sensitivity',
                                  incremental_val=incremental_val)
         # return json_out
         return json_out
