@@ -178,12 +178,12 @@ class HTML(object):
         assert htmltype in ['html_error', 'html_sensitivity'], 'htmltype must be html_error or html_sensitivity'
         # utility class to hold whitebox files
         try:
-            wbox_html = open('./whitebox/HTML/{}.txt'.format(htmltype), 'r').read()
+            wbox_html = open('{}.txt'.format(htmltype), 'r').read()
             return wbox_html
         except IOError:
             import os
             print(os.getcwd())
-            wbox_html = open('/HTML/{}.txt'.format(htmltype), 'r').read()
+            wbox_html = open('whitebox/{}.txt'.format(htmltype), 'r').read()
             return wbox_html
 
 
