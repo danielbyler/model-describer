@@ -61,4 +61,4 @@ if __name__ == '__main__':
 
     WB.run()
 
-    WB.save(fpath = 'PACKAGETEST_WBERROR.html')
+    WB.save(fpath = 'PACKAGETEST_WBERROR2.html')
