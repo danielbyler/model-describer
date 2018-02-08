@@ -96,9 +96,8 @@ def create_insights(
     msedf = pd.DataFrame({'groupByValue': group.name,
                           'groupByVarName': group_var,
                           error_type: error_dict[error_type],
-                          'Total': group.shape[0]}, index=[0])
+                          'Total': int(group.shape[0])}, index=[0])
     return msedf
-
 
 def to_json(
                 dataframe,
