@@ -145,7 +145,6 @@ def flatten_json(dictlist):
     """
     # make copy of dictlist
     copydict = dictlist[:]
-    print(copydict)
     if len(copydict) > 1:
         for val in copydict[1:]:
             copydict[0]['Data'].extend(val['Data'])
