@@ -1,8 +1,11 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from setuptools import setup
 
 setup(
     name='whitebox',
-    version='0.0.7.6',
+    version='0.0.7.7',
     packages=['whitebox'],
     url='https://github.com/Data4Gov/WhiteBox_Production',
     license='MIT',

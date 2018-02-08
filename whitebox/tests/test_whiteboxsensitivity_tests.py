@@ -10,18 +10,9 @@ import numpy as np
 try:
     import sys
     sys.path.insert(0, "/home/travis/build/Data4Gov/WhiteBox_Production")
-    from whitebox.whitebox import WhiteBoxSensitivity
+    from whitebox.eval import WhiteBoxSensitivity
 except:
-    from whitebox.whitebox import WhiteBoxSensitivity
-
-
-__author__ = "Jason Lewris, Daniel Byler, Venkat Gangavarapu, Shruti Panda, Shanti Jha"
-__credits__ = ["Brian Ray"]
-__license__ = "MIT"
-__version__ = "0.0.1"
-__maintainer__ = "Jason Lewris"
-__email__ = "jlewris@deloitte.com"
-__status__ = "Beta"
+    from whitebox.eval import WhiteBoxSensitivity
 
 
 class TestWhiteBoxSensitivity(unittest.TestCase):

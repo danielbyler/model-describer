@@ -11,17 +11,9 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error
 try:
     import sys
     sys.path.insert(0, "/home/travis/build/Data4Gov/WhiteBox_Production")
-    import utils
+    from whitebox import utils
 except:
     import utils
-
-__author__ = "Jason Lewris, Daniel Byler, Venkat Gangavarapu, Shruti Panda, Shanti Jha"
-__credits__ = ["Brian Ray"]
-__license__ = "MIT"
-__version__ = "0.0.1"
-__maintainer__ = "Jason Lewris"
-__email__ = "jlewris@deloitte.com"
-__status__ = "Beta"
 
 
 class TestUtils(unittest.TestCase):

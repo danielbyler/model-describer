@@ -12,17 +12,9 @@ from sklearn.ensemble import RandomForestClassifier
 try:
     import sys
     sys.path.insert(0, "/home/travis/build/Data4Gov/WhiteBox_Production")
-    from whitebox.whitebox import WhiteBoxError
+    from whitebox.eval import WhiteBoxError
 except:
-    from whitebox import WhiteBoxError
-
-__author__ = "Jason Lewris, Daniel Byler, Venkat Gangavarapu, Shruti Panda, Shanti Jha"
-__credits__ = ["Brian Ray"]
-__license__ = "MIT"
-__version__ = "0.0.1"
-__maintainer__ = "Jason Lewris"
-__email__ = "jlewris@deloitte.com"
-__status__ = "Beta"
+    from eval import WhiteBoxError
 
 
 class TestWhiteBoxError(unittest.TestCase):
