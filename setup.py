@@ -11,5 +11,5 @@ setup(
     description='Unlock model details and shine light on how your data is performing within regions of the model',
     download_url='https://github.com/data4gov/WhiteBox_Production/archive/v0.0.5.tar.gz',
     keywords=['whitebox', 'machine learning', 'data science'],
-    include_package_data=True
+    package_data={'whitebox', ['*.txt']},
 )
