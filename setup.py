@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='whitebox',
-    version='0.0.7.2',
+    version='0.0.7.3',
     packages=['whitebox'],
     url='https://github.com/Data4Gov/WhiteBox_Production',
     license='MIT',
