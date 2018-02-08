@@ -15,6 +15,7 @@ __maintainer__ = "Jason Lewris"
 __email__ = "jlewris@deloitte.com"
 __status__ = "Beta"
 
+
 class Settings(object):
     # currently supported aggregate metrics
     supported_agg_errors = ['MSE', 'MAE', 'RMSE', 'RAW']
@@ -22,7 +23,6 @@ class Settings(object):
     # if Error then pull in html_error code
     html_type = {'WhiteBoxSensitivity': 'html_sensitivity',
                  'WhiteBoxError': 'html_error'}
-
 
 
 def getvectors(dataframe):
@@ -183,7 +183,7 @@ class HTML(object):
         except IOError:
             import os
             print(os.getcwd())
-            wbox_html = open('../HTML/{}.txt'.format(htmltype), 'r').read()
+            wbox_html = open('/HTML/{}.txt'.format(htmltype), 'r').read()
             return wbox_html
 
 
