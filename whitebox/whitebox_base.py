@@ -10,7 +10,7 @@ import numpy as np
 from pandas import core, DataFrame, concat
 from sklearn.exceptions import NotFittedError
 
-from whitebox.utils import (prob_acc,
+from utils import (prob_acc,
                    create_insights,
                    getvectors, flatten_json,
                    to_json, createmlerror_html,

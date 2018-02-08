@@ -11,9 +11,9 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error
 try:
     import sys
     sys.path.insert(0, "/home/travis/build/Data4Gov/WhiteBox_Production")
-    import whitebox.utils as utils
+    import utils
 except:
-    import whitebox.utils as utils
+    import utils
 
 __author__ = "Jason Lewris, Daniel Byler, Venkat Gangavarapu, Shruti Panda, Shanti Jha"
 __credits__ = ["Brian Ray"]

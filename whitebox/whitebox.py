@@ -8,12 +8,8 @@ import numpy as np
 from pandas import DataFrame, concat
 from pandas.api.types import is_categorical_dtype
 
-try:
-    from whitebox.utils import to_json
-    from whitebox.whitebox_base import WhiteBoxBase
-except:
-    from utils import to_json
-    from whitebox_base import WhiteBoxBase
+from utils import to_json
+from whitebox_base import WhiteBoxBase
 
 __author__ = """Jason Lewris, Daniel Byler, Venkat Gangavarapu, 
                 Shruti Panda, Shanti Jha"""

@@ -14,7 +14,7 @@ try:
     sys.path.insert(0, "/home/travis/build/Data4Gov/WhiteBox_Production")
     from whitebox.whitebox import WhiteBoxError
 except:
-    from .whitebox.whitebox import WhiteBoxError
+    from whitebox import WhiteBoxError
 
 __author__ = "Jason Lewris, Daniel Byler, Venkat Gangavarapu, Shruti Panda, Shanti Jha"
 __credits__ = ["Brian Ray"]

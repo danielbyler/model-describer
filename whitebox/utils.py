@@ -6,6 +6,7 @@ import logging
 import math
 import pandas as pd
 import numpy as np
+import pkg_resources
 
 __author__ = "Jason Lewris, Daniel Byler, Venkat Gangavarapu, Shruti Panda, Shanti Jha"
 __credits__ = ["Brian Ray"]
@@ -176,16 +177,17 @@ class HTML(object):
     @staticmethod
     def get_html(htmltype='html_error'):
         assert htmltype in ['html_error', 'html_sensitivity'], 'htmltype must be html_error or html_sensitivity'
+        html_path = pkg_resources.resource_filename('whitebox', '{}.txt'.format(htmltype))
         # utility class to hold whitebox files
         try:
+            import os
+            print(os.getcwd())
             wbox_html = open('{}.txt'.format(htmltype), 'r').read()
-            return wbox_html
         except IOError:
             import os
             print(os.getcwd())
-            wbox_html = open('whitebox/{}.txt'.format(htmltype), 'r').read()
-            return wbox_html
-
+            wbox_html = open(html_path, 'r').read()
+        return wbox_html
 
 def createmlerror_html(
                         datastring,

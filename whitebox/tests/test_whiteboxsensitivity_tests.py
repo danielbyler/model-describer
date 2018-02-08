@@ -12,8 +12,6 @@ try:
     sys.path.insert(0, "/home/travis/build/Data4Gov/WhiteBox_Production")
     from whitebox.whitebox import WhiteBoxSensitivity
 except:
-    from .whitebox.whitebox import WhiteBoxSensitivity
-finally:
     from whitebox.whitebox import WhiteBoxSensitivity
 
 
