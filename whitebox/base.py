@@ -178,7 +178,7 @@ class WhiteBoxBase(object):
         # create instance wide percentiles for all numeric columns
         self.percentile_vecs = getvectors(self.cat_df)
         # create percentile out
-        self._percentiles_out(self.percentile_vecs.select_dtypes(include=[np.number]))
+        self._percentiles_out()
 
     def _predict(self):
         """
@@ -260,10 +260,16 @@ class WhiteBoxBase(object):
         # append to insights_df
         return acc
 
-    def _percentiles_out(self,
-                         groupvecs):
+    def _percentiles_out(self):
+        """
+        Create designated percentiles for user interface percentile bars
+            percentiles calculated include: 10, 25, 50, 75 and 90th percentiles
+        :return: Save percnetiles to instance for retrieval in final output
+        """
+        # subset percentiles to only numeric variables
+        numeric_vars = self.percentile_vecs.select_dtypes(include=[np.number])
         # send the percentiles to to_json to create percentile bars in UI
-        percentiles = groupvecs.reset_index().rename(columns={"index": 'percentile'})
+        percentiles = numeric_vars.reset_index().rename(columns={"index": 'percentile'})
         # capture 10, 25, 50, 75, 90 percentiles
         final_percentiles = percentiles[percentiles.percentile.str
                                         .contains('10%|25%|50%|75%|90%')].copy(deep=True)
