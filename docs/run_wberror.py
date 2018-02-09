@@ -1,8 +1,7 @@
 from sklearn.ensemble import RandomForestRegressor
 import pandas as pd
 from whitebox import utils
-import numpy as np
-from whitebox.whitebox import WhiteBoxError
+from whitebox.eval import WhiteBoxError
 
 
 if __name__ == '__main__':
@@ -12,7 +11,7 @@ if __name__ == '__main__':
     # featuredict - cat and continuous variables
 
     # read in wine quality dataset
-    wine = pd.read_csv('datasets/winequality.csv')
+    wine = pd.read_csv('docs/datasets/winequality.csv')
     # init randomforestregressor
     modelObjc = RandomForestRegressor()
 
@@ -60,5 +59,6 @@ if __name__ == '__main__':
                        verbose=None)
 
     WB.run()
-
-    WB.save(fpath = 'PACKAGETEST_WBERROR2.html')
+    import os
+    os.getcwd()
+    WB.save(fpath='docs/PACKAGETEST_WBERROR2.html')

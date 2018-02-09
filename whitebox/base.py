@@ -175,6 +175,11 @@ class WhiteBoxBase(object):
             self.predict_engine = getattr(self.modelobj, 'predict')
             self.model_type = 'regression'
 
+        # create instance wide percentiles for all numeric columns
+        self.percentile_vecs = getvectors(self.cat_df)
+        # create percentile out
+        self._percentiles_out(self.percentile_vecs.select_dtypes(include=[np.number]))
+
     def _predict(self):
         """
         create predictions based on trained model object, dataframe, and dependent variables
@@ -268,7 +273,7 @@ class WhiteBoxBase(object):
         percentiles_melted = melt(final_percentiles, id_vars='percentile')
         # convert to_json
         self.percentiles = to_json(dataframe=percentiles_melted,
-                                   vartype='percentile',
+                                   vartype='Percentile',
                                    html_type='percentile',
                                    incremental_val=None)
 
@@ -293,15 +298,12 @@ class WhiteBoxBase(object):
         # check right vartype
         assert vartype in ['Continuous', 'Categorical'], """Vartype must be 
                             Categorical or Continuous"""
-        # create percentiles for specific grouping of variables of interest
-        group_vecs = getvectors(group)
-
         # if more than 100 values in the group, use percentile bins
         if group.shape[0] > 100:
             logging.info("""Creating percentile bins for current 
                             continuous grouping""")
             group['fixed_bins'] = np.digitize(group.loc[:, col],
-                                              sorted(list(set(group_vecs.loc[:, col]))),
+                                              sorted(list(set(self.percentile_vecs.loc[:, col]))),
                                               right=True)
         else:
             logging.warning("""Slice of data less than 100 continuous observations, 

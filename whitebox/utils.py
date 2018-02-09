@@ -8,14 +8,6 @@ import pandas as pd
 import numpy as np
 import pkg_resources
 
-__author__ = "Jason Lewris, Daniel Byler, Venkat Gangavarapu, Shruti Panda, Shanti Jha"
-__credits__ = ["Brian Ray"]
-__license__ = "MIT"
-__version__ = "0.0.1"
-__maintainer__ = "Jason Lewris"
-__email__ = "jlewris@deloitte.com"
-__status__ = "Beta"
-
 
 class Settings(object):
     # currently supported aggregate metrics
@@ -104,11 +96,10 @@ def to_json(
                 vartype='Continuous',
                 html_type='error',
                 incremental_val=None):
-    # adding html_type
     # convert dataframe values into a json like object for D3 consumption
-    assert vartype in ['Continuous', 'Categorical', 'Accuracy',
-                       'Percentile'], """Vartypes should only be continuous, 
-                                                                    categorical or accuracy"""
+    assert vartype in ['Continuous', 'Categorical', 'Accuracy','Percentile'], """Vartypes should only be continuous, 
+                                                                                categorical,
+                                                                                Percentile or accuracy"""
     assert html_type in ['error', 'sensitivity',
                          'percentile'], 'html_type must be error or sensitivity'
 
