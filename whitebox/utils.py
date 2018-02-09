@@ -106,22 +106,26 @@ def to_json(
                 incremental_val=None):
     # adding html_type
     # convert dataframe values into a json like object for D3 consumption
-    assert vartype in ['Continuous', 'Categorical', 'Accuracy'], """Vartypes should only be continuous, 
+    assert vartype in ['Continuous', 'Categorical', 'Accuracy',
+                       'Percentile'], """Vartypes should only be continuous, 
                                                                     categorical or accuracy"""
-    assert html_type in ['error', 'sensitivity'], 'html_type must be error or sensitivity'
+    assert html_type in ['error', 'sensitivity',
+                         'percentile'], 'html_type must be error or sensitivity'
 
     if 'highlight' in dataframe.columns:
         del dataframe['highlight']
-
-    if html_type == 'error':
+    # prepare for error
+    if html_type in ['error', 'percentile']:
         # specify data type
         json_out = {'Type': vartype}
-    else:
+    # prepare for sensitivity
+    if html_type == 'sensitivity':
         # convert incremental_val
         if isinstance(incremental_val, float):
             incremental_val = round(incremental_val, 2)
         json_out = {'Type': vartype,
                     'Change': str(incremental_val)}
+
     # create data list
     json_data_out = []
     # iterate over dataframe and convert to dict

@@ -7,7 +7,7 @@ from functools import partial
 import logging
 
 import numpy as np
-from pandas import core, DataFrame
+from pandas import core, DataFrame, melt
 from sklearn.exceptions import NotFittedError
 
 try:
@@ -255,6 +255,23 @@ class WhiteBoxBase(object):
         # append to insights_df
         return acc
 
+    def _percentiles_out(self,
+                         groupvecs):
+        # send the percentiles to to_json to create percentile bars in UI
+        percentiles = groupvecs.reset_index().rename(columns={"index": 'percentile'})
+        # capture 10, 25, 50, 75, 90 percentiles
+        final_percentiles = percentiles[percentiles.percentile.str
+                                        .contains('10%|25%|50%|75%|90%')].copy(deep=True)
+        # rename to featuredict values
+        final_percentiles.rename(columns=self.featuredict, inplace=True)
+        # melt to long format
+        percentiles_melted = melt(final_percentiles, id_vars='percentile')
+        # convert to_json
+        self.percentiles = to_json(dataframe=percentiles_melted,
+                                   vartype='percentile',
+                                   html_type='percentile',
+                                   incremental_val=None)
+
     def _continuous_slice(
                         self,
                         group,
@@ -278,7 +295,7 @@ class WhiteBoxBase(object):
                             Categorical or Continuous"""
         # create percentiles for specific grouping of variables of interest
         group_vecs = getvectors(group)
-        # test
+
         # if more than 100 values in the group, use percentile bins
         if group.shape[0] > 100:
             logging.info("""Creating percentile bins for current 
@@ -363,6 +380,8 @@ class WhiteBoxBase(object):
         insights_json = to_json(insights_df, vartype='Accuracy')
         # append to outputs
         placeholder.append(insights_json)
+        # append percentiles
+        placeholder.append(self.percentiles)
         # assign placeholder final outputs to class instance
         self.outputs = placeholder
 
