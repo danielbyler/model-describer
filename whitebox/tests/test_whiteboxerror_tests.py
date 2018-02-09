@@ -330,7 +330,6 @@ class TestWhiteBoxError(unittest.TestCase):
 
     def test_wbox_modelobj_switch_regression(self):
         # test that whitebox can accurately detect regression model
-        clf = RandomForestClassifier()
         wb = WhiteBoxError(modelobj=self.modelobj,
                            model_df=self.iris,
                            ydepend='target',
@@ -341,6 +340,19 @@ class TestWhiteBoxError(unittest.TestCase):
         self.assertEqual(wb.model_type, 'regression',
                          """WhiteBoxBase unable to detect classification model.
                          \nAssigned: {} as model type""".format(wb.model_type))
+
+    def test_called_class(self):
+        # test that whitebox can accurately detect regression model
+        wb = WhiteBoxError(modelobj=self.modelobj,
+                           model_df=self.iris,
+                           ydepend='target',
+                           groupbyvars=['Type'],
+                           cat_df=self.cat_df,
+                           featuredict=None)
+
+        self.assertEqual(wb.called_class, 'WhiteBoxError',
+                         """WhiteBoxBase unable to detect super class correctly.
+                         \nAssigned: {} as called class""".format(wb.called_class))
 
     def test_wbox_error_continuous_slice_outputs(self):
         # test that groupByValue is inserted into continuous slice results

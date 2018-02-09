@@ -184,6 +184,27 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
                               msg="""var check data output not of type list.
                               \nReturned Type: {}""".format(type(var_check['Data'])))
 
+    def test_called_class(self):
+        # test case for var_check method of WhiteBoxError - checking outputs
+        iris = self.cat_df.copy(deep=True)
+        iris['errors'] = np.random.rand(iris.shape[0], 1)
+        iris['predictedYSmooth'] = np.random.rand(iris.shape[0], 1)
+        iris['diff'] = np.random.rand(iris.shape[0], 1)
+
+        wb = WhiteBoxSensitivity(
+            modelobj=self.modelobj,
+            model_df=self.model_df,
+            ydepend='target',
+            groupbyvars=['Type'],
+            cat_df=self.cat_df,
+            featuredict=None)
+
+        wb.run()
+
+        self.assertEqual(wb.called_class, 'WhiteBoxSensitivity',
+                         msg="""WhiteBoxBase unable to detect correct super class
+                                \nAssigned class: {}""".format(wb.called_class))
+
 
 if __name__ == '__main__':
     from os import sys, path

@@ -175,10 +175,14 @@ class WhiteBoxBase(object):
             self.predict_engine = getattr(self.modelobj, 'predict')
             self.model_type = 'regression'
 
+        # determine the calling class (WhiteBoxError or WhiteBoxSensitivity)
+        self.called_class = self.__class__.__name__
         # create instance wide percentiles for all numeric columns
         self.percentile_vecs = getvectors(self.cat_df)
-        # create percentile out
-        self._percentiles_out()
+        # create percentile output for bars in final html if WhiteBoxError
+        if self.called_class == 'WhiteBoxError':
+            # create percentile out
+            self._percentiles_out()
 
     def _predict(self):
         """
@@ -388,8 +392,10 @@ class WhiteBoxBase(object):
         insights_json = to_json(insights_df, vartype='Accuracy')
         # append to outputs
         placeholder.append(insights_json)
-        # append percentiles
-        placeholder.append(self.percentiles)
+        # append self.percentiles if called class is WhiteBoxError
+        if self.called_class == 'WhiteBoxError':
+            # append percentiles
+            placeholder.append(self.percentiles)
         # assign placeholder final outputs to class instance
         self.outputs = placeholder
 
@@ -405,10 +411,7 @@ class WhiteBoxBase(object):
             logging.warning("""Must run WhiteBoxError.run() 
                             before calling save method""")
 
-        # change html output based on used class
-        called_class = self.__class__.__name__
-
-        logging.info("""creating html output for type: {}""".format(Settings.html_type[called_class]))
+        logging.info("""creating html output for type: {}""".format(Settings.html_type[self.called_class]))
 
         # tweak self.ydepend if classification case (add dominate class)
         if self.model_type == 'classification':
@@ -421,7 +424,7 @@ class WhiteBoxBase(object):
         html_out = createmlerror_html(
                                             str(self.outputs),
                                             ydepend_out,
-                                            htmltype=Settings.html_type[called_class])
+                                            htmltype=Settings.html_type[self.called_class])
         # save html_out to disk
         with open(fpath, 'w') as outfile:
             logging.info("""Writing html file out to disk""")
