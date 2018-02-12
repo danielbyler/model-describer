@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import logging
-from functools import partial
 
 import numpy as np
 from pandas import DataFrame, concat
@@ -11,7 +10,7 @@ from pandas.api.types import is_categorical_dtype
 try:
     from utils import to_json
     from base import WhiteBoxBase
-except:
+except ImportError:
     from whitebox.utils import to_json
     from whitebox.base import WhiteBoxBase
 
@@ -193,13 +192,11 @@ class WhiteBoxError(WhiteBoxBase):
                             \nGroup: {}""".format(col, groupby))
             # set variable type
             vartype = 'Categorical'
-            # create a partial function from transform_function to fill in column and variable type
-            categorical_partial = partial(self._transform_function,
-                                          col=col,
-                                          groupby=groupby,
-                                          vartype=vartype)
             # slice over the groupby variable and the categories within the current column
-            errors = self.cat_df[col_indices].groupby([groupby, col]).apply(categorical_partial)
+            errors = self.cat_df[col_indices].groupby([groupby, col]).apply(self._transform_function,
+                                                                            col=col,
+                                                                            groupby=groupby,
+                                                                            vartype=vartype)
             # final categorical transformations
             errors.reset_index(inplace=True)
             # rename
@@ -215,13 +212,11 @@ class WhiteBoxError(WhiteBoxBase):
                                         \nGroup: {}""".format(col, groupby))
             # set variable type
             vartype = 'Continuous'
-            # create partial function to fill in col and vartype of _continuous_slice
-            cont_slice_partial = partial(self._continuous_slice,
-                                         col=col,
-                                         vartype=vartype,
-                                         groupby=groupby)
-            # groupby the groupby variable on subset of columns and apply cont_slice_partial
-            errors = self.cat_df[col_indices].groupby(groupby).apply(cont_slice_partial)
+            # groupby the groupby variable on subset of columns and apply _continuous_slice
+            errors = self.cat_df[col_indices].groupby(groupby).apply(self._continuous_slice,
+                                                                     col=col,
+                                                                     vartype=vartype,
+                                                                     groupby=groupby)
             # rename columns based on user featuredict input
             errors.rename(columns=self.featuredict, inplace=True)
 
@@ -422,19 +417,15 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                                                                                                       'predictedYSmooth'])])
             # calculate difference between actual predictions and new_predictions
             self.cat_df['diff'] = copydf['new_predictions'] - copydf['predictedYSmooth']
-            # create a partial function from transform_function to fill in column and variable type
-            categorical_partial = partial(self._transform_function,
-                                          col=col,
-                                          groupby=groupby,
-                                          vartype=vartype)
-            # create mask of data to select rows that are not equal to the mode of the category. This will prevent
-            # blank displays in the HTML
+            # create mask of data to select rows that are not equal to the mode of the category.
+            # This will prevent blank displays in HTML
             mode_mask = self.cat_df[col] != incremental_val
             # slice over the groupby variable and the categories within the current column
-            sensitivity = self.cat_df[mode_mask][col_indices].groupby([groupby, col]).apply(categorical_partial)
-            # final categorical transformations
-            #sensitivity.reset_index(inplace=True)
-            # rename
+            sensitivity = self.cat_df[mode_mask][col_indices].groupby([groupby, col]).apply(self._transform_function,
+                                                                                            col=col,
+                                                                                            groupby=groupby,
+                                                                                            vartype=vartype)
+            # rename groupby
             sensitivity.rename(columns={groupby: 'groupByValue'}, inplace=True)
             # rename columns based on user featuredict input
             sensitivity.rename(columns=self.featuredict, inplace=True)
@@ -459,13 +450,11 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                                                                                                     'predictedYSmooth'])])
             # calculate difference between actual predictions and new_predictions
             self.cat_df['diff'] = copydf['new_predictions'] - copydf['predictedYSmooth']
-            # create partial function to fill in col and vartype of _continuous_slice
-            cont_slice_partial = partial(self._continuous_slice,
-                                         col=col,
-                                         vartype=vartype,
-                                         groupby=groupby)
-            # groupby the groupby variable on subset of columns and apply cont_slice_partial
-            sensitivity = self.cat_df[col_indices].groupby(groupby).apply(cont_slice_partial)
+            # groupby and apply
+            sensitivity = self.cat_df[col_indices].groupby(groupby).apply(self._continuous_slice,
+                                                                          col=col,
+                                                                          vartype=vartype,
+                                                                          groupby=groupby)
             # rename columns based on user featuredict input
             sensitivity.rename(columns=self.featuredict, inplace=True)
 

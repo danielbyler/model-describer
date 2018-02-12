@@ -3,7 +3,6 @@
 
 import warnings
 from abc import abstractmethod, ABCMeta
-from functools import partial
 import logging
 
 import numpy as np
@@ -250,15 +249,14 @@ class WhiteBoxBase(object):
         :return: accuracy dataframe for groupby variable
         """
         # use this as an opportunity to capture error metrics for the groupby variable
-        # create a partial func by pre-filling in the parameters for create_insights
         if self.model_type == 'classification':
             error_type = 'RAW'
         if self.model_type == 'regression':
             error_type = self.error_type
-        insights = partial(create_insights, group_var=groupby,
-                           error_type=error_type)
 
-        acc = self.cat_df.groupby(groupby).apply(insights)
+        acc = self.cat_df.groupby(groupby).apply(create_insights,
+                                                 group_var=groupby,
+                                                 error_type=error_type)
         # drop the grouping indexing
         acc.reset_index(drop=True, inplace=True)
         # append to insights_df
@@ -321,15 +319,12 @@ class WhiteBoxBase(object):
                                 \nGroup size: {}""".format(group.shape))
             group['fixed_bins'] = group.loc[:, col]
 
-        # create partial function for error transform (pos/neg split and reshape)
-        trans_partial = partial(self._transform_function,
-                                col=col,
-                                groupby=groupby,
-                                vartype=vartype)
-
         logging.info("""Applying transform function to continuous bins""")
         # group by bins
-        errors = group.groupby('fixed_bins').apply(trans_partial)
+        errors = group.groupby('fixed_bins').apply(self._transform_function,
+                                                   col=col,
+                                                   groupby=groupby,
+                                                   vartype=vartype)
         # final data prep for continuous errors case
         # and finalize errors dataframe processing
         errors.reset_index(drop=True, inplace=True)

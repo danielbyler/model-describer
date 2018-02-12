@@ -27,11 +27,11 @@ Currently, many people substitute `variable importance <https://en.wikipedia.org
 
 .. code-block:: python
 
-   from whitebox.whitebox import WhiteBoxSensitivity
    from sklearn.ensemble import RandomForestClassifier
    import pandas as pd
    import numpy as np
 
+   from whitebox.eval import WhiteBoxSensitivity
 
     df = pd.read_csv('docs/datasets/winequality.csv')
 
@@ -96,7 +96,7 @@ We hope our error charts fill that gap for you. These error charts group the lev
     import pandas as pd
     from whitebox import utils
     import numpy as np
-    from whitebox.whitebox import WhiteBoxError
+    from whitebox.eval import WhiteBoxError
 
     #====================
     # wine quality dataset example
@@ -223,7 +223,6 @@ Please drop us a line in the issues section as bugs or feature requests arise.
 .. _Daniel: https://www.linkedin.com/in/danielbyler/
 .. _Venkatesh: https://www.linkedin.com/in/venkatesh-gangavarapu-9845b36b/ 
 .. _Jason: https://www.linkedin.com/in/jasonlewris/ 
-.. _Shruti: https://www.linkedin.com/in/shruti-panda-1466216a/ 
-.. _Shanti: https://www.linkedin.com/in/shantijha/ 
+.. _Shruti: https://www.linkedin.com/in/shruti-panda-1466216a/
 
 
