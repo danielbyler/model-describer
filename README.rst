@@ -2,7 +2,7 @@
 .. image:: https://travis-ci.com/Data4Gov/WhiteBox_Production.svg?token=1GNkopDprh4icqumn6Mz&branch=master
     :target: https://travis-ci.com/Data4Gov/WhiteBox_Production
 
-WhiteBox: One line of code to make 'black box' machine learning models interpretable to humans.
+WhiteBox: Simple code to make 'black box' machine learning models interpretable to humans.
 ===============================================================================================
 
 White Box makes it possible for everyday humans to understand 'black-box' machine learning models in two key ways:
@@ -13,7 +13,7 @@ White Box makes it possible for everyday humans to understand 'black-box' machin
 
 To make communicating these findings to your team easy, WhiteBox outputs: 
 
-- Are created with one line of Python code at the end of your existing machine learning workflow and require no model re-training
+- Are created with simple Python code at the end of your existing machine learning workflow and require no model re-training
 - Are interactive HTML files that are small enough to be emailed as attachment and only require your teammate/client to have a web browser to open your attachment. No server or messy installation required.
 - Do not expose your potentially sensitive raw data. Only summaries of the data are included in the final HTML file. This also makes it possible to summarize models built on extremely large datasets into file sizes that are small enough for email. 
 
@@ -141,5 +141,5 @@ Please drop us a line in the issues section as bugs or feature requests arise.
 .. _Venkatesh: https://www.linkedin.com/in/venkatesh-gangavarapu-9845b36b/ 
 .. _Jason: https://www.linkedin.com/in/jasonlewris/ 
 .. _Shruti: https://www.linkedin.com/in/shruti-panda-1466216a/
-
+.. _Shanti: https://www.linkedin.com/in/shantijha/
 
