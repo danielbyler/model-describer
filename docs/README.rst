@@ -5,11 +5,11 @@ WhiteBox Parameters
 
 modelobj : fitted model, required
 ------------
-WhiteBox is designed first and foremost to work with sklearn. All sklearn objects must have been fit prior to being passed to WhiteBox.  However, any object which has a .predict function and returns an sklearn-like result: array of shape = [n_samples] or [n_samples, n_outputs] will not cause an error. 
+WhiteBox is designed first and foremost to work with sklearn. Anything passed as modelobj must be a single sklearn object that has been fit prior to being passed to WhiteBox. 
 
 model_df : pandas DataFrame, required
 ------------
-The data you use for modeling (both continuous and dummy variables). This data frame must contain all of the 'X' columns and the 'y' column used in your modelobject.fit(X, y) modeling step. Dummy variables formed from categorical variables must have the form catvarname_value (Gender_Male, Gender_Female, etc.) or they will cause and error and not map to the output charts. 
+The data used for modeling (both continuous and dummy variables). This data frame must contain all of the 'X' columns and the 'y' column used in your modelobject.fit(X, y) modeling step. Dummy variables formed from categorical variables must have the form catvarname_value (Gender_Male, Gender_Female, etc.) or they will cause and error and not map to the output charts. 
 
 ydepend : string, required
 ------------
