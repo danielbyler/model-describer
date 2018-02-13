@@ -23,7 +23,7 @@ Sample Outputs
 Impact
 ------------
 
-Currently, many people substitute `variable importance <https://en.wikipedia.org/wiki/Random_forest#Variable_importance>`_  charts for an understanding of how the model works. While genuinely helpful, these plots do not help us understand how different subgroups behave differently under the hood of the model. In the example below (`full notebook here <http://localhost:8888/notebooks/Desktop/Tester/WhiteBox_Production/docs/notebooks/WineQuality_Example>.ipynb`_) all you have to do to produce the interactive chart is this simple segment of code: 
+Currently, many people substitute `variable importance <https://en.wikipedia.org/wiki/Random_forest#Variable_importance>`_  charts for an understanding of how the model works. While genuinely helpful, these plots do not help us understand how different subgroups behave differently under the hood of the model. In the example below (`full notebook here <https://github.com/Data4Gov/WhiteBox_Production/blob/master/docs/notebooks/WineQuality_Example.ipynb>`_) all you have to do to produce the interactive chart is this simple segment of code: 
 
 .. code-block:: python
 
@@ -72,7 +72,7 @@ We hope our error charts fill that gap for you. These error charts group the lev
 
 .. image:: https://github.com/Data4Gov/WhiteBox_Production/blob/master/images/Error_Gif.gif
 
-For a more detailed example, see our `example notebook <http://localhost:8888/notebooks/Desktop/Tester/WhiteBox_Production/docs/notebooks/WineQuality_Example.ipynb>`_
+For a more detailed example, see our `example notebook <https://github.com/Data4Gov/WhiteBox_Production/blob/master/docs/notebooks/WineQuality_Example.ipynb>`_
 
 Installation
 ==============
