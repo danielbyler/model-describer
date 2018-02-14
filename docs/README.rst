@@ -41,6 +41,8 @@ Logging level of output. Level -- 0 = debug, 1 = warning, 2 = error.
 aggregate_func : numpy function, optional
 ---------------------
 
+Numpy function which summarizes the center of the series in question (error or sensitivity depending on the function). For example, passing np.mean in WhiteBox error will make the central line in the plot for each group the average error. Passing np.median to WhiteBoxSensitivity will show the median sensitivity for each group selected. 
+
 WhiteBoxError Specific Parameters
 =======================
 
