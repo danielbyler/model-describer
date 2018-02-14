@@ -7,9 +7,9 @@ WhiteBox: Simple code to make 'black box' machine learning models interpretable 
 
 White Box makes it possible for everyday humans to understand 'black-box' machine learning models in two key ways:
 
-1. WhiteBox makes it easy to understand how the model 'believes' different groups behave within the model (e.g. are the drivers of job satisfaction different across continents)
+1. WhiteBox helps us understand how the model 'believes' different groups behave within the model (e.g. are the drivers of job satisfaction different across continents)
 
-2. WhiteBox makes it clear where the model is making disproportionately poor quality estimations (e.g. do we do a worse job at predicting the job satisfaction in one particular continent)
+2. WhiteBox helps makes it clear where the model is making disproportionately poor quality estimations (e.g. do we do a worse job at predicting the job satisfaction in one particular continent)
 
 To make communicating these findings to your team easy, WhiteBox outputs: 
 
