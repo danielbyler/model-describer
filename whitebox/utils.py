@@ -114,7 +114,7 @@ def to_json(
         json_out = {'Type': vartype,
                     'Change': str(incremental_val)}
     # create data records from values in df
-    json_out['Data'] = dataframe.to_json(orient='records')
+    json_out['Data'] = dataframe.to_dict(orient='records')
 
     return json_out
 
@@ -151,7 +151,7 @@ def create_group_percentiles(df,
                 # readjust percentiles to look nice
                 group_percent.loc[:, 'percentiles'] = group_percent.loc[:, 'percentiles'].apply(lambda x: str(int(x*100))+'%')
                 # convert percnetile dataframe into json format
-                group_out['percentileValues'] = group_percent.to_json(orient='records')
+                group_out['percentileValues'] = group_percent.to_dict(orient='records')
                 # append group out to group placeholder list
                 groupbylist.append(group_out)
         # assign groupbylist out
