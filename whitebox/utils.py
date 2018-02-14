@@ -102,9 +102,6 @@ def to_json(
                                                                                 Percentile or accuracy"""
     assert html_type in ['error', 'sensitivity',
                          'percentile'], 'html_type must be error or sensitivity'
-
-    if 'highlight' in dataframe.columns:
-        del dataframe['highlight']
     # prepare for error
     if html_type in ['error', 'percentile']:
         # specify data type
@@ -116,17 +113,52 @@ def to_json(
             incremental_val = round(incremental_val, 2)
         json_out = {'Type': vartype,
                     'Change': str(incremental_val)}
-
-    # create data list
-    json_data_out = []
-    # iterate over dataframe and convert to dict
-    for index, row in dataframe.iterrows():
-        # convert row to dict and append to data list
-        json_data_out.append(row.to_dict())
-
-    json_out['Data'] = json_data_out
+    # create data records from values in df
+    json_out['Data'] = dataframe.to_json(orient='records')
 
     return json_out
+
+
+def create_group_percentiles(df,
+                             groupbyvars,
+                             wanted_percentiles=[0, .01, .1, .25, .5, .75, .9, 1]):
+    """
+    create percentile buckets for based on groupby for numeric columns
+    :param df: dataframe
+    :param groupbyvars: groupby variable list
+    :param wanted_percentiles: desired percnetile lines for user intereface
+    :return: json formatted percentile outputs
+    """
+    groupbyvars = list(groupbyvars)
+    # subset numeric cols
+    num_cols = df.select_dtypes(include=[np.number])
+    final_out = {'Type': 'PercentileGroup'}
+    final_list = []
+    # iterate over
+    for col in num_cols:
+        data_out = {'variable': col}
+        groupbylist = []
+        # iterate groupbys
+        for group in groupbyvars:
+            # apply group
+            for name, group in df.groupby(group):
+                # get col of interest
+                group = group.loc[:, col]
+                # start data out for group
+                group_out = {'groupByVar': name}
+                # capture wanted percentiles
+                group_percent = group.quantile(wanted_percentiles).reset_index().rename(columns = {'index': 'percentiles',                                                                         col: 'value'})
+                # readjust percentiles to look nice
+                group_percent.loc[:, 'percentiles'] = group_percent.loc[:, 'percentiles'].apply(lambda x: str(int(x*100))+'%')
+                # convert percnetile dataframe into json format
+                group_out['percentileValues'] = group_percent.to_json(orient='records')
+                # append group out to group placeholder list
+                groupbylist.append(group_out)
+        # assign groupbylist out
+        data_out['percentileList'] = groupbylist
+        final_list.append(data_out)
+    final_out['Data'] = final_list
+    return final_out
 
 
 def flatten_json(dictlist):

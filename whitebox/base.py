@@ -9,18 +9,25 @@ import numpy as np
 from pandas import core, DataFrame, melt
 from sklearn.exceptions import NotFittedError
 
+#TODO fix imports
 try:
     from utils import (prob_acc,
                        create_insights,
-                       getvectors, flatten_json,
-                       to_json, createmlerror_html,
-                       Settings)
+                       getvectors,
+                       flatten_json,
+                       to_json,
+                       createmlerror_html,
+                       Settings,
+                       create_group_percentiles)
 except:
     from whitebox.utils import (prob_acc,
                                 create_insights,
-                                getvectors, flatten_json,
-                                to_json, createmlerror_html,
-                                Settings)
+                                getvectors,
+                                flatten_json,
+                                to_json,
+                                createmlerror_html,
+                                Settings,
+                                create_group_percentiles)
 
 
 class WhiteBoxBase(object):
@@ -51,7 +58,7 @@ class WhiteBoxBase(object):
         :param error_type: Aggregate error metric i.e. MSE, MAE, RMSE
         :param verbose: set verbose level -- 0 = debug, 1 = warning, 2 = error
         """
-
+        #TODO clean up type checking - remove
         # basic parameter checks
         if not hasattr(modelobj, 'predict'):
             raise ValueError("""modelObj does not have predict method. 
@@ -66,15 +73,6 @@ class WhiteBoxBase(object):
             # raise exception and not fitted error
             raise Exception('{}\nPlease fit model: {}'.format(e, modelobj.__class__))
 
-        if not isinstance(model_df, core.frame.DataFrame):
-            raise TypeError("""model_df variable not pandas dataframe.
-                                WhiteBoxError only works with dataframe objects""")
-
-        if featuredict is not None and not isinstance(featuredict, dict):
-            raise TypeError("""When used Featuredict needs to be of type dictionary. 
-                                Keys are original column
-                                names and values are formatted column names:
-                                \n{sloppy.name.here: Sloppy Name}""")
         # toggle featuredict depending on whether user specifys cat_df and leaves
         # featuredict blank
         if featuredict is None and cat_df is not None:
@@ -96,20 +94,9 @@ class WhiteBoxBase(object):
             self.cat_df = cat_df[list(self.featuredict.keys())].copy(deep=True)
 
         else:
-            # check that cat_df is not none and if it's not a pandas dataframe, throw warning
-            if not isinstance(cat_df, type(None)):
-                warnings.warn(
-                                """cat_df is not None and not a 
-                                pd.core.frame.DataFrame. 
-                                Default becomes model_df
-                                and may not be intended user behavior""",
-                                UserWarning)
             # assign cat_df to class instance and subset based on featuredict keys
             self.cat_df = model_df[list(self.featuredict.keys())].copy(deep=True)
-        # check that ydepend variable is of string type
-        if not isinstance(ydepend, str):
-            raise TypeError("""ydepend not string, dependent variable 
-                                must be single column name""")
+
         # check verbose log level if not None
         if verbose:
 
@@ -182,6 +169,9 @@ class WhiteBoxBase(object):
         if self.called_class == 'WhiteBoxError':
             # create percentile out
             self._percentiles_out()
+            # create groupby percentiles
+            self._group_percentiles_out = create_group_percentiles(self.cat_df,
+                                                                   self.groupbyvars)
 
     def _predict(self):
         """
@@ -268,6 +258,7 @@ class WhiteBoxBase(object):
             percentiles calculated include: 10, 25, 50, 75 and 90th percentiles
         :return: Save percnetiles to instance for retrieval in final output
         """
+        #TODO adjust _percentiles_out to handle groupby
         # subset percentiles to only numeric variables
         numeric_vars = self.percentile_vecs.select_dtypes(include=[np.number])
         # send the percentiles to to_json to create percentile bars in UI
@@ -284,7 +275,7 @@ class WhiteBoxBase(object):
                                    vartype='Percentile',
                                    html_type='percentile',
                                    incremental_val=None)
-
+    #TODO add weighted schematics function
     def _continuous_slice(
                         self,
                         group,
@@ -391,6 +382,8 @@ class WhiteBoxBase(object):
         if self.called_class == 'WhiteBoxError':
             # append percentiles
             placeholder.append(self.percentiles)
+            # append groupby percnetiles
+            placeholder.append(self._group_percentiles_out)
         # assign placeholder final outputs to class instance
         self.outputs = placeholder
 

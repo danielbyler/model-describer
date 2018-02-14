@@ -2,16 +2,27 @@ from sklearn.ensemble import RandomForestRegressor
 import pandas as pd
 from whitebox import utils
 from whitebox.eval import WhiteBoxError
-
+import requests
+import io
 
 if __name__ == '__main__':
 
     #====================
     # wine quality dataset example
     # featuredict - cat and continuous variables
+    red_raw = requests.get(
+        'https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv').content
+    red = pd.read_csv(io.StringIO(red_raw.decode('utf-8')),
+                      sep=';')
+    red['Type'] = 'Red'
 
+    white_raw = requests.get(
+        'https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-white.csv').content
+    white = pd.read_csv(io.StringIO(white_raw.decode('utf-8')),
+                        sep=';')
+    white['Type'] = 'White'
     # read in wine quality dataset
-    wine = pd.read_csv('docs/datasets/winequality.csv')
+    wine = pd.concat([white, red])
     # init randomforestregressor
     modelObjc = RandomForestRegressor()
 
@@ -22,9 +33,9 @@ if __name__ == '__main__':
     ###
     yDepend = 'quality'
     # create second categorical variable by binning
-    wine['volatile.acidity.bin'] = wine['volatile.acidity'].apply(lambda x: 'bin_0' if x > 0.29 else 'bin_1')
+    wine['volatile.acidity.bin'] = wine['volatile acidity'].apply(lambda x: 'bin_0' if x > 0.29 else 'bin_1')
     # specify groupby variables
-    groupbyVars = ['Type', 'volatile.acidity.bin']
+    groupbyVars = ['Type'] #, 'volatile.acidity.bin']
     # subset dataframe down
     wine_sub = wine.copy(deep = True)
     # select all string columns so we can convert to pandas Categorical dtype
@@ -42,23 +53,23 @@ if __name__ == '__main__':
     modelObjc.fit(xTrainData, yTrainData)
 
     # specify featuredict as a subset of columns we want to focus on
-    featuredict = {'fixed.acidity': 'FIXED ACIDITY',
+    featuredict = {'fixed acidity': 'FIXED ACIDITY',
                    'Type': 'TYPE',
                    'quality': 'SUPERQUALITY',
                    'volatile.acidity.bin': 'VOLATILE ACIDITY BINS',
-                   'AlcoholContent': 'AC',
+                   'alcohol': 'AC',
                    'sulphates': 'SULPHATES'}
 
 
-    WB = WhiteBoxError(modelobj = modelObjc,
-                       model_df = xTrainData,
-                       ydepend= yDepend,
-                       cat_df = wine_sub,
-                       groupbyvars = groupbyVars,
-                       featuredict = featuredict,
+    WB = WhiteBoxError(modelobj=modelObjc,
+                       model_df=xTrainData,
+                       ydepend=yDepend,
+                       cat_df=wine_sub,
+                       groupbyvars=groupbyVars,
+                       featuredict=featuredict,
                        verbose=None)
 
     WB.run()
     import os
     os.getcwd()
-    WB.save(fpath='docs/PACKAGETEST_WBERROR2.html')
+    WB.save(fpath='PERCENTILESTEST.html')
