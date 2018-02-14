@@ -1,6 +1,6 @@
 .. -*- mode: rst -*-
 
-WhiteBox Parameters
+Universal WhiteBox Parameters
 ======================
 
 modelobj : fitted model, required
@@ -35,4 +35,24 @@ Labeling: The values of the dictionary label the output. For example 'GenderSele
 
 verbose : int, optional 
 -------------
-Logging level of output
+Logging level of output. Level -- 0 = debug, 1 = warning, 2 = error.
+
+
+aggregate_func : numpy function, optional
+---------------------
+
+WhiteBoxError Specific Parameters
+=======================
+
+error_type : string, optional
+---------------------
+
+Aggregate error metric that summarizes the positive and negative error vectors. It can take the values: 'MSE' (mean squared error), 'MAE' (mean absolute error), or 'RMSE' (root mean squared error). By default, it is the MAE so errors of [-2,-1,3,4,5] would result in an average negative error of (2+1)/2 and an average positive error of (3+4+5)/3. 
+
+
+WhiteBoxSensitivity Specific Parameter
+=======================
+
+std_num : float, optional
+Number of standard deviations to push data for syntehtic variable creation in the sensitivity analysis. Larger values will result in larger 'leaps of faith' of the model where it will be pushing more data outside of the range of observed data. Only values between -3 and 3 will be accepted as it is generally unrealistic to change variables more than 3 standard deviations. 
+
