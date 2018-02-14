@@ -133,13 +133,10 @@ For those looking for intepretation of individual points, please see the `Lime <
 Authors:
 ========
 
-Authors include: Daniel_, Venkatesh_, Jason_, Shruti_, and Shanti_.
+Authors include: `Daniel Byler <https://www.linkedin.com/in/danielbyler/>`_, `Venkatesh Gangavarapu <https://www.linkedin.com/in/venkatesh-gangavarapu-9845b36b/>`_ ,`Jason Lewris <https://www.linkedin.com/in/jasonlewris/>`_ , `Shruti Panda <https://www.linkedin.com/in/shruti-panda-1466216a/>`_ , and `Shanti Jha <https://www.linkedin.com/in/shantijha/>`_ 
+
+Acknowledgements
+----------
+ `Kenton Andersen <https://www.linkedin.com/in/kentonandersen/>`_ for his tireless help in running and operating our development environment
  
-Please drop us a line in the issues section as bugs or feature requests arise. 
-
-.. _Daniel: https://www.linkedin.com/in/danielbyler/
-.. _Venkatesh: https://www.linkedin.com/in/venkatesh-gangavarapu-9845b36b/ 
-.. _Jason: https://www.linkedin.com/in/jasonlewris/ 
-.. _Shruti: https://www.linkedin.com/in/shruti-panda-1466216a/
-.. _Shanti: https://www.linkedin.com/in/shantijha/
-
+ Please drop us a line in the issues section as bugs or feature requests arise. 
