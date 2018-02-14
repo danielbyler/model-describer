@@ -137,6 +137,7 @@ Authors include: `Daniel Byler <https://www.linkedin.com/in/danielbyler/>`_, `Ve
 
 Acknowledgements
 ----------
+
  `Kenton Andersen <https://www.linkedin.com/in/kentonandersen/>`_ for his tireless help in running and operating our development environment
  
  Please drop us a line in the issues section as bugs or feature requests arise. 
