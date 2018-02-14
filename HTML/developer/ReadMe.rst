@@ -12,11 +12,7 @@ Requirements:
 
 1. `Node.js <https://nodejs.org/en/>`_  
 2. Any browser with javascript enabled
-
-Installation:
--------------
-
-In both the WhiteBox_error and the WhiteBox_impact folders, the node_modules folder contains all the libraries required for development and testing. 
+3. Packages listed in packages.json in each of the parent folders  
 
 Developer Friendly Code:
 ------------------------
