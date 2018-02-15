@@ -33,6 +33,8 @@ Limiting: The keys of the dictionary limit the output. Only variables present in
 
 Labeling: The values of the dictionary label the output. For example 'GenderSelected': 'Gender of Respondent' would replace the variable label for 'GenderSelected' with 'Gender of Respondent' in all of the HTML output. 
 
+Note- all variables (including ydepend and groupbyvars) must be listed and labeled if featuredict is specified.
+
 verbose : int, optional 
 -------------
 Logging level of output. Level -- 0 = debug, 1 = warning, 2 = error.
