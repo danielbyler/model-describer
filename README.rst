@@ -29,7 +29,7 @@ Sample Outputs
 Impact
 ------------
 
-Currently, many people substitute `variable importance <https://en.wikipedia.org/wiki/Random_forest#Variable_importance>`_  charts for an understanding of how the model works. While genuinely helpful, these plots do not help us understand how different subgroups behave differently under the hood of the model. In the example below (`full notebook here <https://github.com/Data4Gov/WhiteBox_Production/blob/master/docs/notebooks/WineQuality_Example.ipynb>`_) all you have to do to produce the interactive chart is this simple segment of code: 
+Currently, many people substitute `variable importance <https://en.wikipedia.org/wiki/Random_forest#Variable_importance>`_  charts for an understanding of how the model works. While genuinely helpful, these plots do not help us understand how different subgroups behave differently under the hood of the model. In the example below (`full notebook here <https://github.com/Data4Gov/WhiteBox_Production/blob/master/docs/notebooks/WineQuality_Example.ipynb>`_ and `parameter list here <https://github.com/DataScienceSquad/WhiteBox_Production/tree/master/docs>`_ ) all you have to do to produce the interactive chart is this simple segment of code: 
 
 .. code-block:: python
 
@@ -78,7 +78,7 @@ We hope our error charts fill that gap for you. These error charts group the lev
 
 .. image:: https://github.com/Data4Gov/WhiteBox_Production/blob/master/images/Error_Gif.gif
 
-For a more detailed example, see our `example notebook <https://github.com/Data4Gov/WhiteBox_Production/blob/master/docs/notebooks/WineQuality_Example.ipynb>`_
+For a more detailed example, see our `example notebook <https://github.com/Data4Gov/WhiteBox_Production/blob/master/docs/notebooks/WineQuality_Example.ipynb>`_ and `parameter list here <https://github.com/DataScienceSquad/WhiteBox_Production/tree/master/docs>`_.
 
 Installation
 ==============
@@ -110,6 +110,7 @@ In many models, categorical variables are present as independent variables. To p
 - Categorical variables must be of the Categorical data type, not strings. To convert your strings to the correct data type, just use this code:
 
 .. code-block:: python
+
     #convert string variables to categorical variables 
     df[df.select_dtypes(['object']).columns] = df.select_dtypes(['object']).apply(lambda x: x.astype('category'))
 
@@ -121,10 +122,18 @@ In many models, categorical variables are present as independent variables. To p
    categorical = final_data.select_dtypes(include={'object'})
    categorical_dummies = pd.get_dummies(categorical.applymap(str), prefix = categorical.columns)
 
+
+
 Managing Output Length
 ----------------------
 
 Many times, models will have hundreds (or more) of independent variables. To select a more managable number of variables,use the featureDict parameter (present in both functions). By feeding in a dictionary like ``{'var1' : 'Gender' , 'var2' : 'Race' }``, you will make the HTML output only print output relating to var1 and var2. Also, instead of displaying the name in your dataframe, the HTML file will display the name you give it in your dictionary. 
+
+FAQs
+--------------
+
+Answers to additional questions about assumptions we make in our calculations can be found `here <https://github.com/DataScienceSquad/WhiteBox_Production/wiki/FAQ>`_. 
+
 
 Supported Machine Learning Libraries
 ====================================
