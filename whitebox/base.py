@@ -141,7 +141,7 @@ class WhiteBoxBase(object):
         self.ydepend = ydepend
         self.aggregate_func = aggregate_func
         # subset down cat_df to only those features in featuredict
-        self.cat_df = self.cat_df[list(self.featuredict.keys())]
+        self.cat_df = self.cat_df[list(self.featuredict.keys())].rename(columns=self.featuredict)
         # instantiate self.outputs
         self.outputs = False
         # check groupby vars
@@ -165,13 +165,12 @@ class WhiteBoxBase(object):
         self.called_class = self.__class__.__name__
         # create instance wide percentiles for all numeric columns
         self.percentile_vecs = getvectors(self.cat_df)
-        # create percentile output for bars in final html if WhiteBoxError
-        if self.called_class == 'WhiteBoxError':
-            # create percentile out
-            self._percentiles_out()
-            # create groupby percentiles
-            self._group_percentiles_out = create_group_percentiles(self.cat_df,
-                                                                   self.groupbyvars)
+        # create percentile output for bars in final html
+        # create percentile out
+        self._percentiles_out()
+        # create groupby percentiles
+        self._group_percentiles_out = create_group_percentiles(self.cat_df,
+                                                               self.groupbyvars)
 
     def _predict(self):
         """
@@ -258,7 +257,6 @@ class WhiteBoxBase(object):
             percentiles calculated include: 10, 25, 50, 75 and 90th percentiles
         :return: Save percnetiles to instance for retrieval in final output
         """
-        #TODO adjust _percentiles_out to handle groupby
         # subset percentiles to only numeric variables
         numeric_vars = self.percentile_vecs.select_dtypes(include=[np.number])
         # send the percentiles to to_json to create percentile bars in UI
@@ -266,8 +264,6 @@ class WhiteBoxBase(object):
         # capture 10, 25, 50, 75, 90 percentiles
         final_percentiles = percentiles[percentiles.percentile.str
                                         .contains('10%|25%|50%|75%|90%')].copy(deep=True)
-        # rename to featuredict values
-        final_percentiles.rename(columns=self.featuredict, inplace=True)
         # melt to long format
         percentiles_melted = melt(final_percentiles, id_vars='percentile')
         # convert to_json
@@ -378,12 +374,10 @@ class WhiteBoxBase(object):
         insights_json = to_json(insights_df, vartype='Accuracy')
         # append to outputs
         placeholder.append(insights_json)
-        # append self.percentiles if called class is WhiteBoxError
-        if self.called_class == 'WhiteBoxError':
-            # append percentiles
-            placeholder.append(self.percentiles)
-            # append groupby percnetiles
-            placeholder.append(self._group_percentiles_out)
+        # append percentiles
+        placeholder.append(self.percentiles)
+        # append groupby percnetiles
+        placeholder.append(self._group_percentiles_out)
         # assign placeholder final outputs to class instance
         self.outputs = placeholder
 

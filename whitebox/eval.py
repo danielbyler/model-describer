@@ -398,8 +398,8 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                                         \nGroup: {}""".format(col, groupby))
             # set variable type
             vartype = 'Categorical'
-            # pull out the categorical dummy columns that match the current column
-            all_type_cols = copydf.filter(regex=re.escape('{}_'.format(col))).columns
+            # map categories with main column name to properly subset
+            all_type_cols = ['{}_{}'.format(col, cat) for cat in self.cat_df.loc[:, col].unique()]
             # find the mode from the original cat_df for this column
             incremental_val = str(self.cat_df[col].mode().values[0])
             # find the columns within all_type_cols related to the mode_val
