@@ -22,7 +22,13 @@ DataFrame of variables with the categorical `data type <https://pandas.pydata.or
 groupbyvars : List, required
 ------------
 
-List of variables that 'groups' the output into discrete segments for comparison. As a workaround, this column may only have a single common value if groups are not desired. 
+List of variables that 'groups' the output into discrete segments for comparison. If the user would like to see the entire population without subgroups, just add a categorical variable to cat_df that only has one category (such as 'Entire Population') and add that variable to the groupbyvars list. 
+
+.. code-block:: python
+
+  #add uniform
+  cat_df['Entire_Population'] = 'Entire Population'
+  cat_df['Entire_Population'] = pd.Categorical(cat_df['Entire_Population'])
 
 featuredict : dictionary, optional
 ------------
@@ -39,7 +45,6 @@ verbose : int, optional
 -------------
 Logging level of output. Level -- 0 = debug, 1 = warning, 2 = error.
 
-
 aggregate_func : numpy function, optional
 ---------------------
 
@@ -52,7 +57,6 @@ error_type : string, optional
 ---------------------
 
 Aggregate error metric that summarizes the positive and negative error vectors. It can take the values: 'MSE' (mean squared error), 'MAE' (mean absolute error), or 'RMSE' (root mean squared error). By default, it is the MAE so errors of [-2,-1,3,4,5] would result in an average negative error of (2+1)/2 and an average positive error of (3+4+5)/3. 
-
 
 WhiteBoxSensitivity Specific Parameter
 =======================
