@@ -2,6 +2,15 @@
 .. image:: https://travis-ci.com/Data4Gov/WhiteBox_Production.svg?token=1GNkopDprh4icqumn6Mz&branch=master
     :target: https://travis-ci.com/Data4Gov/WhiteBox_Production
 
+.. |MIT license| image:: https://img.shields.io/badge/License-MIT-blue.svg
+   :target: https://lbesson.mit-license.org/
+
+.. image:: https://badge.fury.io/py/whitebox.svg
+    :target: https://badge.fury.io/py/whitebox
+    
+.. |PyPI pyversions| image:: https://img.shields.io/pypi/pyversions/ansicolortags.svg
+   :target: https://pypi.python.org/pypi/whitebox
+
 WhiteBox: Simple code to make 'black box' machine learning models interpretable to humans.
 ===============================================================================================
 
@@ -101,6 +110,12 @@ Handling Categorical Variables
 
 In many models, categorical variables are present as independent variables. To provide meaningful charts, WhiteBox requires two things:
 
+- Categorical variables must be of the Categorical data type, not strings. To convert your strings to the correct data type, just use this code:
+
+.. code-block:: python
+    #convert string variables to categorical variables 
+    df[df.select_dtypes(['object']).columns] = df.select_dtypes(['object']).apply(lambda x: x.astype('category'))
+
 - Categorical dummies must have the naming convention varname_category (for example Gender_Male and Gender_Female). One way to generate these is
 
 .. code-block:: python
@@ -108,9 +123,6 @@ In many models, categorical variables are present as independent variables. To p
    #find string variables
    categorical = final_data.select_dtypes(include={'object'})
    categorical_dummies = pd.get_dummies(categorical.applymap(str), prefix = categorical.columns)
-
-
-- The 'data' parameter for WhiteBox must include the dependent variable, all continuous variables, all dummy variables, and all string variables that the dummy variables were created from. If the process of creating these dummy variables poses a problem, just pass an untrained model object and WhiteBox will train the model for you and return the trained model as an output. 
 
 Managing Output Length
 ----------------------
@@ -120,14 +132,14 @@ Many times, models will have hundreds (or more) of independent variables. To sel
 Supported Machine Learning Libraries
 ====================================
 
-We currently support all sklearn classifiers. We will look to add support for things like H20 in the future. In all implementations, we are committed to keeping our 'one line of code' promise. 
+We currently support all sklearn regression methods and all sklearn binary classification methods. We do not support multi-class classification at this time. We will look to add support for other machine learning libraries the future. In all implementations, we are committed to keeping our 'one line of code' promise. 
 
-We currently only support traditional tabular data. We are hoping to include text, audio, video, and images but they are not part of the current implementation. 
+We currently only support traditional tabular data. We are hoping to include text, audio, video, and images in the future but they are not part of the current implementation. 
 
-Other Machine Learning Interpretability Projects
+Other Python Machine Learning Interpretability Projects
 ------------------------------------------------
 
-For those looking for intepretation of individual points, please see the `Lime <https://github.com/marcotcr/lime>`_ project and its good work. 
+For those looking for intepretation of individual points, please see the `Lime <https://github.com/marcotcr/lime>`_ project and its good work. `PyCEbox <https://github.com/AustinRochford/PyCEbox>`_ also has a different take on `classic partial dependence plots <http://scikit-learn.org/stable/auto_examples/ensemble/plot_partial_dependence.html>`_.
 
 
 Authors:
