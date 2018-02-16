@@ -13,7 +13,7 @@ The data used for modeling (both continuous and dummy variables). This data fram
 
 ydepend : string, required
 ------------
-The dependent 'y' variable you are trying to predict. Dependent variables can be continuous or categorical. 
+The dependent 'y' variable you are trying to predict. Dependent variables can be continuous or binary. 
 
 cat_df : pandas DataFrame, required
 ------------
