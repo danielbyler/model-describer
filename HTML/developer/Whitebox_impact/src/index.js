@@ -12,7 +12,7 @@ var main = d3.select('#App');
 
 
 //Main Heading
-var heading = main.append("div").attr('class', "heading").append("a").attr("href", "https://github.com/Data4Gov/WhiteBox").html("White Box - Impact By Variable")
+var heading = main.append("div").attr('class', "heading").append("a").attr("href", "https://github.com/DataScienceSquad/WhiteBox_Production").html("White Box - Impact By Variable")
 //Heat map and the type dropdown
 var summary = main.append("div").attr("class", "summary")
 var heatMapContainer = summary.append('div').attr('class', 'heatMapContainer')
@@ -286,7 +286,6 @@ function intializeTreeMap(type) {
                 var statEach = metaData['statData'].filter(function (s) {
                     return s['groupByVarName'] == groupBy && s['groupByValue'] == d.data.name
                 })[0]
-
                 var percEach = metaData['proportion'].filter(function (s) {
                     return s['name'] == d.data.name
                 })[0]
@@ -338,9 +337,11 @@ function getTreeMapData(type) {
         children: []
     }
     var sample = AppData[0]['Data']
+    //console.log(sample)
     var filteredSample = sample.filter(function (d) {
         return d['groupByVarName'] == type
     })
+    
     var statDataF = metaData['statData'].filter(function (d) {
         return d['groupByVarName'] == type
     })
@@ -352,6 +353,7 @@ function getTreeMapData(type) {
             return ids.length
         })
         .entries(filteredSample)
+    
     nestedSample.forEach(function (d) {
         var temp = {}
         temp['name'] = d.key
@@ -382,23 +384,68 @@ function prepareFilterData() {
 }
 
 //Function to get the xth percentile of the data given
-function getXthPercentaile(dataList, x,cat,varX){
-        var filteredData = dataList.filter(function(d){return d['groupByValue'] == cat})
-        if(x == 100){
-            var percentileValue = filteredData[filteredData.length-1][varX]
-            return appHelper.formatLabel(percentileValue)
-        }
-        else{
-        var percRank = (x/100)*(filteredData.length+1)
-        var percRankInt = parseInt(percRank)
-        var percentileValue = filteredData[percRankInt][varX]
+//Function to get the xth percentile of the data given
+function getXthPercentaile(dataList, x, cat, varX) {
+    
+    var varDict = metaData['percData'].filter(function(d){
+        return d.variable == varX
+    })[0]
+    
+    var typeDict = varDict['percentileList'].filter(function(d){
+        return d.groupByVar == cat
+    })[0]
+    
+    var percDict = typeDict['percentileValues'].filter(function(d){
+        return d.percentiles == x+"%"
+    })[0]
+    return percDict.value
+    /*var filteredData = dataList.filter(function (d) {
+        return d['groupByValue'] == cat
+    })
+    if (x == 100) {
+        var percentileValue = filteredData[filteredData.length - 1][varX]
         return appHelper.formatLabel(percentileValue)
+    } else {
+        var percRank = (x / 100) * (filteredData.length + 1)
+        var percRankInt = parseInt(percRank)
+        if(percRankInt){
+            var percentileValue = filteredData[percRankInt-1][varX]
+        } 
+        else{
+        var percentileValue = filteredData[percRankInt][varX]
         }
+        return appHelper.formatLabel(percentileValue)
+    }*/
+    
 }
+function getXthPercentaileGlobal(dataList, x, cat, varX) {
+    var varDict = metaData['percGData'].filter(function (d) {
+        return d.variable == varX & d.percentile == x+"%"
+    })[0]
 
+    return varDict.value
+    /*var filteredData = dataList.filter(function (d) {
+        return d['groupByValue'] == cat
+    })
+    if (x == 100) {
+        var percentileValue = filteredData[filteredData.length - 1][varX]
+        return appHelper.formatLabel(percentileValue)
+    } else {
+        var percRank = (x / 100) * (filteredData.length + 1)
+        var percRankInt = parseInt(percRank)
+        if(percRankInt){
+            var percentileValue = filteredData[percRankInt-1][varX]
+        } 
+        else{
+        var percentileValue = filteredData[percRankInt][varX]
+        }
+        return appHelper.formatLabel(percentileValue)
+    }*/
+
+}
 //function to return the quartile data from the data provided for continous variables
 function createQuartileData(dataList, varX, cats) {
-    
+    if(cats.length==0) return 0;
     var varRange = d3.extent(dataList.map(function (d) {
         return d[varX]
     }))
@@ -482,7 +529,6 @@ function createQuartileDataCategory(dataList, varX, cats, catlist) {
     var varRange = d3.extent(dataList.map(function (d) {
         return d[varX]
     }))
-    console.log(dataList)
     var statData = {}
     var returnDict = {}
     returnDict['overEst'] = ''
@@ -593,6 +639,18 @@ function prepareAppData() {
             AppData.splice(i, 1)
         }
     })
+    AppData.filter(function (d, i) {
+        if (d.Type == "PercentileGroup") {
+            metaData['percData'] = d.Data
+            AppData.splice(i, 1)
+        }
+    })
+    AppData.filter(function (d, i) {
+        if (d.Type == "Percentile") {
+            metaData['percGData'] = d.Data
+            AppData.splice(i, 1)
+        }
+    })
 }
 
 //calling the required functions
@@ -620,16 +678,13 @@ function loopVariables(varInd) {
     var width = appHelper.getWidth() * 0.74 - margin.left - margin.right;
     var height = 300 - margin.top - margin.bottom;
     var chartLevel = mainApp.append("div").attr("class", "chart-lev").attr("id", "topchlvl-" + varX.replace(/[^a-zA-Z]/g, "")).style("height", "430px")
+    var title = chartLevel.append('div').attr('class', 'Title')
     var main = chartLevel.append("div").attr("class", "app").attr("id", "chlvl-" + varX.replace(/[^a-zA-Z]/g, ""))
-    
-    
+    var legendGroup = main.append("div").attr("class", "legend").attr("width", width - 100).attr("height", height - 100)
 
     var filterContainer = main.append('div').attr('class', 'Filtercontainer')
     var total = main.append('div').attr('class', 'Total')
     var chartContainer = main.append('div').attr('class', 'Chartcont')
-    
-    var title = chartContainer.append('div').attr('class', 'Title')
-    var legendGroup = chartContainer.append("div").attr("class", "legend").attr("width", width - 100).attr("height", height - 100)
     var narrative = chartLevel.append('div').attr('class', 'desc').style("height", "560px")
     var narrativeText = narrative.append("div").attr('class', 'desc-text').html("Few Insights will come here")
     var source = main.append('div').attr('class', 'Source')
@@ -668,7 +723,6 @@ function loopVariables(varInd) {
     //checking for categorical/continous variables
     var varArray = chartRawData[0]
     if (AppData[varInd]['Type'] == "Continuous") {
-        console.log(AppData[varInd]['Change'])
         changePar = appHelper.formatLabel(AppData[varInd]['Change'].indexOf("Default") >= 0 ? (AppData[varInd]['Change'].split(":")[1]) : AppData[varInd]['Change'])
         initializeAreaChart()
     } else if (AppData[varInd]['Type'] == "Categorical") {
@@ -679,7 +733,7 @@ function loopVariables(varInd) {
     function initializeAreaChart() {
         //creating the svg for the area chart
         svg = appHelper.createChart(chartContainer, width);
-        appHelper.setTitle(title, "Impact of changing " + varX + " by " + changePar + (AppData[varInd]['Change'].indexOf("Default") >= 0 ? " (1 standard deviation) " : "") + " on " + yVar);
+        appHelper.setTitle(title, "Impact of Increasing " + varX + " by " + changePar + (AppData[varInd]['Change'].indexOf("Default") >= 0 ? " (1 standard deviation) " : "") + " on " + yVar);
         svg.selectAll('*').remove();
         svg.attr('width', width);
         
@@ -806,7 +860,8 @@ function loopVariables(varInd) {
             var sumProp = 0
             for (var c in filterCategories[varX]){
                 var cat = filterCategories[varX][c]
-                var perc = getXthPercentaile(filterChartRawData,percList[p],cat,varX)
+                
+                var perc =  filterCategories[varX].length== categories.length?getXthPercentaileGlobal(chartRawData, percList[p], cat, varX):getXthPercentaile(chartRawData, percList[p], cat, varX)
                 var prop = metaData['proportion'].filter(function(d){
                     return d.name==cat
                 })[0]['perc']/100
@@ -851,39 +906,56 @@ function loopVariables(varInd) {
             yAxisElement.transition().duration(1000).call(yAxis)
             
             //updating the percentile line positions based on the data check box option
-            if(percFlag){
+            if (percFlag & filterCategories[varX].length != 0) {
                 var refs = refLines.selectAll("line")
-                                    .data(percDataList)
-            
-            refs.exit().remove()                    
-            refs.enter().append("line")
-                                .style("opacity", 1)
-                                .attr("x1", function(d){return x(d['value'])})
-                                .attr("y1", numOfRows * 30+40)
-                                .attr("x2", function(d){return x(d['value'])})
-                                .attr("y2", height + numOfRows * 30 + 20)
-                                .attr("stroke", "#75787B")
-                                .attr("stroke-width","2px")
-                                
-            refs.transition().attr("x1", function(d){return x(d['value'])})
-                                .attr("y1", numOfRows * 30+40)
-                                .attr("x2", function(d){return x(d['value'])})
-                                .attr("y2", height + numOfRows * 30 + 20)
-                                .attr("stroke", "#75787B")
-                                .attr("stroke-width","2px")
-            
-            
-            var refsText = refLinesText.selectAll("text")
-                                .data(percDataList)
-            refsText.exit().remove()                    
-            refsText.enter().append("text")
-                            .text(function(d){return d['percentile']})
-                            .attr('transform',function(d,i){return "translate("+(x(d['value'])-5)+","+(65)+")"})
-                                
-            refsText.transition()
-                        .text(function(d){return d['percentile']})
-                        .attr('transform',function(d,i){return "translate("+(x(d['value'])-5)+","+(65)+")"})
-            
+                    .data(percDataList).style("opacity",1)
+                refs.exit().remove()
+                refs.enter().append("line")
+                    .style("opacity", 1)
+                    .attr("x1", function (d) {
+                        return x(d['value'])
+                    })
+                    .attr("y1", numOfRows * 30+40)
+                    .attr("x2", function (d) {
+                        return x(d['value'])
+                    })
+                    .attr("y2", height + numOfRows * 30 + 20)
+                    .attr("stroke", "#75787B")
+                    .attr("stroke-width", "2px")
+
+                refs.transition().attr("x1", function (d) {
+                        return x(d['value'])
+                    })
+                    .attr("y1", numOfRows * 30+40)
+                    .attr("x2", function (d) {
+                        return x(d['value'])
+                    })
+                    .attr("y2", height + numOfRows * 30 + 20)
+                    .attr("stroke", "#75787B")
+                    .attr("stroke-width", "2px")
+                var refsText = refLinesText.selectAll("text")
+                    .data(percDataList).style("opacity",1)
+                refsText.exit().remove()
+                refsText.enter().append("text")
+                    .text(function (d) {
+                        return d['percentile']
+                    })
+                    .attr('transform', function (d) {
+                        return "translate(" + (x(d['value']) - 5) + ",65)"
+                    })
+
+                refsText.transition()
+                    .text(function (d) {
+                        return d['percentile']
+                    })
+                    .attr('transform', function (d) {
+                        return "translate(" + (x(d['value']) - 5) + ",65)"
+                    })
+
+            }
+            if(filterCategories[varX].length == 0){
+                refLines.selectAll("line").style("opacity",0)
+                refLinesText.selectAll("text").style("opacity",0)
             }
             
             //removing all the paths before updating
@@ -906,6 +978,8 @@ function loopVariables(varInd) {
                 .attr("fill", function (d, i) {
                     return colorDict[varX][d.key];
                 })
+                .attr("stroke","black")
+                .attr("stroke-width", "0.5px" )
                 .attr("cursor", "pointer")
             paths.attr("class", function (d, i) {
                     return "layer" + d.key + " path" + d.key + varInd + " layer" + varInd
@@ -918,6 +992,8 @@ function loopVariables(varInd) {
                 .attr("fill", function (d, i) {
                     return colorDict[varX][d.key];
                 })
+                .attr("stroke","black")
+                .attr("stroke-width", "0.5px" )
                 .attr("transform", "translate(10," + (numOfRows * 30 + 40) + ")")
                 .attr("cursor", "pointer");
             
@@ -945,11 +1021,11 @@ function loopVariables(varInd) {
             //event listeners for the legend buttons
             function legendMouseOver(d, i) {
                 d3.selectAll(".layer" + varInd).style("opacity", 0.25)
-                d3.selectAll(".path" + d + varInd).style("opacity", 1).style('stroke', 'black').attr("stroke-width", "1px")
+                d3.selectAll(".path" + d + varInd).style("opacity", 1).style('stroke', 'black').attr("stroke-width", "1.5px")
             }
 
             function legendMouseOut(d, i) {
-                d3.selectAll(".layer" + varInd).style("opacity", 1).attr("stroke-width", "0")
+                d3.selectAll(".layer" + varInd).style("opacity", 1).attr("stroke-width", "0.5px")
             }
             
             function legendClick(d, i) {
@@ -983,12 +1059,12 @@ function loopVariables(varInd) {
                 var filt = chartRawData.filter(function (d) {
                     return d[varX] == closestXValue
                 })
-                tooltip.html("Within the <span>" + d.key + " </span> group, the model believes that "+(changePar>=0?"increasing":"decreasing")+" <span>" + varX + "</span> from <span> " + appHelper.formatLabel(filt[0][varX]) + " </span> to <span>" + (appHelper.formatLabel(parseFloat(filt[0][varX]) + parseFloat(changePar))) + "</span> leads to, on average, a <span>" + Math.abs(appHelper.formatLabel(filt[0][d.key])) + (appHelper.formatLabel(filt[0][d.key]) >= 0 ? " increase" : " decrease") + "</span> in " + yVar)
+                tooltip.html("Within the <span>" + d.key + " </span> group, the model believes that increasing <span>" + varX + "</span> from <span> " + appHelper.formatLabel(filt[0][varX]) + " </span> to <span>" + (appHelper.formatLabel(parseFloat(filt[0][varX]) + parseFloat(changePar))) + "</span> leads to, on average, a <span>" + Math.abs(appHelper.formatLabel(filt[0][d.key])) + (appHelper.formatLabel(filt[0][d.key]) >= 0 ? " increase" : " decrease") + "</span> in " + yVar)
 
             }
 
             function mouseout(d) {
-                d3.selectAll(".layer" + varInd).style("opacity", 1).attr("stroke-width", 0)
+                d3.selectAll(".layer" + varInd).style("opacity", 1).attr("stroke-width", "0.5px")
                 tooltip.transition().style("opacity", 0);
                 showingTooltip = false;
                 refLine.transition().style("opacity", 0)
@@ -1005,7 +1081,7 @@ function loopVariables(varInd) {
                 })
                 tooltip.attr('class', "colorClass" + varInd + i);
                 tooltip.transition().duration(200).delay(100).style("opacity", 1);
-                tooltip.html("Within the <span>" + d.key + " </span> group, the model believes that "+(changePar>=0?"increasing":"decreasing")+" <span>" + varX + "</span> from <span> " + appHelper.formatLabel(filt[0][varX]) + " </span> to <span>" + (appHelper.formatLabel(parseFloat(filt[0][varX]) + parseFloat(changePar))) + "</span> leads to, on average, a <span>" + Math.abs(appHelper.formatLabel(filt[0][d.key])) + (appHelper.formatLabel(filt[0][d.key]) >= 0 ? " increase" : " decrease") + "</span> in " + yVar)
+                tooltip.html("Within the <span>" + d.key + " </span> group, the model believes that increasing <span>" + varX + "</span> from <span> " + appHelper.formatLabel(filt[0][varX]) + " </span> to <span>" + (appHelper.formatLabel(parseFloat(filt[0][varX]) + parseFloat(changePar))) + "</span> leads to, on average, a <span>" + Math.abs(appHelper.formatLabel(filt[0][d.key])) + (appHelper.formatLabel(filt[0][d.key]) >= 0 ? " increase" : " decrease") + "</span> in " + yVar)
                     .style("left", function () {
                         var tooltipWidth = this.getBoundingClientRect().width;
                         var currentMouseX = d3.event.pageX;
@@ -1022,7 +1098,7 @@ function loopVariables(varInd) {
                 tooltip.style("color", colorDict[varX][d.key])
 
                 d3.selectAll(".layer" + varInd).style("opacity", "0.4")
-                d3.select(this).style("opacity", 1).style('stroke', 'black').attr("stroke-width", "1px")
+                d3.select(this).style("opacity", 1).style('stroke', 'black').attr("stroke-width", "0.5px")
             }
             
             
@@ -1063,7 +1139,6 @@ function loopVariables(varInd) {
         
         //initializing local varaibles required for the bar plot
         var barData = varArray
-        
         var maxHeight = 0
         
         //function to extract the list of categories in the data
@@ -1212,7 +1287,6 @@ function loopVariables(varInd) {
                 .attr("y", function (d) {
                     return y(d["value"]) >= y(0) ? y(0) : y(d["value"])
                 })
-
                 .attr("width", x1.bandwidth())
                 .attr("height", function (d) {
 
@@ -1226,7 +1300,8 @@ function loopVariables(varInd) {
                 .on("mousemove", mousemove)
                 .on("mouseout", mouseout)
                 .style("cursor", "pointer")
-
+                .style("stroke","#000")
+                .style("stroke-width","1px")
 
             //adding grid lines and positioning axes
             yAxisElement.selectAll("line").attr("opacity", 0.15).style("stroke-dasharray", ("4, 4"))
@@ -1246,7 +1321,7 @@ function loopVariables(varInd) {
                 tooltip.attr('class', "colorClass" + varInd + i);
                 tooltip.transition().duration(200).delay(100).style("opacity", 1);
 
-                tooltip.html("Within the <span>" + d.key + " </span> group, the model believes that changing <span>" + varX + "</span> from <span> " + d['parent'] + " </span> to <span>" + changePar + "</span> leads to, on average, a <span>" + Math.abs(appHelper.formatLabel(d.value)) + (appHelper.formatLabel(d.value) >= 0 ? " increase" : " decrease") + "</span> in " + yVar)
+                tooltip.html("Within the <span>" + d.key + " </span> group, the model believes that increasing <span>" + varX + "</span> from <span> " + d['parent'] + " </span> to <span>" + changePar + "</span> leads to, on average, a <span>" + Math.abs(appHelper.formatLabel(d.value)) + (appHelper.formatLabel(d.value) >= 0 ? " increase" : " decrease") + "</span> in " + yVar)
                     .style("left", function () {
                         var tooltipWidth = this.getBoundingClientRect().width;
                         var currentMouseX = d3.event.pageX;
@@ -1269,7 +1344,7 @@ function loopVariables(varInd) {
             function mousemove(d, i) {
                 tooltip.attr('class', "colorClass" + varInd + i);
                 tooltip.transition().duration(200).delay(100).style("opacity", 1);
-                tooltip.html("Within the <span>" + d.key + " </span> group, the model believes that changing <span>" + varX + "</span> from <span> " + d['parent'] + " </span> to <span>" + changePar + "</span> leads to, on average, a <span>" + Math.abs(appHelper.formatLabel(d.value)) + (appHelper.formatLabel(d.value) >= 0 ? " increase" : " decrease") + "</span> in " + yVar)
+                tooltip.html("Within the <span>" + d.key + " </span> group, the model believes that increasing <span>" + varX + "</span> from <span> " + d['parent'] + " </span> to <span>" + changePar + "</span> leads to, on average, a <span>" + Math.abs(appHelper.formatLabel(d.value)) + (appHelper.formatLabel(d.value) >= 0 ? " increase" : " decrease") + "</span> in " + yVar)
                     .style("left", function () {
                         var tooltipWidth = this.getBoundingClientRect().width;
                         var currentMouseX = d3.event.pageX;
@@ -1340,7 +1415,7 @@ function loopVariables(varInd) {
             function wrap(text, width) {
                 text.each(function () {
                     var text = d3.select(this),
-                        words = (text.text()+" → "+changePar).split(/\s+/).reverse(),
+                        words = text.text().split(/\s+/).reverse(),
                         word,
                         line = [],
                         lineNumber = 0,
