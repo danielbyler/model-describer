@@ -16,6 +16,15 @@ Requirements:
 
 Developer Friendly Code:
 ------------------------
+To start with the developement, few javascript libraries are required which were added to the package.json file. Open the command line and switch to the current directory. Run the following command
+
+```
+npm install
+```
+
+which will create a folder named **node_modules** and install all the necessary libraries in it.
+
+
 
 The developer-friendly D3 code is available at ./src/index.js inside of each folder. A sample dataset is available in the file ./src/AppData.js. 
 
