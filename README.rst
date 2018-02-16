@@ -2,14 +2,14 @@
 .. image:: https://travis-ci.com/Data4Gov/WhiteBox_Production.svg?token=1GNkopDprh4icqumn6Mz&branch=master
     :target: https://travis-ci.com/Data4Gov/WhiteBox_Production
 
-.. |MIT license| image:: https://img.shields.io/badge/License-MIT-blue.svg
-   :target: https://lbesson.mit-license.org/
+.. image:: https://img.shields.io/badge/License-MIT-blue.svg
+    :target: https://lbesson.mit-license.org/
 
 .. image:: https://badge.fury.io/py/whitebox.svg
     :target: https://badge.fury.io/py/whitebox
     
-.. |PyPI pyversions| image:: https://img.shields.io/pypi/pyversions/ansicolortags.svg
-   :target: https://pypi.python.org/pypi/whitebox
+.. image:: https://img.shields.io/pypi/pyversions/ansicolortags.svg
+    :target: https://pypi.python.org/pypi/whitebox
 
 WhiteBox: Simple code to make 'black box' machine learning models interpretable to humans.
 ===============================================================================================
