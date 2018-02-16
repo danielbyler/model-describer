@@ -16,17 +16,15 @@ Requirements:
 
 Developer Friendly Code:
 ------------------------
-To start with the developement, few javascript libraries are required which were added to the package.json file. Open the command line and switch to the current directory. Run the following command
+To start with the developement, a few JavaScript libraries are required. These are listed in the packages.json file. Open the command line and switch to the relevant WhiteBox directory (WhiteBoxError or Whitebox_Impact). Run the following command:
 
 ```
 npm install
 ```
 
-which will create a folder named **node_modules** and install all the necessary libraries in it.
+This command will create a folder named **node_modules** and install all the necessary libraries in it.
 
-
-
-The developer-friendly D3 code is available at ./src/index.js inside of each folder. A sample dataset is available in the file ./src/AppData.js. 
+After doing this, it is safe to proceed to development. The developer-friendly D3 code is available at ./src/index.js inside of each folder. A sample dataset is available in the file ./src/AppData.js. 
 
 For consistency and the ability to integrate with the backend, it is crucial that your D3 code take this data in its existing format (unless you are also modifying the backend).
 
