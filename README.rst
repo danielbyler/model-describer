@@ -4,9 +4,6 @@
 
 .. image:: https://img.shields.io/badge/License-MIT-blue.svg
     :target: https://lbesson.mit-license.org/
-
-.. image:: https://badge.fury.io/py/whitebox.svg
-    :target: https://badge.fury.io/py/whitebox
     
 .. image:: https://img.shields.io/pypi/pyversions/ansicolortags.svg
     :target: https://pypi.python.org/pypi/whitebox
