@@ -85,7 +85,7 @@ class WhiteBoxBase(object):
         if isinstance(cat_df, core.frame.DataFrame):
             # check tthat the number of rows from cat_df matches that of model_df
             if model_df.shape[0] != cat_df.shape[0]:
-                raise StandardError("""Misaligned rows. \norig_df shape: {}
+                raise RuntimeError("""Misaligned rows. \norig_df shape: {}
                                         \ndummy_df shape: {}
                                         """.format(
                                                     model_df.shape[0],
@@ -138,10 +138,10 @@ class WhiteBoxBase(object):
         self.error_type = error_type
         self.modelobj = modelobj
         self.model_df = model_df.copy(deep=True)
-        self.ydepend = ydepend
+        self.ydepend = self.featuredict[ydepend] if ydepend in list(self.featuredict.keys()) else ydepend
         self.aggregate_func = aggregate_func
         # subset down cat_df to only those features in featuredict
-        self.cat_df = self.cat_df[list(self.featuredict.keys())].rename(columns=self.featuredict)
+        self.cat_df = self.cat_df.loc[:, list(self.featuredict.keys())].rename(columns=self.featuredict)
         # instantiate self.outputs
         self.outputs = False
         # check groupby vars
@@ -149,7 +149,8 @@ class WhiteBoxBase(object):
             raise ValueError(
                             """groupbyvars must be a list of grouping 
                             variables and cannot be None""")
-        self.groupbyvars = list(groupbyvars)
+        # if user specified featuredict, use column mappings otherwise use original groupby
+        self.groupbyvars = [self.featuredict[group] if group in list(self.featuredict.keys()) else group for group in list(groupbyvars)]
 
         # determine if in classification problem or regression problem
         if hasattr(self.modelobj, 'predict_proba'):
@@ -169,6 +170,7 @@ class WhiteBoxBase(object):
         # create percentile out
         self._percentiles_out()
         # create groupby percentiles
+        #TODO remove this comment
         self._group_percentiles_out = create_group_percentiles(self.cat_df,
                                                                self.groupbyvars)
 

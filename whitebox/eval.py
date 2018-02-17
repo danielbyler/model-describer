@@ -2,11 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import re
 
 import numpy as np
 from pandas import DataFrame, concat
-from pandas.api.types import is_categorical_dtype
+from pandas.api.types import is_object_dtype
 
 try:
     from utils import to_json
@@ -187,7 +186,7 @@ class WhiteBoxError(WhiteBoxBase):
         # subset col indices
         col_indices = [col, 'errors', 'predictedYSmooth', groupby]
         # check if categorical
-        if is_categorical_dtype(self.cat_df.loc[:, col]):
+        if is_object_dtype(self.cat_df.loc[:, col]):
             logging.info("""Column determined as categorical datatype, transforming data for categorical column
                             \nColumn: {}
                             \nGroup: {}""".format(col, groupby))
@@ -222,7 +221,7 @@ class WhiteBoxError(WhiteBoxBase):
             errors.rename(columns=self.featuredict, inplace=True)
 
         # json out
-
+        #TODO remove this
         errors = errors.replace(np.nan, 'null')
         # convert to json structure
         json_out = to_json(

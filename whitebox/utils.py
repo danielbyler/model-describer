@@ -54,6 +54,9 @@ def convert_categorical_independent(dataframe):
     """
     # we want to change the data, not copy and change
     dataframe = dataframe.copy(deep=True)
+    # convert all strings to categories and format codes
+    for str_col in dataframe.select_dtypes(include=['O', 'category']):
+        dataframe.loc[:, str_col] =pd.Categorical(dataframe.loc[:, str_col])
     # convert all category datatypes into numeric
     cats = dataframe.select_dtypes(include=['category'])
     # warn user if no categorical variables detected
@@ -140,7 +143,7 @@ def create_group_percentiles(df,
         groupbylist = []
         # iterate groupbys
         for group in groupbyvars:
-            # apply group
+            # iterate over each slice of the groups
             for name, group in df.groupby(group):
                 # get col of interest
                 group = group.loc[:, col]
