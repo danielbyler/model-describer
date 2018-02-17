@@ -1,19 +1,24 @@
-from whitebox.whitebox import WhiteBoxError
+from whitebox.eval import WhiteBoxError
 from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
 import numpy as np
 
-df = pd.read_csv('docs/datasets/winequality.csv')
+from whitebox.utils import create_wine_data
+
+df = create_wine_data(None)
 
 # set up y var
 # set up some params
-ydepend = 'Type'
+ydepend = 'quality'
+
+# turn it into a binary classification problem
+df.loc[:, ydepend] = df.loc[:, ydepend].apply(lambda x: 0 if x < 5 else 1)
 
 # convert categorical
-df['AlcoholContent'] = pd.Categorical(df['AlcoholContent'])
-model_df = df.copy(deep = True)
+model_df = pd.concat([df.select_dtypes(include=[np.number]),
+                      pd.get_dummies(df.select_dtypes(include=['O', 'category']), prefix='col')], axis=1)
 
-model_df['AlcoholContent'] = model_df['AlcoholContent'].cat.codes
+model_df.head()
 
 x = model_df.loc[:, model_df.columns != ydepend]
 y = model_df.loc[:, ydepend]
@@ -22,6 +27,8 @@ y = model_df.loc[:, ydepend]
 clf = RandomForestClassifier(max_depth=2, random_state=0)
 clf.fit(x, y)
 
+from sklearn.utils.validation import check_is_fitted
+check_is_fitted(clf, 'base_estimator_')
 
 WB = WhiteBoxError(clf,
                    model_df=model_df,

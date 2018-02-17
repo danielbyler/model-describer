@@ -80,6 +80,7 @@ class WhiteBoxError(WhiteBoxBase):
                     groupbyvars=None,
                     aggregate_func=np.mean,
                     error_type='MSE',
+                    autoformat=False,
                     verbose=0):
 
         """
@@ -92,6 +93,7 @@ class WhiteBoxError(WhiteBoxBase):
         :param aggregate_func: numpy aggregate function like np.mean
         :param dominate_class: in the case of binary classification, class of interest
             to measure probabilities from
+        :param autoformat: experimental autoformatting of dataframe
         :param verbose: Logging level
         """
         super(WhiteBoxError, self).__init__(
@@ -103,10 +105,10 @@ class WhiteBoxError(WhiteBoxBase):
                                             groupbyvars=groupbyvars,
                                             aggregate_func=aggregate_func,
                                             error_type=error_type,
+                                            autoformat=autoformat,
                                             verbose=verbose)
 
-        import pandas as pd
-        self.allerrors = pd.DataFrame()
+        self.allerrors = DataFrame()
 
     def _transform_function(
                             self,
@@ -201,8 +203,6 @@ class WhiteBoxError(WhiteBoxBase):
             errors.reset_index(inplace=True)
             # rename
             errors.rename(columns={groupby: 'groupByValue'}, inplace=True)
-            # rename columns based on user featuredict input
-            errors.rename(columns=self.featuredict, inplace=True)
             # assign groupby variable to the errors dataframe
             errors['groupByVarName'] = groupby
 
@@ -217,12 +217,10 @@ class WhiteBoxError(WhiteBoxBase):
                                                                      col=col,
                                                                      vartype=vartype,
                                                                      groupby=groupby)
-            # rename columns based on user featuredict input
-            errors.rename(columns=self.featuredict, inplace=True)
 
         # json out
         #TODO remove this
-        errors = errors.replace(np.nan, 'null')
+        errors = errors.fillna('null')# errors.replace(np.nan, 'null')
         # convert to json structure
         json_out = to_json(
                                     errors,
@@ -307,6 +305,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                  aggregate_func=np.median,
                  error_type='MSE',
                  std_num=0.5,
+                 autoformat=False,
                  verbose=0,
                  ):
         """
@@ -317,6 +316,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         :param featuredict: Subset and rename columns
         :param groupbyvars: grouping variables
         :param aggregate_func: function to aggregate sensitivity results by group
+        :param autoformat: experimental auto formatting of dataframe
         :param verbose: Logging level
         :param std_num: Standard deviation adjustment
         """
@@ -336,6 +336,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                                                     groupbyvars=groupbyvars,
                                                     aggregate_func=aggregate_func,
                                                     error_type=error_type,
+                                                    autoformat=autoformat,
                                                     verbose=verbose)
 
     def _transform_function(
@@ -391,7 +392,9 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         # make a copy of the data to manipulate and change values
         copydf = self.model_df.copy(deep=True)
         # check if categorical
-        if is_categorical_dtype(self.cat_df.loc[:, col]):
+        if is_object_dtype(self.cat_df.loc[:, col]):
+            #TODO need to handle case where user adds columns to cat_df but is not in model_df - can't select these cols
+            #TODO split this into two additional methods - categorical and continuous case
             logging.info("""Column determined as categorical datatype, transforming data for categorical column
                                         \nColumn: {}
                                         \nGroup: {}""".format(col, groupby))
@@ -427,8 +430,6 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                                                                                             vartype=vartype)
             # rename groupby
             sensitivity.rename(columns={groupby: 'groupByValue'}, inplace=True)
-            # rename columns based on user featuredict input
-            sensitivity.rename(columns=self.featuredict, inplace=True)
             # assign groupby variable to the errors dataframe
             sensitivity['groupByVarName'] = groupby
 
@@ -455,11 +456,10 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                                                                           col=col,
                                                                           vartype=vartype,
                                                                           groupby=groupby)
-            # rename columns based on user featuredict input
-            sensitivity.rename(columns=self.featuredict, inplace=True)
 
         # json out
-        sensitivity = sensitivity.replace(np.nan, 'null')
+        print(sensitivity.dtypes)
+        sensitivity = sensitivity.fillna('null')# sensitivity.replace(np.nan, 'null')
         logging.info("""Converting output to json type using to_json utility function""")
         # convert to json structure
         json_out = to_json(sensitivity, vartype=vartype, html_type = 'sensitivity',

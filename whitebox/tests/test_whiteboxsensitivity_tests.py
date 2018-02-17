@@ -61,7 +61,8 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
                                     ydepend='target',
                                     groupbyvars=['Type'],
                                     cat_df=self.cat_df,
-                                    featuredict=None)
+                                    featuredict=None,
+                                    autoformat=True)
 
         results = wb._continuous_slice(
                                         iris.groupby('Type').get_group('white'),
@@ -93,7 +94,8 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
                                     ydepend='target',
                                     groupbyvars=['Type'],
                                     cat_df=self.cat_df,
-                                    featuredict=None)
+                                    featuredict=None,
+                                    autoformat=True)
 
         self.assertEqual(wb.__class__.__name__,
                          'WhiteBoxSensitivity',
@@ -116,7 +118,8 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
                                     ydepend='target',
                                     groupbyvars=['Type'],
                                     cat_df=self.cat_df,
-                                    featuredict=None)
+                                    featuredict=None,
+                                    autoformat=True)
 
         wb.run()
 
@@ -156,7 +159,8 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
                                     ydepend='target',
                                     groupbyvars=['Type'],
                                     cat_df=self.cat_df,
-                                    featuredict=None)
+                                    featuredict=None,
+                                    autoformat=True)
 
         wb.run()
 
@@ -197,7 +201,8 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
             ydepend='target',
             groupbyvars=['Type'],
             cat_df=self.cat_df,
-            featuredict=None)
+            featuredict=None,
+            autoformat=True)
 
         wb.run()
 

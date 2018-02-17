@@ -3,10 +3,12 @@
 
 import warnings
 import logging
+import requests
 import math
 import pandas as pd
 import numpy as np
 import pkg_resources
+import io
 
 
 class Settings(object):
@@ -16,6 +18,52 @@ class Settings(object):
     # if Error then pull in html_error code
     html_type = {'WhiteBoxSensitivity': 'html_sensitivity',
                  'WhiteBoxError': 'html_error'}
+
+class ErrorWarningMsgs(object):
+    # specify groupbyvars error
+    groupbyvars_error = ValueError(
+        """groupbyvars must be a list of grouping 
+            variables and cannot be None""")
+
+    # specify supported errosr message
+    error_type_error = ValueError(
+        """Supported values for error_type are [MSE, MAE, RMSE]"""
+    )
+
+    cat_df_shape_error = """cat_df and model_df must have same number of observations.
+                            \ncat_df shape: {}
+                            \nmodel_df shape: {}"""
+
+    predict_model_obj_error = """modelObj does not have predict method. 
+                                WhiteBoxError only works with model 
+                                objects with predict method"""
+
+    run_wb_error = """Must run {}.run() before calling save method"""
+
+    agg_func_error = """aggregate_func must work on 
+                            arrays of data and yield scalar
+                            \nError: {}"""
+
+    # hold all error messages that are raised based on value or type errors
+    error_msgs = {'groupbyvars': groupbyvars_error,
+                  'error_type': error_type_error,
+                  'cat_df': cat_df_shape_error,
+                  'modelobj': predict_model_obj_error,
+                  'wb_run_error': run_wb_error,
+                  'agg_func': agg_func_error}
+
+    cat_df_warning = """model_df being used for processing. Given that most 
+                        sklearn models cannot directly handle 
+                        string objects and they need to be converted to numbers, 
+                        the use of model_df for processing may not behave as expected. 
+                        For best results, use cat_df with string columns directly"""
+
+    auto_format = """Please note autoformat is currently experimental and may have unintended consequences."""
+
+    warning_msgs = {'cat_df': cat_df_warning,
+                    'auto_format': auto_format}
+
+
 
 
 def getvectors(dataframe):
@@ -208,12 +256,8 @@ class HTML(object):
         html_path = pkg_resources.resource_filename('whitebox', '{}.txt'.format(htmltype))
         # utility class to hold whitebox files
         try:
-            import os
-            print(os.getcwd())
             wbox_html = open('{}.txt'.format(htmltype), 'r').read()
         except IOError:
-            import os
-            print(os.getcwd())
             wbox_html = open(html_path, 'r').read()
         return wbox_html
 
@@ -234,3 +278,35 @@ def createmlerror_html(
                                                         ).replace('Quality', dependentvar)
 
     return output
+
+def create_wine_data(cat_cols):
+    """
+    helper function to grab UCI machine learning wine dataset, convert to
+    pandas dataframe, and return
+    :return: pandas dataframe
+    """
+
+    if not cat_cols:
+        cat_cols = ['alcohol', 'fixed acidity']
+
+    red_raw = requests.get(
+        'https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv').content
+    red = pd.read_csv(io.StringIO(red_raw.decode('utf-8-sig')),
+                      sep=';')
+    red['Type'] = 'Red'
+
+    white_raw = requests.get(
+        'https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-white.csv').content
+    white = pd.read_csv(io.StringIO(white_raw.decode('utf-8-sig')),
+                        sep=';')
+    white['Type'] = 'White'
+
+    # read in wine quality dataset
+    wine = pd.concat([white, red])
+
+    # create category columns
+    # create categories
+    for cat in cat_cols:
+        wine.loc[:, cat] = pd.cut(wine.loc[:, cat], bins=3, labels=['low', 'medium', 'high'])
+
+    return wine
