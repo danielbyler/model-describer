@@ -72,24 +72,24 @@ class WhiteBoxBase(object):
         if not groupbyvars:
             raise ErrorWarningMsgs.error_msgs['groupbyvars']
 
-        # run model checks
-        self._check_model_obj(modelobj=modelobj,
-                              model_df=model_df,
-                              ydepend=ydepend)
+        # make copy and assign model dataframe
+        self.model_df = model_df.copy(deep=True)
+        # check cat_df
+        self._cat_df = cat_df
+        # check modelobj
+        self._modelobj = modelobj
         # check verbosity
         self._check_verbose(verbose)
         # check for classification or regression
         self._is_regression_classification()
-        # check cat_df
-        self._cat_df = cat_df
         # check featuredict
         self._check_featuredict(featuredict)
+        # create reverse featuredict
+        self._reverse_featuredict = {val: key for key, val in self.featuredict.items()}
         # check aggregate func
         self._check_agg_func(aggregate_func)
         # check error type supported
         self.error_type = error_type
-        # make copy and assign model dataframe
-        self.model_df = model_df.copy(deep=True)
         # assign dependent variable
         self.ydepend = ydepend
         # instantiate self.outputs
@@ -103,6 +103,47 @@ class WhiteBoxBase(object):
         # create percentiles
         self._run_percentiles()
 
+    @property
+    def cat_df(self):
+        return self._cat_df
+
+    @cat_df.setter
+    def cat_df(self, value):
+        """
+        ensure validity of assigned cat_df - must have same length of model_df
+        and if None, is replaced by model_df
+        :param value: user defined cat_df
+        :return: NA
+        """
+        # if cat_df not assigned, use model_df
+        if value is None:
+            warnings.warn(ErrorWarningMsgs.warning_msgs['cat_df'])
+            self._cat_df = self.model_df
+        else:
+            # check both model_df and cat_df have the same length
+            check_consistent_length(value, self.model_df)
+            self._cat_df = value.copy(deep=True)
+
+    @property
+    def modelobj(self):
+        return self._modelobj
+
+    @modelobj.setter
+    def modelobj(self, value):
+        """
+        check user defined model object has been fit before use within WhiteBox
+        :param value: user defined model object
+        :return: NA
+        """
+        # basic parameter checks
+        if not hasattr(value, 'predict'):
+            raise ValueError(ErrorWarningMsgs.error_msgs['modelobj'])
+
+        # ensure modelobj has been previously fit
+        check_is_fitted(value, 'base_estimator_')
+
+        self._modelobj = value
+
     def _check_featuredict(self, featuredict):
         """
         check user defined featuredict - if blank assign all dataframe columns
@@ -110,9 +151,13 @@ class WhiteBoxBase(object):
         :return: NA
         """
         # featuredict blank
-        if featuredict is None:
+        if not featuredict:
             self.featuredict = {col: col for col in self._cat_df.columns}
         else:
+            if not all([key in self._cat_df.columns for key in featuredict.keys()]):
+                # find missing keys
+                missing = list(set(featuredict.keys()).difference(set(self._cat_df.columns)))
+                raise ValueError(ErrorWarningMsgs.error_msgs['featuredict'].format(missing))
             self.featuredict = featuredict
 
     def _check_verbose(self, verbose):
@@ -142,47 +187,6 @@ class WhiteBoxBase(object):
                                         %(levelname)s:\n%(message)s""",
                 level=log_dict[verbose])
             logging.info("Logger started....")
-            
-    @property
-    def cat_df(self):
-        return self._cat_df
-
-    @cat_df.setter
-    def cat_df(self, value):
-        """
-        ensure validity of assigned cat_df - must have same length of model_df
-        and if None, is replaced by model_df
-        :param value: user defined cat_df
-        :return: NA
-        """
-        # if cat_df not assigned, use model_df
-        if value is None:
-            warnings.warn(ErrorWarningMsgs.warning_msgs['cat_df'])
-            self._cat_df = self.model_df
-        else:
-            # check both model_df and cat_df have the same length
-            check_consistent_length(value, self.model_df)
-            self._cat_df = value.copy(deep=True)
-
-    def _check_model_obj(self,
-                         modelobj,
-                         model_df,
-                         ydepend):
-        """
-        check user defined model object has been fit before use within WhiteBox
-        :param modelobj: user defined model object
-        :param model_df: user defined model dataframe (categories converted to numbers)
-        :param ydepend: user defined dependent variable string
-        :return: NA
-        """
-        # basic parameter checks
-        if not hasattr(modelobj, 'predict'):
-            raise ValueError(ErrorWarningMsgs.error_msgs['modelobj'])
-
-        # need to ensure modelobj has previously been fitted, otherwise raise error
-        check_is_fitted(modelobj, 'base_estimator_')
-
-        self.modelobj = modelobj
 
     def _is_regression_classification(self):
         """
@@ -191,13 +195,13 @@ class WhiteBoxBase(object):
         :return: NA
         """
         # determine if in classification problem or regression problem
-        if hasattr(self.modelobj, 'predict_proba'):
+        if hasattr(self._modelobj, 'predict_proba'):
             # if classification setting, secure the predicted class probabilities
-            self.predict_engine = getattr(self.modelobj, 'predict_proba')
+            self.predict_engine = getattr(self._modelobj, 'predict_proba')
             self.model_type = 'classification'
         else:
             # use the regular predict function
-            self.predict_engine = getattr(self.modelobj, 'predict')
+            self.predict_engine = getattr(self._modelobj, 'predict')
             self.model_type = 'regression'
 
     def _check_agg_func(self, aggregate_func):
@@ -252,7 +256,7 @@ class WhiteBoxBase(object):
         :return: dataframe with prediction column
         """
         logging.info("""Creating predictions using modelobj.
-                        \nModelobj class name: {}""".format(self.modelobj.__class__.__name__))
+                        \nModelobj class name: {}""".format(self._modelobj.__class__.__name__))
         # create predictions
         preds = self.predict_engine(
                                     self.model_df.loc[:, self.model_df.columns != self.ydepend])
@@ -264,9 +268,9 @@ class WhiteBoxBase(object):
             # select the prediction probabilities for the class labeled 1
             preds = preds[:, 1].tolist()
             # create a lookup of class labels to numbers
-            class_lookup = {class_: num for num, class_ in enumerate(self.modelobj.classes_)}
+            class_lookup = {class_: num for num, class_ in enumerate(self._modelobj.classes_)}
             # convert the ydepend column to numeric
-            actual = self._cat_df.loc[:, self.ydepend].apply(lambda x: class_lookup[x])
+            actual = self._cat_df.loc[:, self.ydepend].apply(lambda x: class_lookup[x]).values.tolist()
             # calculate the difference between actual and predicted probabilities
             diff = [prob_acc(true_class=actual[idx], pred_prob=pred) for idx, pred in enumerate(preds)]
         else:
@@ -469,7 +473,7 @@ class WhiteBoxBase(object):
 
         # tweak self.ydepend if classification case (add dominate class)
         if self.model_type == 'classification':
-            ydepend_out = '{}: {}'.format(self.ydepend, self.modelobj.classes_[1])
+            ydepend_out = '{}: {}'.format(self.ydepend, self._modelobj.classes_[1])
         else:
             # regression case
             ydepend_out = self.ydepend

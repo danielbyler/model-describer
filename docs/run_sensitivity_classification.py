@@ -1,4 +1,4 @@
-from whitebox.whitebox import WhiteBoxSensitivity
+from whitebox.eval import WhiteBoxSensitivity
 from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
 import numpy as np

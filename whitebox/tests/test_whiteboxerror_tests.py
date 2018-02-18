@@ -435,7 +435,7 @@ class TestWhiteBoxError(unittest.TestCase):
                            featuredict=None,
                            autoformat=True)
 
-        test_featuredict = {'TEST': "TEST"}
+        test_featuredict = {'target': "SUPERTEST"}
         wb._check_featuredict(test_featuredict)
 
         self.assertEqual(test_featuredict,

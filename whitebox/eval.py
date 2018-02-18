@@ -110,6 +110,33 @@ class WhiteBoxError(WhiteBoxBase):
 
         self.allerrors = DataFrame()
 
+    def _create_group_errors(self,
+                             group_copy):
+        """
+        split errors into positive and negative errors, concatenate poisitive and negative
+        errosr on index. Concatenate with original group columns for final dataset
+        :param group_copy: deep copy of region of data driven by groupby level
+        :return: errors dataframe
+        """
+        # split out positive vs negative errors
+        errors = group_copy['errors']
+        # check if classification
+        if self.model_type == 'classification':
+            # get user defined aggregate (central values) value of the errors
+            agg_errors = self.aggregate_func(errors)
+            # subtract the aggregate value for the group from the errors
+            errors = errors.apply(lambda x: agg_errors - x)
+        # need non zero mask when concatenating non error columns back
+        non_zero_errors_mask = errors != 0
+        # create separate columns for pos or neg errors
+        errors = concat([errors[errors > 0], errors[errors < 0]], axis=1)
+        # rename error columns
+        errors.columns = ['errPos', 'errNeg']
+        # merge back with orignial data
+        toreturn = concat([group_copy.loc[non_zero_errors_mask, group_copy.columns != 'errors'], errors], axis=1)
+        # return
+        return toreturn
+
     def _transform_function(
                             self,
                             group,
@@ -128,21 +155,10 @@ class WhiteBoxError(WhiteBoxBase):
         assert vartype in ['Continuous', 'Categorical'], 'variable type needs to be continuous or categorical'
         # copy so we don't change the og data
         group_copy = group.copy(deep=True)
-        # split out positive vs negative errors
-        errors = group_copy['errors']
-        # check if classification
-        if self.model_type == 'classification':
-            # get user defined aggregate (central values) value of the errors
-            agg_errors = self.aggregate_func(errors)
-            # subtract the aggregate value for the group from the errors
-            errors = errors.apply(lambda x: agg_errors-x)
 
-        # create separate columns for pos or neg errors
-        errors = concat([errors[errors > 0], errors[errors < 0]], axis=1)
-        # rename error columns
-        errors.columns = ['errPos', 'errNeg']
-        # merge back with original data
-        toreturn = concat([group_copy.loc[:, group_copy.columns != 'errors'], errors], axis=1)
+        # create group errors dataframe
+        toreturn = self._create_group_errors(group_copy)
+
         # return the mean
         if vartype == 'Categorical':
             logging.info(""""Returning mean values for group of categorical variable in transform_function
@@ -175,6 +191,59 @@ class WhiteBoxError(WhiteBoxBase):
             self.allerrors = self.allerrors.append(errors)
             return errors
 
+    def _handle_categorical(self,
+                            col,
+                            groupby,
+                            col_indices):
+        """
+        pass categorical variable column to  _transform_func to capture
+        positive and negative errosr within a particular region of the data
+        driven by groupby level.
+        :param col: current column being operated on
+        :param groupby: current groupby being operated on
+        :param col_indices: column indices to include
+        :return: errors dataframe
+        """
+        logging.info("""Column determined as categorical datatype, transforming data for categorical column
+                                    \nColumn: {}
+                                    \nGroup: {}""".format(col, groupby))
+        # slice over the groupby variable and the categories within the current column
+        errors = self.cat_df[col_indices].groupby([groupby, col]).apply(self._transform_function,
+                                                                        col=col,
+                                                                        groupby=groupby,
+                                                                        vartype='Categorical')
+        # final categorical transformations
+        errors.reset_index(inplace=True)
+        # rename
+        errors.rename(columns={groupby: 'groupByValue'}, inplace=True)
+        # assign groupby variable to the errors dataframe
+        errors['groupByVarName'] = groupby
+        # return
+        return errors
+
+    def _handle_continuous(self,
+                           col,
+                           groupby,
+                           col_indices):
+        """
+        pass continous variable column to _continuous_slice to create percentile buckets,
+        measures positive and negative errosr, and create final errors dataframe
+        :param col: current column being operated on
+        :param groupby: current groupby being operated on
+        :param col_indices: column indices to include
+        :return: errors dataframe
+        """
+        logging.info("""Column determined as continuous datatype, transforming data for continuous column
+                                                \nColumn: {}
+                                                \nGroup: {}""".format(col, groupby))
+        # groupby the groupby variable on subset of columns and apply _continuous_slice
+        errors = self.cat_df[col_indices].groupby(groupby).apply(self._continuous_slice,
+                                                                 col=col,
+                                                                 vartype='Continuous',
+                                                                 groupby=groupby)
+
+        return errors
+
     def _var_check(
                     self,
                     col=None,
@@ -189,38 +258,19 @@ class WhiteBoxError(WhiteBoxBase):
         col_indices = [col, 'errors', 'predictedYSmooth', groupby]
         # check if categorical
         if is_object_dtype(self.cat_df.loc[:, col]):
-            logging.info("""Column determined as categorical datatype, transforming data for categorical column
-                            \nColumn: {}
-                            \nGroup: {}""".format(col, groupby))
             # set variable type
             vartype = 'Categorical'
-            # slice over the groupby variable and the categories within the current column
-            errors = self.cat_df[col_indices].groupby([groupby, col]).apply(self._transform_function,
-                                                                            col=col,
-                                                                            groupby=groupby,
-                                                                            vartype=vartype)
-            # final categorical transformations
-            errors.reset_index(inplace=True)
-            # rename
-            errors.rename(columns={groupby: 'groupByValue'}, inplace=True)
-            # assign groupby variable to the errors dataframe
-            errors['groupByVarName'] = groupby
+            errors = self._handle_categorical(col,
+                                              groupby,
+                                              col_indices)
 
         else:
-            logging.info("""Column determined as continuous datatype, transforming data for continuous column
-                                        \nColumn: {}
-                                        \nGroup: {}""".format(col, groupby))
-            # set variable type
             vartype = 'Continuous'
-            # groupby the groupby variable on subset of columns and apply _continuous_slice
-            errors = self.cat_df[col_indices].groupby(groupby).apply(self._continuous_slice,
-                                                                     col=col,
-                                                                     vartype=vartype,
-                                                                     groupby=groupby)
+            errors = self._handle_continuous(col,
+                                             groupby,
+                                             col_indices)
 
-        # json out
-        #TODO remove this
-        errors = errors.fillna('null')# errors.replace(np.nan, 'null')
+        errors = errors.fillna('null')
         # convert to json structure
         json_out = to_json(
                                     errors,
@@ -377,6 +427,108 @@ class WhiteBoxSensitivity(WhiteBoxBase):
 
         return errors
 
+    def _handle_categorical(self,
+                            col,
+                            groupby,
+                            copydf,
+                            col_indices):
+        """
+        To measure sensitivity in the categorical case, the mode value of the categorical
+        column is identified, and all other levels within the category are switch to the
+        mode value. New predictions are created with this synthetic dataset and the
+        difference between the original predictions with the real data vs the synthetic
+        predictions are calculated and returned.
+        :param col: current column being operated on
+        :param groupby: current groupby being operated on
+        :param copydf: deep copy of cat_df
+        :param col_indices: column indices to include
+        :return: incremental bump value, sensitivity dataframe
+        """
+        # TODO need to handle case where user adds columns to cat_df but is not in model_df - can't select these cols
+        # TODO split this into two additional methods - categorical and continuous case
+        logging.info("""Column determined as categorical datatype, transforming data for categorical column
+                                                \nColumn: {}
+                                                \nGroup: {}""".format(col, groupby))
+        rev_col = self._reverse_featuredict[col]
+        # map categories with main column name to properly subset
+        all_type_cols = ['{}_{}'.format(rev_col, cat) for cat in self.cat_df.loc[:, col].unique()]
+        # find the mode from the original cat_df for this column
+        incremental_val = str(self.cat_df[col].mode().values[0])
+        # find the columns within all_type_cols related to the mode_val
+        mode_col = list(filter(lambda x: incremental_val in x, all_type_cols))
+        # convert mode cols to all 1's
+        copydf.loc[:, mode_col] = 1
+        # convert all other non mode cols to zeros
+        non_mode_col = list(filter(lambda x: incremental_val not in x, all_type_cols))
+        copydf.loc[:, non_mode_col] = 0
+        # make predictions with the switches to the dataset
+        if self.model_type == 'classification':
+            copydf['new_predictions'] = self.predict_engine(copydf.loc[:, ~copydf.columns.isin([self.ydepend,
+                                                                                                'predictedYSmooth'])])[
+                                        :, 1]
+        if self.model_type == 'regression':
+            copydf['new_predictions'] = self.predict_engine(copydf.loc[:, ~copydf.columns.isin([self.ydepend,
+                                                                                                'predictedYSmooth'])])
+        # calculate difference between actual predictions and new_predictions
+        self.cat_df['diff'] = copydf['new_predictions'] - copydf['predictedYSmooth']
+        # create mask of data to select rows that are not equal to the mode of the category.
+        # This will prevent blank displays in HTML
+        mode_mask = self.cat_df[col] != incremental_val
+        # slice over the groupby variable and the categories within the current column
+        sensitivity = self.cat_df[mode_mask][col_indices].groupby([groupby, col]).apply(self._transform_function,
+                                                                                        col=col,
+                                                                                        groupby=groupby,
+                                                                                        vartype='Categorical')
+        # rename groupby
+        sensitivity.rename(columns={groupby: 'groupByValue'}, inplace=True)
+        # assign groupby variable to the errors dataframe
+        sensitivity['groupByVarName'] = groupby
+        # return sensitivity
+        return incremental_val, sensitivity
+
+    def _handle_continuous(self,
+                           col,
+                           groupby,
+                           copydf,
+                           col_indices):
+        """
+        In the continuous case, the standard deviation is determined by the values of
+        the continuous column. This is multipled by the user defined std_num and applied
+        to the values in the continuous column. New predictions are generated on this synthetic
+        dataset, and the difference between the original predictions and the new predictions are
+        captured and assigned.
+        :param col: current column being operated on
+        :param groupby: current groupby being operated on
+        :param copydf: deep copy of cat_df
+        :param col_indices: column indices to include
+        :return: incremental bump value, sensitivity dataframe
+        """
+        logging.info("""Column determined as continuous datatype, transforming data for continuous column
+                                                            \nColumn: {}
+                                                            \nGroup: {}""".format(col, groupby))
+        rev_col = self._reverse_featuredict[col]
+        incremental_val = copydf[rev_col].std() * self.std_num
+        # tweak the currently column by the incremental_val
+        copydf[rev_col] = copydf[rev_col] + incremental_val
+        # make predictions with the switches to the dataset
+        if self.model_type == 'classification':
+            copydf['new_predictions'] = self.predict_engine(copydf.loc[:, ~copydf.columns.isin([self.ydepend,
+                                                                                                'predictedYSmooth'])])[
+                                        :, 1]
+        if self.model_type == 'regression':
+            copydf['new_predictions'] = self.predict_engine(copydf.loc[:, ~copydf.columns.isin([self.ydepend,
+                                                                                                'predictedYSmooth'])])
+        # calculate difference between actual predictions and new_predictions
+        self.cat_df['diff'] = copydf['new_predictions'] - copydf['predictedYSmooth']
+        # groupby and apply
+        sensitivity = self.cat_df[col_indices].groupby(groupby).apply(self._continuous_slice,
+                                                                      col=col,
+                                                                      vartype='Continuous',
+                                                                      groupby=groupby)
+
+        # return sensitivity
+        return incremental_val, sensitivity
+
     def _var_check(
                     self,
                     col=None,
@@ -393,73 +545,22 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         copydf = self.model_df.copy(deep=True)
         # check if categorical
         if is_object_dtype(self.cat_df.loc[:, col]):
-            #TODO need to handle case where user adds columns to cat_df but is not in model_df - can't select these cols
-            #TODO split this into two additional methods - categorical and continuous case
-            logging.info("""Column determined as categorical datatype, transforming data for categorical column
-                                        \nColumn: {}
-                                        \nGroup: {}""".format(col, groupby))
             # set variable type
             vartype = 'Categorical'
-            # map categories with main column name to properly subset
-            all_type_cols = ['{}_{}'.format(col, cat) for cat in self.cat_df.loc[:, col].unique()]
-            # find the mode from the original cat_df for this column
-            incremental_val = str(self.cat_df[col].mode().values[0])
-            # find the columns within all_type_cols related to the mode_val
-            mode_col = list(filter(lambda x: incremental_val in x, all_type_cols))
-            # convert mode cols to all 1's
-            copydf.loc[:, mode_col] = 1
-            # convert all other non mode cols to zeros
-            non_mode_col = list(filter(lambda x: incremental_val not in x, all_type_cols))
-            copydf.loc[:, non_mode_col] = 0
-            # make predictions with the switches to the dataset
-            if self.model_type == 'classification':
-                copydf['new_predictions'] = self.predict_engine(copydf.loc[:, ~copydf.columns.isin([self.ydepend,
-                                                                                                    'predictedYSmooth'])])[:,1]
-            if self.model_type == 'regression':
-                copydf['new_predictions'] = self.predict_engine(copydf.loc[:, ~copydf.columns.isin([self.ydepend,
-                                                                                                      'predictedYSmooth'])])
-            # calculate difference between actual predictions and new_predictions
-            self.cat_df['diff'] = copydf['new_predictions'] - copydf['predictedYSmooth']
-            # create mask of data to select rows that are not equal to the mode of the category.
-            # This will prevent blank displays in HTML
-            mode_mask = self.cat_df[col] != incremental_val
-            # slice over the groupby variable and the categories within the current column
-            sensitivity = self.cat_df[mode_mask][col_indices].groupby([groupby, col]).apply(self._transform_function,
-                                                                                            col=col,
-                                                                                            groupby=groupby,
-                                                                                            vartype=vartype)
-            # rename groupby
-            sensitivity.rename(columns={groupby: 'groupByValue'}, inplace=True)
-            # assign groupby variable to the errors dataframe
-            sensitivity['groupByVarName'] = groupby
-
+            incremental_val, sensitivity = self._handle_categorical(col,
+                                                                    groupby,
+                                                                    copydf,
+                                                                    col_indices)
         else:
-            logging.info("""Column determined as continuous datatype, transforming data for continuous column
-                                                    \nColumn: {}
-                                                    \nGroup: {}""".format(col, groupby))
             # set variable type
             vartype = 'Continuous'
-            incremental_val = copydf[col].std() * self.std_num
-            # tweak the currently column by the incremental_val
-            copydf[col] = copydf[col] + incremental_val
-            # make predictions with the switches to the dataset
-            if self.model_type == 'classification':
-                copydf['new_predictions'] = self.predict_engine(copydf.loc[:, ~copydf.columns.isin([self.ydepend,
-                                                                                                    'predictedYSmooth'])])[:, 1]
-            if self.model_type == 'regression':
-                copydf['new_predictions'] = self.predict_engine(copydf.loc[:, ~copydf.columns.isin([self.ydepend,
-                                                                                                    'predictedYSmooth'])])
-            # calculate difference between actual predictions and new_predictions
-            self.cat_df['diff'] = copydf['new_predictions'] - copydf['predictedYSmooth']
-            # groupby and apply
-            sensitivity = self.cat_df[col_indices].groupby(groupby).apply(self._continuous_slice,
-                                                                          col=col,
-                                                                          vartype=vartype,
-                                                                          groupby=groupby)
+            incremental_val, sensitivity = self._handle_continuous(col,
+                                                                   groupby,
+                                                                   copydf,
+                                                                   col_indices)
 
-        # json out
-        print(sensitivity.dtypes)
-        sensitivity = sensitivity.fillna('null')# sensitivity.replace(np.nan, 'null')
+
+        sensitivity = sensitivity.fillna('null')
         logging.info("""Converting output to json type using to_json utility function""")
         # convert to json structure
         json_out = to_json(sensitivity, vartype=vartype, html_type = 'sensitivity',

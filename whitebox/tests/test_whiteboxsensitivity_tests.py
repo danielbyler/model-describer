@@ -32,14 +32,13 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
         # set up randomforestregressor
         modelobj = RandomForestRegressor()
 
-        df['Type'] = pd.Categorical(df['Type'])
-        df['Subtype'] = pd.Categorical(df['Subtype'])
-
         self.cat_df = df
 
         model_df = df.copy(deep=True)
-        model_df['Type'] = model_df['Type'].cat.codes
-        model_df['Subtype'] = model_df['Subtype'].cat.codes
+
+        # create dummies
+        model_df = pd.concat([model_df.select_dtypes(include=[np.number]),
+                              pd.get_dummies(model_df.select_dtypes(include=['O', 'category']))], axis=1)
 
         self.model_df = model_df
         modelobj.fit(self.model_df.loc[:, self.model_df.columns != 'target'],
@@ -203,8 +202,6 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
             cat_df=self.cat_df,
             featuredict=None,
             autoformat=True)
-
-        wb.run()
 
         self.assertEqual(wb.called_class, 'WhiteBoxSensitivity',
                          msg="""WhiteBoxBase unable to detect correct super class

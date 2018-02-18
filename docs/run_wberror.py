@@ -69,6 +69,8 @@ WB = WhiteBoxError(modelobj=modelObjc,
                    featuredict=featuredict,
                    verbose=None)
 
+WB.featuredict = featuredict
+WB._cat_df.columns
 WB.run()
 WB.cat_df.columns
 import os
@@ -76,46 +78,46 @@ os.getcwd()
 WB.save(fpath='PERCENTILESTEST.html')
 
 
-class Test(object):
-
-    def __init__(self, x):
-
-        self._x = x
-
-    @property
-    def x(self):
-        return self._x
-
-    @x.setter
-    def x(self, value):
-
-        if value > 50:
-            raise ValueError("x cannot be over 50")
-
-        else:
-            self._x = value
+ydepend, groupby, df = utils.create_synthetic(nrows=10000,
+                                              ncols=10,
+                                              ncat=3,
+                                              max_levels=10,
+                                              mod_type='regression')
 
 
-class Celsius:
-    def __init__(self, temperature = 0):
-        self._temperature = temperature
+final_df = pd.concat([pd.get_dummies(df.select_dtypes(include=['O'])),
+                      df.select_dtypes(include=[np.number])], axis=1)
 
-    def to_fahrenheit(self):
-        return (self.temperature * 1.8) + 32
+modelObjc.fit(final_df.loc[:, final_df.columns != ydepend],
+              final_df.loc[:, ydepend])
 
-    @property
-    def temperature(self):
-        print("Getting value")
-        return self._temperature
+WB = WhiteBoxError(modelobj=modelObjc,
+                   model_df=final_df,
+                   ydepend=ydepend,
+                   cat_df=df,
+                   groupbyvars=groupby,
+                   featuredict=None,
+                   verbose=None)
 
-    @temperature.setter
-    def temperature(self, value):
-        if value < -273:
-            raise ValueError("Temperature below -273 is not possible")
-        print("Setting value")
-        self._temperature = value
+WB.run()
 
-z = Test(49)
+WB.save('REGRESSIONTEST.html')
 
+ydepend, groupby, df = utils.create_synthetic(nrows=10000,
+                                              ncols=10,
+                                              ncat=3,
+                                              max_levels=10,
+                                              mod_type='classification')
+
+df['probs'] = np.random.rand(df.shape[0])
+
+diff = (df['target']*(1-df['probs'])) + ((1-df['target']) * df['probs'])
+
+diff2 = df.apply(lambda x: utils.prob_acc(true_class=x['target'],
+                                          pred_prob=x['probs']), axis=1)
+
+diff2
+np.sum(diff2)
+np.sum(diff)
 
 

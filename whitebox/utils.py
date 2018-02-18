@@ -9,6 +9,8 @@ import pandas as pd
 import numpy as np
 import pkg_resources
 import io
+from sklearn.datasets import make_blobs, make_regression
+import random
 
 
 class Settings(object):
@@ -38,6 +40,10 @@ class ErrorWarningMsgs(object):
                                 WhiteBoxError only works with model 
                                 objects with predict method"""
 
+    missing_featuredict_error = """featuredict keys missing from assigned cat_df
+                                    \ncheck featuredict keys and reassign.
+                                    \nMissing keys: {}"""
+
     run_wb_error = """Must run {}.run() before calling save method"""
 
     agg_func_error = """aggregate_func must work on 
@@ -50,7 +56,8 @@ class ErrorWarningMsgs(object):
                   'cat_df': cat_df_shape_error,
                   'modelobj': predict_model_obj_error,
                   'wb_run_error': run_wb_error,
-                  'agg_func': agg_func_error}
+                  'agg_func': agg_func_error,
+                  'featuredict': missing_featuredict_error}
 
     cat_df_warning = """model_df being used for processing. Given that most 
                         sklearn models cannot directly handle 
@@ -310,3 +317,64 @@ def create_wine_data(cat_cols):
         wine.loc[:, cat] = pd.cut(wine.loc[:, cat], bins=3, labels=['low', 'medium', 'high'])
 
     return wine
+
+
+def create_synthetic(nrows=100,
+                     ncols=10,
+                     ncat=5,
+                     num_groupby=3,
+                     max_levels=10,
+                     mod_type='regression'):
+    """
+    create synthetic datasets for both classification and regression problems
+    :param nrows: num observations
+    :param ncols: num features
+    :param ncat: num categories
+    :param num_groupby: number of groupby columns
+    :param max_levels: max bin levels
+    :param mod_type: model type --> classification or regression
+    :return: synthetic dataset
+    """
+
+    if mod_type == 'classification':
+        df = pd.DataFrame(make_blobs(n_samples=nrows,
+                                     n_features=ncols,
+                                     random_state=5)[0])
+    else:
+        df = pd.DataFrame(make_regression(n_samples=nrows,
+                                     n_features=ncols,
+                                          random_state=5)[0])
+
+    cols = ['col{}'.format(idx) for idx in list(range(ncols))]
+
+    df.columns = cols
+
+    # reserve col0 for target
+    cols = cols[1:]
+    # randomly select ncat cols
+    cats = list(set([random.choice(cols) for i in range(ncat)]))
+
+    for cat in cats:
+        num_bins = max(1, random.choice(list(range(max_levels))))
+        bin_labels = ['level_{}'.format(level) for level in list(range(num_bins))]
+        df.loc[:, cat] = pd.cut(df.loc[:, cat], bins=num_bins,
+                                labels=bin_labels)
+        df.loc[:, cat] = df.loc[:, cat].astype(str)
+
+    if mod_type == 'classification':
+        df.loc[:, 'col0'] = pd.cut(df.loc[:, 'col0'], bins=2,
+                                   labels=[0, 1])
+        df.loc[:, 'col0'] = df.loc[:, 'col0'].astype(int)
+
+    df.rename(columns={'col0': 'target'}, inplace=True)
+
+    if not num_groupby:
+        num_groupby = max(1, random.choice(list(range(ncat))))
+
+    catcols = df.loc[:, df.columns != 'target'].select_dtypes(include=['O']).columns.values.tolist()
+
+    random.shuffle(catcols)
+
+    groupby = catcols[0:num_groupby]
+
+    return 'target', groupby, df
