@@ -125,9 +125,9 @@ class TestWhiteBoxError(unittest.TestCase):
 
         wb._predict()
 
-        self.assertIn('predictedYSmooth', wb.model_df.columns,
+        self.assertIn('predictedYSmooth', wb._model_df.columns,
                       msg="""predictedYSmooth not in instances model_df. \nOnly cols present:
-                      {}""".format(wb.model_df.columns))
+                      {}""".format(wb._model_df.columns))
 
     def test_wberror_predict_predicted(self):
         # test whether predictedYSmooth column is present after whiteboxerror predict method called

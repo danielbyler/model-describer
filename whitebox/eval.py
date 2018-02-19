@@ -4,14 +4,14 @@
 import logging
 
 import numpy as np
-from pandas import DataFrame, concat
+import pandas as pd
 from pandas.api.types import is_object_dtype
 
 try:
-    from utils import to_json
+    import utils as wb_utils
     from base import WhiteBoxBase
 except ImportError:
-    from whitebox.utils import to_json
+    import whitebox.utils as wb_utils
     from whitebox.base import WhiteBoxBase
 
 
@@ -108,7 +108,7 @@ class WhiteBoxError(WhiteBoxBase):
                                             autoformat=autoformat,
                                             verbose=verbose)
 
-        self.allerrors = DataFrame()
+        self.allerrors = pd.DataFrame()
 
     def _create_group_errors(self,
                              group_copy):
@@ -129,11 +129,11 @@ class WhiteBoxError(WhiteBoxBase):
         # need non zero mask when concatenating non error columns back
         non_zero_errors_mask = errors != 0
         # create separate columns for pos or neg errors
-        errors = concat([errors[errors > 0], errors[errors < 0]], axis=1)
+        errors = pd.concat([errors[errors > 0], errors[errors < 0]], axis=1)
         # rename error columns
         errors.columns = ['errPos', 'errNeg']
         # merge back with orignial data
-        toreturn = concat([group_copy.loc[non_zero_errors_mask, group_copy.columns != 'errors'], errors], axis=1)
+        toreturn = pd.concat([group_copy.loc[non_zero_errors_mask, group_copy.columns != 'errors'], errors], axis=1)
         # return
         return toreturn
 
@@ -180,7 +180,7 @@ class WhiteBoxError(WhiteBoxBase):
                                                                  group.shape,
                                                                  col,
                                                                  vartype))
-            errors = DataFrame({
+            errors = pd.DataFrame({
                                     col: toreturn[col].max(),
                                     groupby: toreturn[groupby].mode(),
                                     'predictedYSmooth': self.aggregate_func(toreturn['predictedYSmooth']),
@@ -208,7 +208,7 @@ class WhiteBoxError(WhiteBoxBase):
                                     \nColumn: {}
                                     \nGroup: {}""".format(col, groupby))
         # slice over the groupby variable and the categories within the current column
-        errors = self.cat_df[col_indices].groupby([groupby, col]).apply(self._transform_function,
+        errors = self._cat_df[col_indices].groupby([groupby, col]).apply(self._transform_function,
                                                                         col=col,
                                                                         groupby=groupby,
                                                                         vartype='Categorical')
@@ -237,7 +237,7 @@ class WhiteBoxError(WhiteBoxBase):
                                                 \nColumn: {}
                                                 \nGroup: {}""".format(col, groupby))
         # groupby the groupby variable on subset of columns and apply _continuous_slice
-        errors = self.cat_df[col_indices].groupby(groupby).apply(self._continuous_slice,
+        errors = self._cat_df[col_indices].groupby(groupby).apply(self._continuous_slice,
                                                                  col=col,
                                                                  vartype='Continuous',
                                                                  groupby=groupby)
@@ -257,7 +257,7 @@ class WhiteBoxError(WhiteBoxBase):
         # subset col indices
         col_indices = [col, 'errors', 'predictedYSmooth', groupby]
         # check if categorical
-        if is_object_dtype(self.cat_df.loc[:, col]):
+        if is_object_dtype(self._cat_df.loc[:, col]):
             # set variable type
             vartype = 'Categorical'
             errors = self._handle_categorical(col,
@@ -272,7 +272,7 @@ class WhiteBoxError(WhiteBoxBase):
 
         errors = errors.fillna('null')
         # convert to json structure
-        json_out = to_json(
+        json_out = wb_utils.to_json(
                                     errors,
                                     vartype=vartype,
                                     html_type='error',
@@ -411,7 +411,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                             \nGroup: {}
                             \nGroup shape: {}""".format(col, groupby, group.shape))
             # return the max value for the Continuous case
-            errors = DataFrame({
+            errors = pd.DataFrame({
                                     col: group[col].max(),
                                     groupby: group[groupby].mode(),
                                     'predictedYSmooth': self.aggregate_func(group['diff'])})
@@ -421,7 +421,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                                         \nGroup: {}
                                         \nGroup shape: {}""".format(col, groupby, group.shape))
             # return the mode for the categorical case
-            errors = DataFrame({col: group[col].mode(),
+            errors = pd.DataFrame({col: group[col].mode(),
                                 groupby: group[groupby].mode(),
                                 'predictedYSmooth': self.aggregate_func(group['diff'])})
 
@@ -451,9 +451,9 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                                                 \nGroup: {}""".format(col, groupby))
         rev_col = self._reverse_featuredict[col]
         # map categories with main column name to properly subset
-        all_type_cols = ['{}_{}'.format(rev_col, cat) for cat in self.cat_df.loc[:, col].unique()]
+        all_type_cols = ['{}_{}'.format(rev_col, cat) for cat in self._cat_df.loc[:, col].unique()]
         # find the mode from the original cat_df for this column
-        incremental_val = str(self.cat_df[col].mode().values[0])
+        incremental_val = str(self._cat_df[col].mode().values[0])
         # find the columns within all_type_cols related to the mode_val
         mode_col = list(filter(lambda x: incremental_val in x, all_type_cols))
         # convert mode cols to all 1's
@@ -470,12 +470,12 @@ class WhiteBoxSensitivity(WhiteBoxBase):
             copydf['new_predictions'] = self.predict_engine(copydf.loc[:, ~copydf.columns.isin([self.ydepend,
                                                                                                 'predictedYSmooth'])])
         # calculate difference between actual predictions and new_predictions
-        self.cat_df['diff'] = copydf['new_predictions'] - copydf['predictedYSmooth']
+        self._cat_df['diff'] = copydf['new_predictions'] - copydf['predictedYSmooth']
         # create mask of data to select rows that are not equal to the mode of the category.
         # This will prevent blank displays in HTML
-        mode_mask = self.cat_df[col] != incremental_val
+        mode_mask = self._cat_df[col] != incremental_val
         # slice over the groupby variable and the categories within the current column
-        sensitivity = self.cat_df[mode_mask][col_indices].groupby([groupby, col]).apply(self._transform_function,
+        sensitivity = self._cat_df[mode_mask][col_indices].groupby([groupby, col]).apply(self._transform_function,
                                                                                         col=col,
                                                                                         groupby=groupby,
                                                                                         vartype='Categorical')
@@ -519,9 +519,9 @@ class WhiteBoxSensitivity(WhiteBoxBase):
             copydf['new_predictions'] = self.predict_engine(copydf.loc[:, ~copydf.columns.isin([self.ydepend,
                                                                                                 'predictedYSmooth'])])
         # calculate difference between actual predictions and new_predictions
-        self.cat_df['diff'] = copydf['new_predictions'] - copydf['predictedYSmooth']
+        self._cat_df['diff'] = copydf['new_predictions'] - copydf['predictedYSmooth']
         # groupby and apply
-        sensitivity = self.cat_df[col_indices].groupby(groupby).apply(self._continuous_slice,
+        sensitivity = self._cat_df[col_indices].groupby(groupby).apply(self._continuous_slice,
                                                                       col=col,
                                                                       vartype='Continuous',
                                                                       groupby=groupby)
@@ -542,9 +542,9 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         # subset col indices
         col_indices = [col, 'errors', 'predictedYSmooth', groupby, 'diff']
         # make a copy of the data to manipulate and change values
-        copydf = self.model_df.copy(deep=True)
+        copydf = self._model_df.copy(deep=True)
         # check if categorical
-        if is_object_dtype(self.cat_df.loc[:, col]):
+        if is_object_dtype(self._cat_df.loc[:, col]):
             # set variable type
             vartype = 'Categorical'
             incremental_val, sensitivity = self._handle_categorical(col,
@@ -563,7 +563,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         sensitivity = sensitivity.fillna('null')
         logging.info("""Converting output to json type using to_json utility function""")
         # convert to json structure
-        json_out = to_json(sensitivity, vartype=vartype, html_type = 'sensitivity',
+        json_out = wb_utils.to_json(sensitivity, vartype=vartype, html_type = 'sensitivity',
                                  incremental_val=incremental_val)
         # return json_out
         return json_out

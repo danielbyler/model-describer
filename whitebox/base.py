@@ -7,30 +7,14 @@ import logging
 import warnings
 
 import numpy as np
-from pandas import DataFrame, melt
+import pandas as pd
 from sklearn.utils.validation import check_is_fitted, check_consistent_length
 
 #TODO fix imports
 try:
-    from utils import (prob_acc,
-                       create_insights,
-                       getvectors,
-                       flatten_json,
-                       to_json,
-                       createmlerror_html,
-                       Settings,
-                       ErrorWarningMsgs,
-                       create_group_percentiles)
+    import utils as wb_utils
 except:
-    from whitebox.utils import (prob_acc,
-                                create_insights,
-                                getvectors,
-                                flatten_json,
-                                to_json,
-                                createmlerror_html,
-                                Settings,
-                                ErrorWarningMsgs,
-                                create_group_percentiles)
+    import whitebox.utils as wb_utils
 
 
 class WhiteBoxBase(object):
@@ -65,15 +49,15 @@ class WhiteBoxBase(object):
         """
 
         # check error type is supported format
-        if error_type not in Settings.supported_agg_errors:
-            raise ErrorWarningMsgs.error_msgs['error_type']
+        if error_type not in wb_utils.Settings.supported_agg_errors:
+            raise wb_utils.ErrorWarningMsgs.error_msgs['error_type']
 
             # check groupby vars
         if not groupbyvars:
-            raise ErrorWarningMsgs.error_msgs['groupbyvars']
+            raise wb_utils.ErrorWarningMsgs.error_msgs['groupbyvars']
 
-        # make copy and assign model dataframe
-        self.model_df = model_df.copy(deep=True)
+        # make copy, reset index and assign model dataframe
+        self._model_df = model_df.copy(deep=True).reset_index(drop=True)
         # check cat_df
         self._cat_df = cat_df
         # check modelobj
@@ -117,12 +101,20 @@ class WhiteBoxBase(object):
         """
         # if cat_df not assigned, use model_df
         if value is None:
-            warnings.warn(ErrorWarningMsgs.warning_msgs['cat_df'])
-            self._cat_df = self.model_df
+            warnings.warn(wb_utils.ErrorWarningMsgs.warning_msgs['cat_df'])
+            self._cat_df = self._model_df
         else:
             # check both model_df and cat_df have the same length
-            check_consistent_length(value, self.model_df)
-            self._cat_df = value.copy(deep=True)
+            check_consistent_length(value, self._model_df)
+            # check index's are equal
+            if not all(value.index == self._model_df.index):
+                raise ValueError("""Indices of cat_df and model_df are not aligned. Ensure Index's are 
+                                    \nexactly the same before WhiteBox use.""")
+            # create copy of users dataframe as to not adjust their actual dataframe object
+            # they are working on
+            value = value.copy(deep=True)
+            # reset users index in case of multi index or otherwise
+            self._cat_df = value.reset_index(drop=True)
 
     @property
     def modelobj(self):
@@ -137,7 +129,7 @@ class WhiteBoxBase(object):
         """
         # basic parameter checks
         if not hasattr(value, 'predict'):
-            raise ValueError(ErrorWarningMsgs.error_msgs['modelobj'])
+            raise ValueError(wb_utils.ErrorWarningMsgs.error_msgs['modelobj'])
 
         # ensure modelobj has been previously fit
         check_is_fitted(value, 'base_estimator_')
@@ -157,7 +149,7 @@ class WhiteBoxBase(object):
             if not all([key in self._cat_df.columns for key in featuredict.keys()]):
                 # find missing keys
                 missing = list(set(featuredict.keys()).difference(set(self._cat_df.columns)))
-                raise ValueError(ErrorWarningMsgs.error_msgs['featuredict'].format(missing))
+                raise ValueError(wb_utils.ErrorWarningMsgs.error_msgs['featuredict'].format(missing))
             self.featuredict = featuredict
 
     def _check_verbose(self, verbose):
@@ -216,7 +208,7 @@ class WhiteBoxBase(object):
             if hasattr(agg_results, '__len__'):
                 raise ValueError("""aggregate_func must return scalar""")
         except Exception as e:
-            raise TypeError(ErrorWarningMsgs.error_msgs['agg_func'].format(e))
+            raise TypeError(wb_utils.ErrorWarningMsgs.error_msgs['agg_func'].format(e))
 
         self.aggregate_func = aggregate_func
 
@@ -228,10 +220,10 @@ class WhiteBoxBase(object):
         # subset down cat_df to only those features in featuredict
         self._cat_df = self._cat_df.loc[:, list(self.featuredict.keys())].rename(columns=self.featuredict)
         # rename model_df columns based on featuredict
-        self.model_df = self.model_df.rename(columns=self.featuredict)
+        self._model_df = self._model_df.rename(columns=self.featuredict)
 
         if autoformat:
-            warnings.warn(ErrorWarningMsgs.warning_msgs['auto_format'])
+            warnings.warn(wb_utils.ErrorWarningMsgs.warning_msgs['auto_format'])
             # convert categorical dtypes to strings
             for cat in self._cat_df.select_dtypes(include=['category']).columns:
                 self._cat_df.loc[:, cat] = self._cat_df.loc[:, cat].astype(str)
@@ -243,11 +235,11 @@ class WhiteBoxBase(object):
         :return: NA
         """
         # create instance wide percentiles for all numeric columns
-        self.percentile_vecs = getvectors(self._cat_df)
+        self.percentile_vecs = wb_utils.getvectors(self._cat_df)
         # create percentile bars for final out
         self._percentiles_out()
         # create groupby percentiles
-        self._group_percentiles_out = create_group_percentiles(self._cat_df,
+        self._group_percentiles_out = wb_utils.create_group_percentiles(self._cat_df,
                                                                self.groupbyvars)
 
     def _predict(self):
@@ -259,7 +251,7 @@ class WhiteBoxBase(object):
                         \nModelobj class name: {}""".format(self._modelobj.__class__.__name__))
         # create predictions
         preds = self.predict_engine(
-                                    self.model_df.loc[:, self.model_df.columns != self.ydepend])
+                                    self._model_df.loc[:, self._model_df.columns != self.ydepend])
 
         if self.model_type == 'regression':
             # calculate error
@@ -272,7 +264,7 @@ class WhiteBoxBase(object):
             # convert the ydepend column to numeric
             actual = self._cat_df.loc[:, self.ydepend].apply(lambda x: class_lookup[x]).values.tolist()
             # calculate the difference between actual and predicted probabilities
-            diff = [prob_acc(true_class=actual[idx], pred_prob=pred) for idx, pred in enumerate(preds)]
+            diff = [wb_utils.prob_acc(true_class=actual[idx], pred_prob=pred) for idx, pred in enumerate(preds)]
         else:
             raise RuntimeError(""""unsupported model type
                                     \nInput Model Type: {}""".format(self.model_type))
@@ -282,7 +274,7 @@ class WhiteBoxBase(object):
         # assign predictions
         logging.info('Assigning predictions to instance dataframe')
         self._cat_df['predictedYSmooth'] = preds
-        self.model_df['predictedYSmooth'] = preds
+        self._model_df['predictedYSmooth'] = preds
         # return
         return self._cat_df
 
@@ -321,7 +313,7 @@ class WhiteBoxBase(object):
         if self.model_type == 'regression':
             error_type = self.error_type
 
-        acc = self._cat_df.groupby(groupby).apply(create_insights,
+        acc = self._cat_df.groupby(groupby).apply(wb_utils.create_insights,
                                                  group_var=groupby,
                                                  error_type=error_type)
         # drop the grouping indexing
@@ -343,9 +335,9 @@ class WhiteBoxBase(object):
         final_percentiles = percentiles[percentiles.percentile.str
                                         .contains('10%|25%|50%|75%|90%')].copy(deep=True)
         # melt to long format
-        percentiles_melted = melt(final_percentiles, id_vars='percentile')
+        percentiles_melted = pd.melt(final_percentiles, id_vars='percentile')
         # convert to_json
-        self.percentiles = to_json(dataframe=percentiles_melted,
+        self.percentiles = wb_utils.to_json(dataframe=percentiles_melted,
                                    vartype='Percentile',
                                    html_type='percentile',
                                    incremental_val=None)
@@ -410,7 +402,7 @@ class WhiteBoxBase(object):
         # create placeholder for outputs
         placeholder = []
         # create placeholder for all insights
-        insights_df = DataFrame()
+        insights_df = pd.DataFrame()
         logging.info("""Running main program. Iterating over 
                     columns and applying functions depednent on datatype""")
         for col in self._cat_df.columns[
@@ -445,11 +437,11 @@ class WhiteBoxBase(object):
             # append to placeholder
             # dont append if placeholder is empty due to col being the same as groupby
             if len(colhold) > 0:
-                placeholder.append(flatten_json(colhold))
+                placeholder.append(wb_utils.flatten_json(colhold))
 
         logging.info('Converting accuracy outputs to json format')
         # finally convert insights_df into json object
-        insights_json = to_json(insights_df, vartype='Accuracy')
+        insights_json = wb_utils.to_json(insights_df, vartype='Accuracy')
         # append to outputs
         placeholder.append(insights_json)
         # append percentiles
@@ -466,10 +458,10 @@ class WhiteBoxBase(object):
         :return: None
         """
         if not self.outputs:
-            RuntimeError(ErrorWarningMsgs.error_msgs['wb_run_error'].format(self.called_class))
-            logging.warning(ErrorWarningMsgs.error_msgs['wb_run_error'].format(self.called_class))
+            RuntimeError(wb_utils.ErrorWarningMsgs.error_msgs['wb_run_error'].format(self.called_class))
+            logging.warning(wb_utils.ErrorWarningMsgs.error_msgs['wb_run_error'].format(self.called_class))
 
-        logging.info("""creating html output for type: {}""".format(Settings.html_type[self.called_class]))
+        logging.info("""creating html output for type: {}""".format(wb_utils.Settings.html_type[self.called_class]))
 
         # tweak self.ydepend if classification case (add dominate class)
         if self.model_type == 'classification':
@@ -479,10 +471,10 @@ class WhiteBoxBase(object):
             ydepend_out = self.ydepend
 
         # create HTML output
-        html_out = createmlerror_html(
+        html_out = wb_utils.createmlerror_html(
                                             str(self.outputs),
                                             ydepend_out,
-                                            htmltype=Settings.html_type[self.called_class])
+                                            htmltype=wb_utils.Settings.html_type[self.called_class])
         # save html_out to disk
         with open(fpath, 'w') as outfile:
             logging.info("""Writing html file out to disk""")
