@@ -105,24 +105,13 @@ Helpful Tips
 Handling Categorical Variables
 ------------------------------
 
-In many models, categorical variables are present as independent variables. To provide meaningful charts, WhiteBox requires two things:
-
-- Categorical variables must be of the Categorical data type, not strings. To convert your strings to the correct data type, just use this code:
-
-.. code-block:: python
-
-    #convert string variables to categorical variables 
-    df[df.select_dtypes(['object']).columns] = df.select_dtypes(['object']).apply(lambda x: x.astype('category'))
-
-- Categorical dummies must have the naming convention varname_category (for example Gender_Male and Gender_Female). One way to generate these is
+In many models, categorical variables are present as independent variables. To provide meaningful charts, WhiteBox require categorical dummies to have the naming convention varname_category (for example Gender_Male and Gender_Female). One way to generate these is
 
 .. code-block:: python
 
    #find string variables
    categorical = final_data.select_dtypes(include={'object'})
    categorical_dummies = pd.get_dummies(categorical.applymap(str), prefix = categorical.columns)
-
-
 
 Managing Output Length
 ----------------------
