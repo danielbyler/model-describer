@@ -120,7 +120,7 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
                                     featuredict=None,
                                     autoformat=True)
 
-        wb.run()
+        wb.run(output_type=None)
 
         var_check = wb._var_check(col='sepall',
                      groupby='Type')
@@ -161,7 +161,7 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
                                     featuredict=None,
                                     autoformat=True)
 
-        wb.run()
+        wb.run(output_type=None)
 
         var_check = wb._var_check(
                                     col='Subtype',

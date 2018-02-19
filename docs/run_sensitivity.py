@@ -64,6 +64,10 @@ modelObjc.fit(finaldf.loc[:, finaldf.columns != yDepend], finaldf.loc[:, yDepend
 
 wine_sub['alcohol'] = wine_sub['alcohol'].astype(str)
 
+import warnings
+
+type(warnings.warn('test'))
+
 # instantiate whitebox sensitivity
 WB = WhiteBoxSensitivity(modelobj=modelObjc,
                    model_df=finaldf,

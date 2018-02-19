@@ -87,6 +87,8 @@ df.groupby('col1').get_group('level_1')
 
 WB.run()
 
+import warnings
+warn = warnings.WarningMessage('test')
 WB.save('REGRESSIONTEST.html')
 
 ydepend, groupby, df = utils.create_synthetic(nrows=10000,

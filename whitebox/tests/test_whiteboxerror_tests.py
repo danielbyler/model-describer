@@ -7,6 +7,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn import datasets
 import pandas as pd
 import numpy as np
+import warnings
 from sklearn.ensemble import RandomForestClassifier
 
 try:
@@ -76,7 +77,7 @@ class TestWhiteBoxError(unittest.TestCase):
                             cat_df=self.cat_df,
                             autoformat=True)
 
-        wb.run()
+        wb.run(output_type=None)
 
         self.assertIsInstance(wb.outputs, list,
                               msg="""WhiteBoxError is not producing list of outputs after run
@@ -463,6 +464,8 @@ class TestWhiteBoxError(unittest.TestCase):
                          0,
                          msg="""whitebox base _check_featuredict did not specify proper featuredict
                                 when given featuredict""")
+
+
 
 
 

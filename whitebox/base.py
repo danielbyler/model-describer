@@ -390,13 +390,19 @@ class WhiteBoxBase(object):
         errors['groupByVarName'] = groupby
         return errors
 
-    def run(self):
+    def run(self,
+            output_type='html',
+            output_path=''):
         """
         main run engine. Iterate over columns specified in featuredict,
         and perform anlaysis
         :return: None - does put outputs in place
         """
-        # testing run function
+        # ensure supported output types
+        supported = ['html', None]
+        if output_type not in supported:
+            raise ValueError("""Output type {} not supported.
+                                \nCurrently support {} output""".format(output_type, supported))
         # run the prediction function first to assign the errors to the dataframe
         self._predict()
         # create placeholder for outputs
@@ -416,7 +422,7 @@ class WhiteBoxBase(object):
             for groupby in self.groupbyvars:
                 logging.info("""Currently working on column: {}
                                 \nGroupby: {}\n""".format(col, groupby))
-                # check if we are a col that is the groupbyvar3
+                # check if we are a col that is the groupbyvars
                 if col != groupby:
                     json_out = self._var_check(
                                                 col=col,
@@ -450,6 +456,9 @@ class WhiteBoxBase(object):
         placeholder.append(self._group_percentiles_out)
         # assign placeholder final outputs to class instance
         self.outputs = placeholder
+        # save outputs if specified
+        if output_type == 'html':
+            self.save(fpath=output_path)
 
     def save(self, fpath=''):
         """
