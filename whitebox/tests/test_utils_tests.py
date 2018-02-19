@@ -211,6 +211,19 @@ class TestUtils(unittest.TestCase):
                                     not dict object.
                                     \nReturn class: {}""".format(type(flat)))
 
+    def test_acc_formula(self):
+        # test classification accuracy formula
+        true_class = 1
+        predicted_prob = 0.8
+        expected_out = (true_class*(1-predicted_prob)) + ((1-true_class)*predicted_prob)
+        self.assertEqual(expected_out,
+                         utils.prob_acc(true_class=true_class,
+                                        pred_prob=predicted_prob),
+                         msg="""utils.prob_acc returned unexpected accuracy""")
+
+
+
+
 
 if __name__ == '__main__':
     from os import sys, path

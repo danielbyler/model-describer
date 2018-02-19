@@ -3,10 +3,14 @@
 
 import warnings
 import logging
+import requests
 import math
 import pandas as pd
 import numpy as np
 import pkg_resources
+import io
+from sklearn.datasets import make_blobs, make_regression
+import random
 
 
 class Settings(object):
@@ -16,6 +20,57 @@ class Settings(object):
     # if Error then pull in html_error code
     html_type = {'WhiteBoxSensitivity': 'html_sensitivity',
                  'WhiteBoxError': 'html_error'}
+
+class ErrorWarningMsgs(object):
+    # specify groupbyvars error
+    groupbyvars_error = ValueError(
+        """groupbyvars must be a list of grouping 
+            variables and cannot be None""")
+
+    # specify supported errosr message
+    error_type_error = ValueError(
+        """Supported values for error_type are [MSE, MAE, RMSE]"""
+    )
+
+    cat_df_shape_error = """cat_df and model_df must have same number of observations.
+                            \ncat_df shape: {}
+                            \nmodel_df shape: {}"""
+
+    predict_model_obj_error = """modelObj does not have predict method. 
+                                WhiteBoxError only works with model 
+                                objects with predict method"""
+
+    missing_featuredict_error = """featuredict keys missing from assigned cat_df
+                                    \ncheck featuredict keys and reassign.
+                                    \nMissing keys: {}"""
+
+    run_wb_error = """Must run {}.run() before calling save method"""
+
+    agg_func_error = """aggregate_func must work on 
+                            arrays of data and yield scalar
+                            \nError: {}"""
+
+    # hold all error messages that are raised based on value or type errors
+    error_msgs = {'groupbyvars': groupbyvars_error,
+                  'error_type': error_type_error,
+                  'cat_df': cat_df_shape_error,
+                  'modelobj': predict_model_obj_error,
+                  'wb_run_error': run_wb_error,
+                  'agg_func': agg_func_error,
+                  'featuredict': missing_featuredict_error}
+
+    cat_df_warning = """model_df being used for processing. Given that most 
+                        sklearn models cannot directly handle 
+                        string objects and they need to be converted to numbers, 
+                        the use of model_df for processing may not behave as expected. 
+                        For best results, use cat_df with string columns directly"""
+
+    auto_format = """Please note autoformat is currently experimental and may have unintended consequences."""
+
+    warning_msgs = {'cat_df': cat_df_warning,
+                    'auto_format': auto_format}
+
+
 
 
 def getvectors(dataframe):
@@ -54,6 +109,9 @@ def convert_categorical_independent(dataframe):
     """
     # we want to change the data, not copy and change
     dataframe = dataframe.copy(deep=True)
+    # convert all strings to categories and format codes
+    for str_col in dataframe.select_dtypes(include=['O', 'category']):
+        dataframe.loc[:, str_col] =pd.Categorical(dataframe.loc[:, str_col])
     # convert all category datatypes into numeric
     cats = dataframe.select_dtypes(include=['category'])
     # warn user if no categorical variables detected
@@ -102,9 +160,6 @@ def to_json(
                                                                                 Percentile or accuracy"""
     assert html_type in ['error', 'sensitivity',
                          'percentile'], 'html_type must be error or sensitivity'
-
-    if 'highlight' in dataframe.columns:
-        del dataframe['highlight']
     # prepare for error
     if html_type in ['error', 'percentile']:
         # specify data type
@@ -116,17 +171,52 @@ def to_json(
             incremental_val = round(incremental_val, 2)
         json_out = {'Type': vartype,
                     'Change': str(incremental_val)}
-
-    # create data list
-    json_data_out = []
-    # iterate over dataframe and convert to dict
-    for index, row in dataframe.iterrows():
-        # convert row to dict and append to data list
-        json_data_out.append(row.to_dict())
-
-    json_out['Data'] = json_data_out
+    # create data records from values in df
+    json_out['Data'] = dataframe.to_dict(orient='records')
 
     return json_out
+
+
+def create_group_percentiles(df,
+                             groupbyvars,
+                             wanted_percentiles=[0, .01, .1, .25, .5, .75, .9, 1]):
+    """
+    create percentile buckets for based on groupby for numeric columns
+    :param df: dataframe
+    :param groupbyvars: groupby variable list
+    :param wanted_percentiles: desired percnetile lines for user intereface
+    :return: json formatted percentile outputs
+    """
+    groupbyvars = list(groupbyvars)
+    # subset numeric cols
+    num_cols = df.select_dtypes(include=[np.number])
+    final_out = {'Type': 'PercentileGroup'}
+    final_list = []
+    # iterate over
+    for col in num_cols:
+        data_out = {'variable': col}
+        groupbylist = []
+        # iterate groupbys
+        for group in groupbyvars:
+            # iterate over each slice of the groups
+            for name, group in df.groupby(group):
+                # get col of interest
+                group = group.loc[:, col]
+                # start data out for group
+                group_out = {'groupByVar': name}
+                # capture wanted percentiles
+                group_percent = group.quantile(wanted_percentiles).reset_index().rename(columns = {'index': 'percentiles',                                                                         col: 'value'})
+                # readjust percentiles to look nice
+                group_percent.loc[:, 'percentiles'] = group_percent.loc[:, 'percentiles'].apply(lambda x: str(int(x*100))+'%')
+                # convert percnetile dataframe into json format
+                group_out['percentileValues'] = group_percent.to_dict(orient='records')
+                # append group out to group placeholder list
+                groupbylist.append(group_out)
+        # assign groupbylist out
+        data_out['percentileList'] = groupbylist
+        final_list.append(data_out)
+    final_out['Data'] = final_list
+    return final_out
 
 
 def flatten_json(dictlist):
@@ -173,12 +263,8 @@ class HTML(object):
         html_path = pkg_resources.resource_filename('whitebox', '{}.txt'.format(htmltype))
         # utility class to hold whitebox files
         try:
-            import os
-            print(os.getcwd())
             wbox_html = open('{}.txt'.format(htmltype), 'r').read()
         except IOError:
-            import os
-            print(os.getcwd())
             wbox_html = open(html_path, 'r').read()
         return wbox_html
 
@@ -199,3 +285,96 @@ def createmlerror_html(
                                                         ).replace('Quality', dependentvar)
 
     return output
+
+def create_wine_data(cat_cols):
+    """
+    helper function to grab UCI machine learning wine dataset, convert to
+    pandas dataframe, and return
+    :return: pandas dataframe
+    """
+
+    if not cat_cols:
+        cat_cols = ['alcohol', 'fixed acidity']
+
+    red_raw = requests.get(
+        'https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv').content
+    red = pd.read_csv(io.StringIO(red_raw.decode('utf-8-sig')),
+                      sep=';')
+    red['Type'] = 'Red'
+
+    white_raw = requests.get(
+        'https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-white.csv').content
+    white = pd.read_csv(io.StringIO(white_raw.decode('utf-8-sig')),
+                        sep=';')
+    white['Type'] = 'White'
+
+    # read in wine quality dataset
+    wine = pd.concat([white, red])
+
+    # create category columns
+    # create categories
+    for cat in cat_cols:
+        wine.loc[:, cat] = pd.cut(wine.loc[:, cat], bins=3, labels=['low', 'medium', 'high'])
+
+    return wine
+
+
+def create_synthetic(nrows=100,
+                     ncols=10,
+                     ncat=5,
+                     num_groupby=3,
+                     max_levels=10,
+                     mod_type='regression'):
+    """
+    create synthetic datasets for both classification and regression problems
+    :param nrows: num observations
+    :param ncols: num features
+    :param ncat: num categories
+    :param num_groupby: number of groupby columns
+    :param max_levels: max bin levels
+    :param mod_type: model type --> classification or regression
+    :return: synthetic dataset
+    """
+
+    if mod_type == 'classification':
+        df = pd.DataFrame(make_blobs(n_samples=nrows,
+                                     n_features=ncols,
+                                     random_state=5)[0])
+    else:
+        df = pd.DataFrame(make_regression(n_samples=nrows,
+                                     n_features=ncols,
+                                          random_state=5)[0])
+
+    cols = ['col{}'.format(idx) for idx in list(range(ncols))]
+
+    df.columns = cols
+
+    # reserve col0 for target
+    cols = cols[1:]
+    # randomly select ncat cols
+    cats = list(set([random.choice(cols) for i in range(ncat)]))
+
+    for cat in cats:
+        num_bins = max(1, random.choice(list(range(max_levels))))
+        bin_labels = ['level_{}'.format(level) for level in list(range(num_bins))]
+        df.loc[:, cat] = pd.cut(df.loc[:, cat], bins=num_bins,
+                                labels=bin_labels)
+        df.loc[:, cat] = df.loc[:, cat].astype(str)
+
+    if mod_type == 'classification':
+        df.loc[:, 'col0'] = pd.cut(df.loc[:, 'col0'], bins=2,
+                                   labels=[0, 1])
+        df.loc[:, 'col0'] = df.loc[:, 'col0'].astype(int)
+
+    df.rename(columns={'col0': 'target'}, inplace=True)
+
+    if not num_groupby:
+        num_groupby = max(1, random.choice(list(range(ncat))))
+
+    catcols = df.loc[:, df.columns != 'target'].select_dtypes(include=['O']).columns.values.tolist()
+
+    random.shuffle(catcols)
+
+    groupby = catcols[0:num_groupby]
+
+    return 'target', groupby, df

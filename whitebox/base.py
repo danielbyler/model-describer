@@ -4,23 +4,17 @@
 import warnings
 from abc import abstractmethod, ABCMeta
 import logging
+import warnings
 
 import numpy as np
-from pandas import core, DataFrame, melt
-from sklearn.exceptions import NotFittedError
+import pandas as pd
+from sklearn.utils.validation import check_is_fitted, check_consistent_length
 
+#TODO fix imports
 try:
-    from utils import (prob_acc,
-                       create_insights,
-                       getvectors, flatten_json,
-                       to_json, createmlerror_html,
-                       Settings)
+    import utils as wb_utils
 except:
-    from whitebox.utils import (prob_acc,
-                                create_insights,
-                                getvectors, flatten_json,
-                                to_json, createmlerror_html,
-                                Settings)
+    import whitebox.utils as wb_utils
 
 
 class WhiteBoxBase(object):
@@ -38,6 +32,7 @@ class WhiteBoxBase(object):
                     groupbyvars=None,
                     aggregate_func=np.mean,
                     error_type='MSE',
+                    autoformat=False,
                     verbose=None):
         """
         initialize base class
@@ -49,77 +44,129 @@ class WhiteBoxBase(object):
         :param featuredict: prettty printing and subsetting analysis
         :param groupbyvars: grouping variables
         :param error_type: Aggregate error metric i.e. MSE, MAE, RMSE
+        :param autoformat: experimental feature for formatting dataframe columns and dtypes
         :param verbose: set verbose level -- 0 = debug, 1 = warning, 2 = error
         """
 
-        # basic parameter checks
-        if not hasattr(modelobj, 'predict'):
-            raise ValueError("""modelObj does not have predict method. 
-                                WhiteBoxError only works with model 
-                                objects with predict method""")
-        # need to ensure modelobj has previously been fitted, otherwise
-        # raise NotFittedError
-        try:
-            # try predicting on model dataframe
-            modelobj.predict(model_df.loc[:, model_df.columns != ydepend])
-        except NotFittedError as e:
-            # raise exception and not fitted error
-            raise Exception('{}\nPlease fit model: {}'.format(e, modelobj.__class__))
+        # check error type is supported format
+        if error_type not in wb_utils.Settings.supported_agg_errors:
+            raise wb_utils.ErrorWarningMsgs.error_msgs['error_type']
 
-        if not isinstance(model_df, core.frame.DataFrame):
-            raise TypeError("""model_df variable not pandas dataframe.
-                                WhiteBoxError only works with dataframe objects""")
+            # check groupby vars
+        if not groupbyvars:
+            raise wb_utils.ErrorWarningMsgs.error_msgs['groupbyvars']
 
-        if featuredict is not None and not isinstance(featuredict, dict):
-            raise TypeError("""When used Featuredict needs to be of type dictionary. 
-                                Keys are original column
-                                names and values are formatted column names:
-                                \n{sloppy.name.here: Sloppy Name}""")
-        # toggle featuredict depending on whether user specifys cat_df and leaves
-        # featuredict blank
-        if featuredict is None and cat_df is not None:
-            self.featuredict = {col: col for col in cat_df.columns}
-        elif featuredict is None:
-            self.featuredict = {col: col for col in model_df.columns}
+        # make copy, reset index and assign model dataframe
+        self._model_df = model_df.copy(deep=True).reset_index(drop=True)
+        # check cat_df
+        self._cat_df = cat_df
+        # check modelobj
+        self._modelobj = modelobj
+        # check verbosity
+        self._check_verbose(verbose)
+        # check for classification or regression
+        self._is_regression_classification()
+        # check featuredict
+        self._check_featuredict(featuredict)
+        # create reverse featuredict
+        self._reverse_featuredict = {val: key for key, val in self.featuredict.items()}
+        # check aggregate func
+        self._check_agg_func(aggregate_func)
+        # check error type supported
+        self.error_type = error_type
+        # assign dependent variable
+        self.ydepend = ydepend
+        # instantiate self.outputs
+        self.outputs = False
+        # if user specified featuredict, use column mappings otherwise use original groupby
+        self.groupbyvars = groupbyvars
+        # determine the calling class (WhiteBoxError or WhiteBoxSensitivity)
+        self.called_class = self.__class__.__name__
+        # format ydepend, catdf, groupbyvars
+        self._formatter(autoformat)
+        # create percentiles
+        self._run_percentiles()
+
+    @property
+    def cat_df(self):
+        return self._cat_df
+
+    @cat_df.setter
+    def cat_df(self, value):
+        """
+        ensure validity of assigned cat_df - must have same length of model_df
+        and if None, is replaced by model_df
+        :param value: user defined cat_df
+        :return: NA
+        """
+        # if cat_df not assigned, use model_df
+        if value is None:
+            warnings.warn(wb_utils.ErrorWarningMsgs.warning_msgs['cat_df'])
+            self._cat_df = self._model_df
         else:
+            # check both model_df and cat_df have the same length
+            check_consistent_length(value, self._model_df)
+            # check index's are equal
+            if not all(value.index == self._model_df.index):
+                raise ValueError("""Indices of cat_df and model_df are not aligned. Ensure Index's are 
+                                    \nexactly the same before WhiteBox use.""")
+            # create copy of users dataframe as to not adjust their actual dataframe object
+            # they are working on
+            value = value.copy(deep=True)
+            # reset users index in case of multi index or otherwise
+            self._cat_df = value.reset_index(drop=True)
+
+    @property
+    def modelobj(self):
+        return self._modelobj
+
+    @modelobj.setter
+    def modelobj(self, value):
+        """
+        check user defined model object has been fit before use within WhiteBox
+        :param value: user defined model object
+        :return: NA
+        """
+        # basic parameter checks
+        if not hasattr(value, 'predict'):
+            raise ValueError(wb_utils.ErrorWarningMsgs.error_msgs['modelobj'])
+
+        # ensure modelobj has been previously fit
+        check_is_fitted(value, 'base_estimator_')
+
+        self._modelobj = value
+
+    def _check_featuredict(self, featuredict):
+        """
+        check user defined featuredict - if blank assign all dataframe columns
+        :param featuredict: user defined featuredict mapping original col names to cleaned col names
+        :return: NA
+        """
+        # featuredict blank
+        if not featuredict:
+            self.featuredict = {col: col for col in self._cat_df.columns}
+        else:
+            if not all([key in self._cat_df.columns for key in featuredict.keys()]):
+                # find missing keys
+                missing = list(set(featuredict.keys()).difference(set(self._cat_df.columns)))
+                raise ValueError(wb_utils.ErrorWarningMsgs.error_msgs['featuredict'].format(missing))
             self.featuredict = featuredict
 
-        if isinstance(cat_df, core.frame.DataFrame):
-            # check tthat the number of rows from cat_df matches that of model_df
-            if model_df.shape[0] != cat_df.shape[0]:
-                raise StandardError("""Misaligned rows. \norig_df shape: {}
-                                        \ndummy_df shape: {}
-                                        """.format(
-                                                    model_df.shape[0],
-                                                    cat_df.shape[0]))
-            # assign cat_df to class instance and subset to featuredict keys
-            self.cat_df = cat_df[list(self.featuredict.keys())].copy(deep=True)
-
-        else:
-            # check that cat_df is not none and if it's not a pandas dataframe, throw warning
-            if not isinstance(cat_df, type(None)):
-                warnings.warn(
-                                """cat_df is not None and not a 
-                                pd.core.frame.DataFrame. 
-                                Default becomes model_df
-                                and may not be intended user behavior""",
-                                UserWarning)
-            # assign cat_df to class instance and subset based on featuredict keys
-            self.cat_df = model_df[list(self.featuredict.keys())].copy(deep=True)
-        # check that ydepend variable is of string type
-        if not isinstance(ydepend, str):
-            raise TypeError("""ydepend not string, dependent variable 
-                                must be single column name""")
-        # check verbose log level if not None
+    def _check_verbose(self, verbose):
+        """
+        assign user defined verbosity level to logging
+        :param verbose: verbosity level
+        :return: NA
+        """
         if verbose:
 
             if verbose not in [0, 1, 2]:
                 raise ValueError(
-                                """Verbose flag must be set to 
-                                level 0, 1 or 2.
-                                \nLevel 0: Debug
-                                \nLevel 1: Warning
-                                \nLevel 2: Info""")
+                    """Verbose flag must be set to 
+                    level 0, 1 or 2.
+                    \nLevel 0: Debug
+                    \nLevel 1: Warning
+                    \nLevel 2: Info""")
 
             # create log dict
             log_dict = {0: logging.DEBUG,
@@ -127,61 +174,73 @@ class WhiteBoxBase(object):
                         2: logging.INFO}
 
             logging.basicConfig(
-                                format="""%(asctime)s:[%(filename)s:%(lineno)s - 
-                                %(funcName)20s()]
-                                %(levelname)s:\n%(message)s""",
-                                level=log_dict[verbose])
+                format="""%(asctime)s:[%(filename)s:%(lineno)s - 
+                                        %(funcName)20s()]
+                                        %(levelname)s:\n%(message)s""",
+                level=log_dict[verbose])
             logging.info("Logger started....")
+
+    def _is_regression_classification(self):
+        """
+        determined whether users modelobj is regression or classification based on
+        presence of predict_proba
+        :return: NA
+        """
+        # determine if in classification problem or regression problem
+        if hasattr(self._modelobj, 'predict_proba'):
+            # if classification setting, secure the predicted class probabilities
+            self.predict_engine = getattr(self._modelobj, 'predict_proba')
+            self.model_type = 'classification'
+        else:
+            # use the regular predict function
+            self.predict_engine = getattr(self._modelobj, 'predict')
+            self.model_type = 'regression'
+
+    def _check_agg_func(self, aggregate_func):
+        """
+        check user defined aggregate function
+        :param aggregate_func: user defined aggregate function
+        :return: NA
+        """
 
         try:
             agg_results = aggregate_func(list(range(100)))
             if hasattr(agg_results, '__len__'):
                 raise ValueError("""aggregate_func must return scalar""")
         except Exception as e:
-            raise TypeError(
-                            """aggregate_func must work on 
-                            arrays of data and yield scalar
-                            \nError: {}""".format(e))
+            raise TypeError(wb_utils.ErrorWarningMsgs.error_msgs['agg_func'].format(e))
 
-        if error_type not in Settings.supported_agg_errors:
-            raise ValueError("""Supported aggregate error metrics are MSE, MAE, RMSE
-                            \nInput value: {} not supported""".format(error_type))
-
-        # assign parameters to class instance
-        self.error_type = error_type
-        self.modelobj = modelobj
-        self.model_df = model_df.copy(deep=True)
-        self.ydepend = ydepend
         self.aggregate_func = aggregate_func
+
+    def _formatter(self, autoformat):
+        # convert ydepend based on featuredict
+        self.ydepend = self.featuredict[self.ydepend] if self.ydepend in list(self.featuredict.keys()) else self.ydepend
+        # convert groupby's based on featuredict
+        self.groupbyvars = [self.featuredict[group] if group in list(self.featuredict.keys()) else group for group in list(self.groupbyvars)]
         # subset down cat_df to only those features in featuredict
-        self.cat_df = self.cat_df[list(self.featuredict.keys())]
-        # instantiate self.outputs
-        self.outputs = False
-        # check groupby vars
-        if not groupbyvars:
-            raise ValueError(
-                            """groupbyvars must be a list of grouping 
-                            variables and cannot be None""")
-        self.groupbyvars = list(groupbyvars)
+        self._cat_df = self._cat_df.loc[:, list(self.featuredict.keys())].rename(columns=self.featuredict)
+        # rename model_df columns based on featuredict
+        self._model_df = self._model_df.rename(columns=self.featuredict)
 
-        # determine if in classification problem or regression problem
-        if hasattr(self.modelobj, 'predict_proba'):
-            # if classification setting, secure the predicted class probabilities
-            self.predict_engine = getattr(self.modelobj, 'predict_proba')
-            self.model_type = 'classification'
-        else:
-            # use the regular predict function
-            self.predict_engine = getattr(self.modelobj, 'predict')
-            self.model_type = 'regression'
+        if autoformat:
+            warnings.warn(wb_utils.ErrorWarningMsgs.warning_msgs['auto_format'])
+            # convert categorical dtypes to strings
+            for cat in self._cat_df.select_dtypes(include=['category']).columns:
+                self._cat_df.loc[:, cat] = self._cat_df.loc[:, cat].astype(str)
 
-        # determine the calling class (WhiteBoxError or WhiteBoxSensitivity)
-        self.called_class = self.__class__.__name__
+
+    def _run_percentiles(self):
+        """
+        create population percentiles, and group percentiles
+        :return: NA
+        """
         # create instance wide percentiles for all numeric columns
-        self.percentile_vecs = getvectors(self.cat_df)
-        # create percentile output for bars in final html if WhiteBoxError
-        if self.called_class == 'WhiteBoxError':
-            # create percentile out
-            self._percentiles_out()
+        self.percentile_vecs = wb_utils.getvectors(self._cat_df)
+        # create percentile bars for final out
+        self._percentiles_out()
+        # create groupby percentiles
+        self._group_percentiles_out = wb_utils.create_group_percentiles(self._cat_df,
+                                                               self.groupbyvars)
 
     def _predict(self):
         """
@@ -189,35 +248,35 @@ class WhiteBoxBase(object):
         :return: dataframe with prediction column
         """
         logging.info("""Creating predictions using modelobj.
-                        \nModelobj class name: {}""".format(self.modelobj.__class__.__name__))
+                        \nModelobj class name: {}""".format(self._modelobj.__class__.__name__))
         # create predictions
         preds = self.predict_engine(
-                                    self.model_df.loc[:, self.model_df.columns != self.ydepend])
+                                    self._model_df.loc[:, self._model_df.columns != self.ydepend])
 
         if self.model_type == 'regression':
             # calculate error
-            diff = preds - self.cat_df.loc[:, self.ydepend]
+            diff = preds - self._cat_df.loc[:, self.ydepend]
         elif self.model_type == 'classification':
             # select the prediction probabilities for the class labeled 1
             preds = preds[:, 1].tolist()
             # create a lookup of class labels to numbers
-            class_lookup = {class_: num for num, class_ in enumerate(self.modelobj.classes_)}
+            class_lookup = {class_: num for num, class_ in enumerate(self._modelobj.classes_)}
             # convert the ydepend column to numeric
-            actual = self.cat_df.loc[:, self.ydepend].apply(lambda x: class_lookup[x])
+            actual = self._cat_df.loc[:, self.ydepend].apply(lambda x: class_lookup[x]).values.tolist()
             # calculate the difference between actual and predicted probabilities
-            diff = [prob_acc(true_class=actual[idx], pred_prob=pred) for idx, pred in enumerate(preds)]
+            diff = [wb_utils.prob_acc(true_class=actual[idx], pred_prob=pred) for idx, pred in enumerate(preds)]
         else:
             raise RuntimeError(""""unsupported model type
                                     \nInput Model Type: {}""".format(self.model_type))
 
         # assign errors
-        self.cat_df['errors'] = diff
+        self._cat_df['errors'] = diff
         # assign predictions
         logging.info('Assigning predictions to instance dataframe')
-        self.cat_df['predictedYSmooth'] = preds
-        self.model_df['predictedYSmooth'] = preds
+        self._cat_df['predictedYSmooth'] = preds
+        self._model_df['predictedYSmooth'] = preds
         # return
-        return self.cat_df
+        return self._cat_df
 
     @abstractmethod
     def _transform_function(self, group):
@@ -254,7 +313,7 @@ class WhiteBoxBase(object):
         if self.model_type == 'regression':
             error_type = self.error_type
 
-        acc = self.cat_df.groupby(groupby).apply(create_insights,
+        acc = self._cat_df.groupby(groupby).apply(wb_utils.create_insights,
                                                  group_var=groupby,
                                                  error_type=error_type)
         # drop the grouping indexing
@@ -275,16 +334,14 @@ class WhiteBoxBase(object):
         # capture 10, 25, 50, 75, 90 percentiles
         final_percentiles = percentiles[percentiles.percentile.str
                                         .contains('10%|25%|50%|75%|90%')].copy(deep=True)
-        # rename to featuredict values
-        final_percentiles.rename(columns=self.featuredict, inplace=True)
         # melt to long format
-        percentiles_melted = melt(final_percentiles, id_vars='percentile')
+        percentiles_melted = pd.melt(final_percentiles, id_vars='percentile')
         # convert to_json
-        self.percentiles = to_json(dataframe=percentiles_melted,
+        self.percentiles = wb_utils.to_json(dataframe=percentiles_melted,
                                    vartype='Percentile',
                                    html_type='percentile',
                                    incremental_val=None)
-
+    #TODO add weighted schematics function
     def _continuous_slice(
                         self,
                         group,
@@ -333,23 +390,29 @@ class WhiteBoxBase(object):
         errors['groupByVarName'] = groupby
         return errors
 
-    def run(self):
+    def run(self,
+            output_type='html',
+            output_path=''):
         """
         main run engine. Iterate over columns specified in featuredict,
         and perform anlaysis
         :return: None - does put outputs in place
         """
-        # testing run function
+        # ensure supported output types
+        supported = ['html', None]
+        if output_type not in supported:
+            raise ValueError("""Output type {} not supported.
+                                \nCurrently support {} output""".format(output_type, supported))
         # run the prediction function first to assign the errors to the dataframe
         self._predict()
         # create placeholder for outputs
         placeholder = []
         # create placeholder for all insights
-        insights_df = DataFrame()
+        insights_df = pd.DataFrame()
         logging.info("""Running main program. Iterating over 
                     columns and applying functions depednent on datatype""")
-        for col in self.cat_df.columns[
-                                        ~self.cat_df.columns.isin(['errors',
+        for col in self._cat_df.columns[
+                                        ~self._cat_df.columns.isin(['errors',
                                                                    'predictedYSmooth',
                                                                    self.ydepend])]:
 
@@ -359,7 +422,7 @@ class WhiteBoxBase(object):
             for groupby in self.groupbyvars:
                 logging.info("""Currently working on column: {}
                                 \nGroupby: {}\n""".format(col, groupby))
-                # check if we are a col that is the groupbyvar3
+                # check if we are a col that is the groupbyvars
                 if col != groupby:
                     json_out = self._var_check(
                                                 col=col,
@@ -380,19 +443,22 @@ class WhiteBoxBase(object):
             # append to placeholder
             # dont append if placeholder is empty due to col being the same as groupby
             if len(colhold) > 0:
-                placeholder.append(flatten_json(colhold))
+                placeholder.append(wb_utils.flatten_json(colhold))
 
         logging.info('Converting accuracy outputs to json format')
         # finally convert insights_df into json object
-        insights_json = to_json(insights_df, vartype='Accuracy')
+        insights_json = wb_utils.to_json(insights_df, vartype='Accuracy')
         # append to outputs
         placeholder.append(insights_json)
-        # append self.percentiles if called class is WhiteBoxError
-        if self.called_class == 'WhiteBoxError':
-            # append percentiles
-            placeholder.append(self.percentiles)
+        # append percentiles
+        placeholder.append(self.percentiles)
+        # append groupby percnetiles
+        placeholder.append(self._group_percentiles_out)
         # assign placeholder final outputs to class instance
         self.outputs = placeholder
+        # save outputs if specified
+        if output_type == 'html':
+            self.save(fpath=output_path)
 
     def save(self, fpath=''):
         """
@@ -401,25 +467,23 @@ class WhiteBoxBase(object):
         :return: None
         """
         if not self.outputs:
-            RuntimeError("""Must run WhiteBoxError.run() 
-                        on data to store outputs""")
-            logging.warning("""Must run WhiteBoxError.run() 
-                            before calling save method""")
+            RuntimeError(wb_utils.ErrorWarningMsgs.error_msgs['wb_run_error'].format(self.called_class))
+            logging.warning(wb_utils.ErrorWarningMsgs.error_msgs['wb_run_error'].format(self.called_class))
 
-        logging.info("""creating html output for type: {}""".format(Settings.html_type[self.called_class]))
+        logging.info("""creating html output for type: {}""".format(wb_utils.Settings.html_type[self.called_class]))
 
         # tweak self.ydepend if classification case (add dominate class)
         if self.model_type == 'classification':
-            ydepend_out = '{}: {}'.format(self.ydepend, self.modelobj.classes_[1])
+            ydepend_out = '{}: {}'.format(self.ydepend, self._modelobj.classes_[1])
         else:
             # regression case
             ydepend_out = self.ydepend
 
         # create HTML output
-        html_out = createmlerror_html(
+        html_out = wb_utils.createmlerror_html(
                                             str(self.outputs),
                                             ydepend_out,
-                                            htmltype=Settings.html_type[self.called_class])
+                                            htmltype=wb_utils.Settings.html_type[self.called_class])
         # save html_out to disk
         with open(fpath, 'w') as outfile:
             logging.info("""Writing html file out to disk""")

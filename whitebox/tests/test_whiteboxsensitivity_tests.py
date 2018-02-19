@@ -32,14 +32,13 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
         # set up randomforestregressor
         modelobj = RandomForestRegressor()
 
-        df['Type'] = pd.Categorical(df['Type'])
-        df['Subtype'] = pd.Categorical(df['Subtype'])
-
         self.cat_df = df
 
         model_df = df.copy(deep=True)
-        model_df['Type'] = model_df['Type'].cat.codes
-        model_df['Subtype'] = model_df['Subtype'].cat.codes
+
+        # create dummies
+        model_df = pd.concat([model_df.select_dtypes(include=[np.number]),
+                              pd.get_dummies(model_df.select_dtypes(include=['O', 'category']))], axis=1)
 
         self.model_df = model_df
         modelobj.fit(self.model_df.loc[:, self.model_df.columns != 'target'],
@@ -61,7 +60,8 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
                                     ydepend='target',
                                     groupbyvars=['Type'],
                                     cat_df=self.cat_df,
-                                    featuredict=None)
+                                    featuredict=None,
+                                    autoformat=True)
 
         results = wb._continuous_slice(
                                         iris.groupby('Type').get_group('white'),
@@ -93,7 +93,8 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
                                     ydepend='target',
                                     groupbyvars=['Type'],
                                     cat_df=self.cat_df,
-                                    featuredict=None)
+                                    featuredict=None,
+                                    autoformat=True)
 
         self.assertEqual(wb.__class__.__name__,
                          'WhiteBoxSensitivity',
@@ -116,9 +117,10 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
                                     ydepend='target',
                                     groupbyvars=['Type'],
                                     cat_df=self.cat_df,
-                                    featuredict=None)
+                                    featuredict=None,
+                                    autoformat=True)
 
-        wb.run()
+        wb.run(output_type=None)
 
         var_check = wb._var_check(col='sepall',
                      groupby='Type')
@@ -156,9 +158,10 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
                                     ydepend='target',
                                     groupbyvars=['Type'],
                                     cat_df=self.cat_df,
-                                    featuredict=None)
+                                    featuredict=None,
+                                    autoformat=True)
 
-        wb.run()
+        wb.run(output_type=None)
 
         var_check = wb._var_check(
                                     col='Subtype',
@@ -197,9 +200,8 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
             ydepend='target',
             groupbyvars=['Type'],
             cat_df=self.cat_df,
-            featuredict=None)
-
-        wb.run()
+            featuredict=None,
+            autoformat=True)
 
         self.assertEqual(wb.called_class, 'WhiteBoxSensitivity',
                          msg="""WhiteBoxBase unable to detect correct super class

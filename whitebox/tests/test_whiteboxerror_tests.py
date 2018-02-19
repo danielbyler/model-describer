@@ -7,6 +7,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn import datasets
 import pandas as pd
 import numpy as np
+import warnings
 from sklearn.ensemble import RandomForestClassifier
 
 try:
@@ -73,9 +74,10 @@ class TestWhiteBoxError(unittest.TestCase):
                             model_df=self.iris,
                             ydepend='target',
                             groupbyvars=['Type'],
-                            cat_df=self.cat_df)
+                            cat_df=self.cat_df,
+                            autoformat=True)
 
-        wb.run()
+        wb.run(output_type=None)
 
         self.assertIsInstance(wb.outputs, list,
                               msg="""WhiteBoxError is not producing list of outputs after run
@@ -124,9 +126,9 @@ class TestWhiteBoxError(unittest.TestCase):
 
         wb._predict()
 
-        self.assertIn('predictedYSmooth', wb.model_df.columns,
+        self.assertIn('predictedYSmooth', wb._model_df.columns,
                       msg="""predictedYSmooth not in instances model_df. \nOnly cols present:
-                      {}""".format(wb.model_df.columns))
+                      {}""".format(wb._model_df.columns))
 
     def test_wberror_predict_predicted(self):
         # test whether predictedYSmooth column is present after whiteboxerror predict method called
@@ -193,9 +195,9 @@ class TestWhiteBoxError(unittest.TestCase):
 
     def test_featuredict_subset(self):
         # create the featuredict
-        featuredict = {'Type': 'type',
-                       'target': 'target',
-                       'sepall': 'sepall'}
+        featuredict = {'Type': 'TYPE',
+                       'target': 'TARGET',
+                       'sepall': 'SEPALL'}
 
         wb = WhiteBoxError(modelobj=self.modelobj,
                            model_df=self.iris,
@@ -205,14 +207,14 @@ class TestWhiteBoxError(unittest.TestCase):
                            featuredict=featuredict)
 
         if not isinstance(featuredict.keys(), list):
-            featuredictkeys = list(featuredict.keys())
+            featuredictvalues = list(featuredict.values())
         else:
-            featuredictkeys = featuredict.keys()
+            featuredictvalues = featuredict.values()
 
-        self.assertListEqual(featuredictkeys, wb.cat_df.columns.values.tolist(),
+        self.assertListEqual(featuredictvalues, wb.cat_df.columns.values.tolist(),
                              """Featuredict and wb instance columns dont match.
                              \nFeaturedict: {}
-                             \nwb Instance cat df: {}""".format(featuredictkeys, wb.cat_df.columns.values.tolist()))
+                             \nwb Instance cat df: {}""".format(featuredictvalues, wb.cat_df.columns.values.tolist()))
 
     def test_whitebox_no_featuredict(self):
         wb = WhiteBoxError(modelobj=self.modelobj,
@@ -241,7 +243,8 @@ class TestWhiteBoxError(unittest.TestCase):
                            ydepend='target',
                            groupbyvars=['Type'],
                            cat_df=iris,
-                           featuredict=None)
+                           featuredict=None,
+                           autoformat=True)
 
         var_check = wb._var_check(
                                     col='sepall',
@@ -274,7 +277,8 @@ class TestWhiteBoxError(unittest.TestCase):
                            ydepend='target',
                            groupbyvars=['Type'],
                            cat_df=iris,
-                           featuredict=None)
+                           featuredict=None,
+                           autoformat=True)
 
         var_check = wb._var_check(
                                     col='Type2',
@@ -397,6 +401,73 @@ class TestWhiteBoxError(unittest.TestCase):
         self.assertIn('sepall', results.columns,
                       msg="""sulphates not found in continuous slice results.
                                                       \nColumns: {}""".format(results.columns))
+
+    def test_autoformat(self):
+        # check that autoformat converts categorical columns to strings
+        iris = self.cat_df.copy(deep=True)
+        iris['Type'] = pd.Categorical(iris['Type'])
+        # test that whitebox can accurately detect regression model
+        wb = WhiteBoxError(modelobj=self.modelobj,
+                           model_df=self.iris,
+                           ydepend='target',
+                           groupbyvars=['Type'],
+                           cat_df=iris,
+                           featuredict=None,
+                           autoformat=True)
+
+        # check number of categorical columns
+        cat_len = len(wb.cat_df.select_dtypes(include=['category']).columns)
+
+        self.assertEqual(cat_len,
+                         0,
+                         msg="""autoformat not converting categorical columns to strings""")
+
+        self.assertEqual(wb.cat_df['Type'].dtype,
+                         'object',
+                         msg="""autoformat returned dtype not object""")
+
+    def test_check_featuredict(self):
+        # test proper featuredict assignment
+        wb = WhiteBoxError(modelobj=self.modelobj,
+                           model_df=self.iris,
+                           ydepend='target',
+                           groupbyvars=['Type'],
+                           cat_df=self.cat_df,
+                           featuredict=None,
+                           autoformat=True)
+
+        test_featuredict = {'target': "SUPERTEST"}
+        wb._check_featuredict(test_featuredict)
+
+        self.assertEqual(test_featuredict,
+                         wb.featuredict,
+                         msg="""whitebox base _check_featuredict did not specify proper featuredict
+                                when given featuredict""")
+
+    def test_check_null_featuredict(self):
+        # test proper featuredict assignment
+        wb = WhiteBoxError(modelobj=self.modelobj,
+                           model_df=self.iris,
+                           ydepend='target',
+                           groupbyvars=['Type'],
+                           cat_df=self.cat_df,
+                           featuredict=None,
+                           autoformat=True)
+
+        if isinstance(wb.featuredict.keys(), list):
+            to_check = wb.featuredict.keys()
+        else:
+            to_check = list(wb.featuredict.keys())
+
+        diff = list(set(to_check).difference(set(self.cat_df.columns)))
+        self.assertEqual(len(diff),
+                         0,
+                         msg="""whitebox base _check_featuredict did not specify proper featuredict
+                                when given featuredict""")
+
+
+
+
 
 
 if __name__ == '__main__':
