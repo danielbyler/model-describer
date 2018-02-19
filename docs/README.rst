@@ -28,7 +28,6 @@ List of variables that 'groups' the output into discrete segments for comparison
 
   #add uniform
   cat_df['Entire_Population'] = 'Entire Population'
-  cat_df['Entire_Population'] = pd.Categorical(cat_df['Entire_Population'])
 
 featuredict : dictionary, optional
 ------------
