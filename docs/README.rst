@@ -17,7 +17,7 @@ The dependent 'y' variable you are trying to predict. Dependent variables can be
 
 cat_df : pandas DataFrame, required
 ------------
-DataFrame of variables with the categorical `data type <https://pandas.pydata.org/pandas-docs/stable/categorical.html>`_. This dataframe may contain string variables not present in the model. The groupbyvars must be contained in this dataset. 
+DataFrame of variables with the object data type. This dataframe may contain string variables not present in the model. The groupbyvars must be contained in this dataset. The dependent variable (ydpend) must also be included in this dataset.  
 
 groupbyvars : List, required
 ------------
