@@ -11,6 +11,12 @@ model_df : pandas DataFrame, required
 ------------
 The data used for modeling (both continuous and dummy variables). This data frame must contain all of the 'X' columns and the 'y' column used in your modelobject.fit(X, y) modeling step. Dummy variables formed from categorical variables must have the form catvarname_value (Gender_Male, Gender_Female, etc.) or they will cause and error and not map to the output charts. 
 
+For dummies, all values in a categorical column (including nulls) must have a dummy column associated with them. The following code will create dummies in the correct format.
+
+.. code-block:: python
+
+dummies = pd.concat([pd.get_dummies(model_df.loc[:, col], prefix = col) for col in model_df.select_dtypes(include = ['object']).columns], dummy_na=True, axis = 1)
+
 ydepend : string, required
 ------------
 The dependent 'y' variable you are trying to predict. Dependent variables can be continuous or binary. 
