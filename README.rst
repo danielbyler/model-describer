@@ -122,15 +122,15 @@ Many times, models will have hundreds (or more) of independent variables. To sel
 FAQs
 --------------
 
-Answers to additional questions about assumptions we make in our calculations can be found `here <https://github.com/DataScienceSquad/WhiteBox_Production/wiki/FAQ>`_. 
+Answers to additional questions about assumptions WhiteBox makes in its calculations can be found `here <https://github.com/DataScienceSquad/WhiteBox_Production/wiki/FAQ>`_. 
 
 
 Supported Machine Learning Libraries
 ====================================
 
-WhiteBox currently supports all traditional sklearn regression methods and all sklearn binary classification methods. WhiteBox does not support multi-class classification at this time. PLS Regression, PLS Cannonical, Isotonic Regression, Mutlitask Lasso & Multi-task ElasticNet are not supported as they do not produce a single prediction for each row like other classifiers do. WhiteBox will look to add support for other machine learning libraries the future. In all implementations, we are committed to keeping our 'one line of code' promise. 
+WhiteBox currently supports all traditional sklearn regression methods and all sklearn binary classification methods. WhiteBox does not support multi-class classification at this time. PLS Regression, PLS Cannonical, Isotonic Regression, Mutlitask Lasso & Multi-task ElasticNet are not supported as they do not produce a single prediction for each row like other classifiers do. WhiteBox will look to add support for other machine learning libraries the future. In all implementations, WhiteBox is committed to keeping our 'one line of code' promise. 
 
-WhiteBox currently only supports traditional tabular data. We are hoping to include text, audio, video, and images in the future but they are not part of the current implementation. 
+WhiteBox currently only supports traditional tabular data. WhiteBox is hoping to include text, audio, video, and images in the future but they are not part of the current implementation. 
 
 Other Python Machine Learning Interpretability Projects
 ------------------------------------------------
