@@ -16,7 +16,8 @@ For dummies, all values in a categorical column (including nulls) must have a du
 .. code-block:: python
   
   #create dummies
-  dummies = pd.concat([pd.get_dummies(model_df.loc[:, col], prefix = col) for col in model_df.select_dtypes(include =     ['object']).columns], dummy_na=True, axis = 1)
+  dummies = pd.concat([pd.get_dummies(model_df.loc[:, col], prefix = col) for col in model_df.select_dtypes(include =   
+  ['object']).columns], dummy_na=True, axis = 1)
 
 ydepend : string, required
 ------------
