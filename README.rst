@@ -20,7 +20,7 @@ White Box makes it possible for everyday humans to understand 'black-box' machin
 To make communicating these findings to your team easy, WhiteBox outputs: 
 
 - Are created with simple Python code at the end of your existing machine learning workflow and require no model re-training
-- Are high quality interactive HTML files that are small enough to be emailed. 
+- Are compelling interactive HTML files that are small enough to be emailed. 
 - Attachment only require your teammate/client to have a web browser to open your attachment. No server or messy installation required.
 - Do not expose your potentially sensitive raw data. Only summaries of the data are included in the final HTML file. This also makes it possible to summarize models built on extremely large datasets into file sizes that are small enough for email. 
 
