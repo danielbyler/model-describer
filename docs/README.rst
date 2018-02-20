@@ -14,6 +14,7 @@ The data used for modeling (both continuous and dummy variables). This data fram
 For dummies, all values in a categorical column (including nulls) must have a dummy column associated with them. The following code will create dummies in the correct format.
 
 .. code-block:: python
+  
   #create dummies
   dummies = pd.concat([pd.get_dummies(model_df.loc[:, col], prefix = col) for col in model_df.select_dtypes(include =     ['object']).columns], dummy_na=True, axis = 1)
 
