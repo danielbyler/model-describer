@@ -110,7 +110,11 @@ class WhiteBoxBase(object):
         return self._modelobj
 
     @abstractmethod
-    def _transform_function(self, groupby_var):
+    def _transform_function(self,
+                            group,
+                            groupby_var=None,
+                            col=None,
+                            vartype='Continuous'):
         # method to operate on slices of data within groups
         pass
 
@@ -154,15 +158,16 @@ class WhiteBoxBase(object):
         if group.shape[0] > 100:
             logging.info("""Creating percentile bins for current 
                             continuous grouping""")
+            continuous_group = group.reset_index(drop=True).copy(deep=True)
             # pull out col being operated on
-            group_col = group.loc[:, col]
+            group_col = continuous_group.loc[:, col]
             # digitize needs monotonically increasing vector
             group_percentiles = sorted(list(set(percentiles.create_percentile_vecs(group_col))))
-            print(group_percentiles)
-            print('column: {}'.format(col))
-            print('group name: {}'.format(group.name))
-            print('groupby: {}'.format(groupby_var))
-            group['fixed_bins'] = np.digitize(group_col,
+            #print(group_percentiles)
+            #print('column: {}'.format(col))
+            #print('group name: {}'.format(group.name))
+            #print('groupby: {}'.format(groupby_var))
+            continuous_group['fixed_bins'] = np.digitize(group_col,
                                               group_percentiles,
                                               right=True)
         else:
@@ -173,11 +178,24 @@ class WhiteBoxBase(object):
 
         logging.info("""Applying transform function to continuous bins""")
         # group by bins
-        errors = group.groupby('fixed_bins').apply(self._transform_function,
-                                                   col=col,
-                                                   groupby_var=groupby_var,
-                                                   vartype=vartype)
-        return errors
+        final_errors_out = pd.DataFrame()
+        # iterate over each bin
+        for bin in continuous_group['fixed_bins'].unique():
+            # subset down to bin
+            bin_data = continuous_group[continuous_group['fixed_bins'] == bin].reset_index(drop=True).copy(deep=True)
+            # apply transformation function
+            errors_out = self._transform_function(bin_data,
+                                                  col=col,
+                                                  groupby_var=groupby_var,
+                                                  vartype=vartype)
+            final_errors_out = final_errors_out.append(errors_out)
+
+        #errors = group.groupby('fixed_bins').apply(self._transform_function,
+        #                                           col=col,
+        #                                           groupby_var=groupby_var,
+        #                                           vartype=vartype)
+
+        return final_errors_out
 
     def run(self,
             output_type=None,
@@ -219,8 +237,8 @@ class WhiteBoxBase(object):
             colhold = []
 
             for groupby_var in self.groupbyvars:
-                print("""Currently working on column: {}
-                                \nGroupby: {}\n""".format(col, groupby_var))
+                #print("""Currently working on column: {}
+                #                \nGroupby: {}\n""".format(col, groupby_var))
                 # check if we are a col that is the groupbyvars
                 if col != groupby_var:
                     json_out = self._var_check(
