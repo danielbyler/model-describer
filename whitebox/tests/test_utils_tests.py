@@ -11,9 +11,9 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error
 try:
     import sys
     sys.path.insert(0, "/home/travis/build/Data4Gov/WhiteBox_Production")
-    from whitebox import utils
+    from whitebox.utils import utils
 except:
-    import utils
+    import utils.utils
 
 
 class TestUtils(unittest.TestCase):
@@ -220,7 +220,11 @@ class TestUtils(unittest.TestCase):
                          utils.prob_acc(true_class=true_class,
                                         pred_prob=predicted_prob),
                          msg="""utils.prob_acc returned unexpected accuracy""")
+    #TODO Create test for check featuredict
 
+    #TODO create test for check is_regression_classification
+
+    # TODO create test for check agg functions
 
 
 

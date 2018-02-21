@@ -8,13 +8,20 @@ import warnings
 
 import numpy as np
 import pandas as pd
-from sklearn.utils.validation import check_is_fitted, check_consistent_length
 
 #TODO fix imports
 try:
-    import utils as wb_utils
+    import utils.utils as wb_utils
+    import utils.check_utils as checks
+    import utils.percentiles as percentiles
+    import utils.formatting as format
+    import modelconfig.sklearn_predict as sklearn_predict
 except:
-    import whitebox.utils as wb_utils
+    import whitebox.utils.utils as wb_utils
+    import whitebox.utils.check_utils as checks
+    import whitebox.utils.percentiles as percentiles
+    import whitebox.utils.formatting as format
+    from whitebox.modelconfig import sklearn_predict
 
 
 class WhiteBoxBase(object):
@@ -32,7 +39,7 @@ class WhiteBoxBase(object):
                     groupbyvars=None,
                     aggregate_func=np.mean,
                     error_type='MSE',
-                    autoformat=False,
+                    autoformat_types=False,
                     verbose=None):
         """
         initialize base class
@@ -59,227 +66,53 @@ class WhiteBoxBase(object):
         # make copy, reset index and assign model dataframe
         self._model_df = model_df.copy(deep=True).reset_index(drop=True)
         # check cat_df
-        self._cat_df = cat_df
+        self._cat_df = checks.CheckInputs.check_cat_df(cat_df.copy(deep=True).reset_index(drop=True),
+                                                        self._model_df)
         # check modelobj
-        self._modelobj = modelobj
+        self._modelobj = checks.CheckInputs.check_modelobj(modelobj)
         # check verbosity
-        self._check_verbose(verbose)
+        if verbose:
+            checks.CheckInputs.check_verbose(verbose)
         # check for classification or regression
-        self._is_regression_classification()
+        self.predict_engine, self.model_type = checks.CheckInputs.is_regression(modelobj)
         # check featuredict
-        self._check_featuredict(featuredict)
+        self.featuredict = checks.CheckInputs.check_featuredict(featuredict, cat_df)
         # create reverse featuredict
         self._reverse_featuredict = {val: key for key, val in self.featuredict.items()}
         # check aggregate func
-        self._check_agg_func(aggregate_func)
+        self.aggregate_func = checks.CheckInputs.check_agg_func(aggregate_func)
         # check error type supported
         self.error_type = error_type
         # assign dependent variable
-        self.ydepend = ydepend
-        # instantiate self.outputs
+        self.ydepend = format.format_inputs(ydepend, self.featuredict)
+        # create outputs toggle
         self.outputs = False
         # if user specified featuredict, use column mappings otherwise use original groupby
-        self.groupbyvars = groupbyvars
+        self.groupbyvars = format.format_inputs(groupbyvars, self.featuredict)
         # determine the calling class (WhiteBoxError or WhiteBoxSensitivity)
         self.called_class = self.__class__.__name__
-        # format ydepend, catdf, groupbyvars
-        self._formatter(autoformat)
         # create percentiles
-        self._run_percentiles()
+        self.Percentiles = percentiles.Percentiles(self._cat_df,
+                                                   self.groupbyvars)
+        # get population percentiles
+        self.Percentiles.population_percentiles()
 
-    @property
-    def cat_df(self):
-        return self._cat_df
+        if autoformat_types:
+            self._cat_df = format.autoformat_types(self._cat_df)
 
-    @cat_df.setter
-    def cat_df(self, value):
-        """
-        ensure validity of assigned cat_df - must have same length of model_df
-        and if None, is replaced by model_df
-        :param value: user defined cat_df
-        :return: NA
-        """
-        # if cat_df not assigned, use model_df
-        if value is None:
-            warnings.warn(wb_utils.ErrorWarningMsgs.warning_msgs['cat_df'])
-            self._cat_df = self._model_df
-        else:
-            # check both model_df and cat_df have the same length
-            check_consistent_length(value, self._model_df)
-            # check index's are equal
-            if not all(value.index == self._model_df.index):
-                raise ValueError("""Indices of cat_df and model_df are not aligned. Ensure Index's are 
-                                    \nexactly the same before WhiteBox use.""")
-            # create copy of users dataframe as to not adjust their actual dataframe object
-            # they are working on
-            value = value.copy(deep=True)
-            # reset users index in case of multi index or otherwise
-            self._cat_df = value.reset_index(drop=True)
+        # apply formatting to model_df and cat_df
+        self._cat_df = format.format_inputs(self._cat_df, self.featuredict)
+        self._model_df = format.format_inputs(self._model_df, self.featuredict)
+
+        # store results
+        self.debugdf = pd.DataFrame()
 
     @property
     def modelobj(self):
         return self._modelobj
 
-    @modelobj.setter
-    def modelobj(self, value):
-        """
-        check user defined model object has been fit before use within WhiteBox
-        :param value: user defined model object
-        :return: NA
-        """
-        # basic parameter checks
-        if not hasattr(value, 'predict'):
-            raise ValueError(wb_utils.ErrorWarningMsgs.error_msgs['modelobj'])
-
-        # ensure modelobj has been previously fit
-        check_is_fitted(value, 'base_estimator_')
-
-        self._modelobj = value
-
-    def _check_featuredict(self, featuredict):
-        """
-        check user defined featuredict - if blank assign all dataframe columns
-        :param featuredict: user defined featuredict mapping original col names to cleaned col names
-        :return: NA
-        """
-        # featuredict blank
-        if not featuredict:
-            self.featuredict = {col: col for col in self._cat_df.columns}
-        else:
-            if not all([key in self._cat_df.columns for key in featuredict.keys()]):
-                # find missing keys
-                missing = list(set(featuredict.keys()).difference(set(self._cat_df.columns)))
-                raise ValueError(wb_utils.ErrorWarningMsgs.error_msgs['featuredict'].format(missing))
-            self.featuredict = featuredict
-
-    def _check_verbose(self, verbose):
-        """
-        assign user defined verbosity level to logging
-        :param verbose: verbosity level
-        :return: NA
-        """
-        if verbose:
-
-            if verbose not in [0, 1, 2]:
-                raise ValueError(
-                    """Verbose flag must be set to 
-                    level 0, 1 or 2.
-                    \nLevel 0: Debug
-                    \nLevel 1: Warning
-                    \nLevel 2: Info""")
-
-            # create log dict
-            log_dict = {0: logging.DEBUG,
-                        1: logging.WARNING,
-                        2: logging.INFO}
-
-            logging.basicConfig(
-                format="""%(asctime)s:[%(filename)s:%(lineno)s - 
-                                        %(funcName)20s()]
-                                        %(levelname)s:\n%(message)s""",
-                level=log_dict[verbose])
-            logging.info("Logger started....")
-
-    def _is_regression_classification(self):
-        """
-        determined whether users modelobj is regression or classification based on
-        presence of predict_proba
-        :return: NA
-        """
-        # determine if in classification problem or regression problem
-        if hasattr(self._modelobj, 'predict_proba'):
-            # if classification setting, secure the predicted class probabilities
-            self.predict_engine = getattr(self._modelobj, 'predict_proba')
-            self.model_type = 'classification'
-        else:
-            # use the regular predict function
-            self.predict_engine = getattr(self._modelobj, 'predict')
-            self.model_type = 'regression'
-
-    def _check_agg_func(self, aggregate_func):
-        """
-        check user defined aggregate function
-        :param aggregate_func: user defined aggregate function
-        :return: NA
-        """
-
-        try:
-            agg_results = aggregate_func(list(range(100)))
-            if hasattr(agg_results, '__len__'):
-                raise ValueError("""aggregate_func must return scalar""")
-        except Exception as e:
-            raise TypeError(wb_utils.ErrorWarningMsgs.error_msgs['agg_func'].format(e))
-
-        self.aggregate_func = aggregate_func
-
-    def _formatter(self, autoformat):
-        # convert ydepend based on featuredict
-        self.ydepend = self.featuredict[self.ydepend] if self.ydepend in list(self.featuredict.keys()) else self.ydepend
-        # convert groupby's based on featuredict
-        self.groupbyvars = [self.featuredict[group] if group in list(self.featuredict.keys()) else group for group in list(self.groupbyvars)]
-        # subset down cat_df to only those features in featuredict
-        self._cat_df = self._cat_df.loc[:, list(self.featuredict.keys())].rename(columns=self.featuredict)
-        # rename model_df columns based on featuredict
-        self._model_df = self._model_df.rename(columns=self.featuredict)
-
-        if autoformat:
-            warnings.warn(wb_utils.ErrorWarningMsgs.warning_msgs['auto_format'])
-            # convert categorical dtypes to strings
-            for cat in self._cat_df.select_dtypes(include=['category']).columns:
-                self._cat_df.loc[:, cat] = self._cat_df.loc[:, cat].astype(str)
-
-
-    def _run_percentiles(self):
-        """
-        create population percentiles, and group percentiles
-        :return: NA
-        """
-        # create instance wide percentiles for all numeric columns
-        self.percentile_vecs = wb_utils.getvectors(self._cat_df)
-        # create percentile bars for final out
-        self._percentiles_out()
-        # create groupby percentiles
-        self._group_percentiles_out = wb_utils.create_group_percentiles(self._cat_df,
-                                                               self.groupbyvars)
-
-    def _predict(self):
-        """
-        create predictions based on trained model object, dataframe, and dependent variables
-        :return: dataframe with prediction column
-        """
-        logging.info("""Creating predictions using modelobj.
-                        \nModelobj class name: {}""".format(self._modelobj.__class__.__name__))
-        # create predictions
-        preds = self.predict_engine(
-                                    self._model_df.loc[:, self._model_df.columns != self.ydepend])
-
-        if self.model_type == 'regression':
-            # calculate error
-            diff = preds - self._cat_df.loc[:, self.ydepend]
-        elif self.model_type == 'classification':
-            # select the prediction probabilities for the class labeled 1
-            preds = preds[:, 1].tolist()
-            # create a lookup of class labels to numbers
-            class_lookup = {class_: num for num, class_ in enumerate(self._modelobj.classes_)}
-            # convert the ydepend column to numeric
-            actual = self._cat_df.loc[:, self.ydepend].apply(lambda x: class_lookup[x]).values.tolist()
-            # calculate the difference between actual and predicted probabilities
-            diff = [wb_utils.prob_acc(true_class=actual[idx], pred_prob=pred) for idx, pred in enumerate(preds)]
-        else:
-            raise RuntimeError(""""unsupported model type
-                                    \nInput Model Type: {}""".format(self.model_type))
-
-        # assign errors
-        self._cat_df['errors'] = diff
-        # assign predictions
-        logging.info('Assigning predictions to instance dataframe')
-        self._cat_df['predictedYSmooth'] = preds
-        self._model_df['predictedYSmooth'] = preds
-        # return
-        return self._cat_df
-
     @abstractmethod
-    def _transform_function(self, group):
+    def _transform_function(self, groupby_var):
         # method to operate on slices of data within groups
         pass
 
@@ -287,7 +120,7 @@ class WhiteBoxBase(object):
     def _var_check(
                     self,
                     col=None,
-                    groupby=None):
+                    groupby_var=None):
         """
         _var_check tests for categorical or continuous variable and performs operations
         dependent upon the var type
@@ -297,56 +130,12 @@ class WhiteBoxBase(object):
         """
         pass
 
-    def _create_accuracy(
-                            self,
-                            groupby=None):
-        """
-        create error metrics for each slice of the groupby variable.
-        i.e. if groupby is type of wine,
-        create error metric for all white wine, then all red wine.
-        :param groupby: groupby variable -- str -- i.e. 'Type'
-        :return: accuracy dataframe for groupby variable
-        """
-        # use this as an opportunity to capture error metrics for the groupby variable
-        if self.model_type == 'classification':
-            error_type = 'RAW'
-        if self.model_type == 'regression':
-            error_type = self.error_type
-
-        acc = self._cat_df.groupby(groupby).apply(wb_utils.create_insights,
-                                                 group_var=groupby,
-                                                 error_type=error_type)
-        # drop the grouping indexing
-        acc.reset_index(drop=True, inplace=True)
-        # append to insights_df
-        return acc
-
-    def _percentiles_out(self):
-        """
-        Create designated percentiles for user interface percentile bars
-            percentiles calculated include: 10, 25, 50, 75 and 90th percentiles
-        :return: Save percnetiles to instance for retrieval in final output
-        """
-        # subset percentiles to only numeric variables
-        numeric_vars = self.percentile_vecs.select_dtypes(include=[np.number])
-        # send the percentiles to to_json to create percentile bars in UI
-        percentiles = numeric_vars.reset_index().rename(columns={"index": 'percentile'})
-        # capture 10, 25, 50, 75, 90 percentiles
-        final_percentiles = percentiles[percentiles.percentile.str
-                                        .contains('10%|25%|50%|75%|90%')].copy(deep=True)
-        # melt to long format
-        percentiles_melted = pd.melt(final_percentiles, id_vars='percentile')
-        # convert to_json
-        self.percentiles = wb_utils.to_json(dataframe=percentiles_melted,
-                                   vartype='Percentile',
-                                   html_type='percentile',
-                                   incremental_val=None)
     #TODO add weighted schematics function
     def _continuous_slice(
                         self,
                         group,
                         col=None,
-                        groupby=None,
+                        groupby_var=None,
                         vartype='Continuous'):
         """
         _continuous_slice operates on portions of the data that correspond
@@ -367,8 +156,15 @@ class WhiteBoxBase(object):
         if group.shape[0] > 100:
             logging.info("""Creating percentile bins for current 
                             continuous grouping""")
-            group['fixed_bins'] = np.digitize(group.loc[:, col],
-                                              sorted(list(set(self.percentile_vecs.loc[:, col]))),
+            # pull out col being operated on
+            group_col = group.loc[:, col]
+            group_percentiles = sorted(list(set(percentiles.create_percentile_vecs(group_col))))
+            print(group_percentiles)
+            print('column: {}'.format(col))
+            print('group name: {}'.format(group.name))
+            print('groupby: {}'.format(groupby_var))
+            group['fixed_bins'] = np.digitize(group_col,
+                                              group_percentiles,
                                               right=True)
         else:
             logging.warning("""Slice of data less than 100 continuous observations, 
@@ -380,22 +176,18 @@ class WhiteBoxBase(object):
         # group by bins
         errors = group.groupby('fixed_bins').apply(self._transform_function,
                                                    col=col,
-                                                   groupby=groupby,
+                                                   groupby_var=groupby_var,
                                                    vartype=vartype)
-        # final data prep for continuous errors case
-        # and finalize errors dataframe processing
-        errors.reset_index(drop=True, inplace=True)
-        # rename columns
-        errors.rename(columns={groupby: 'groupByValue'}, inplace=True)
-        errors['groupByVarName'] = groupby
         return errors
 
     def run(self,
-            output_type='html',
+            output_type=None,
             output_path=''):
         """
         main run engine. Iterate over columns specified in featuredict,
         and perform anlaysis
+        :param output_type - output type - current support for html
+        :param output_path - fpath to save output
         :return: None - does put outputs in place
         """
         # ensure supported output types
@@ -404,38 +196,49 @@ class WhiteBoxBase(object):
             raise ValueError("""Output type {} not supported.
                                 \nCurrently support {} output""".format(output_type, supported))
         # run the prediction function first to assign the errors to the dataframe
-        self._predict()
+        self._cat_df, self._model_df = sklearn_predict(self.predict_engine,
+                                                       self.modelobj,
+                                                       self._model_df,
+                                                       self._cat_df,
+                                                       self.ydepend,
+                                                       self.model_type)
         # create placeholder for outputs
         placeholder = []
         # create placeholder for all insights
         insights_df = pd.DataFrame()
         logging.info("""Running main program. Iterating over 
                     columns and applying functions depednent on datatype""")
-        for col in self._cat_df.columns[
-                                        ~self._cat_df.columns.isin(['errors',
-                                                                   'predictedYSmooth',
-                                                                   self.ydepend])]:
+
+
+        not_in_cols = ['errors', 'predictedYSmooth', self.ydepend]
+        # filter columns to iterate through
+        to_iter_cols = self._cat_df.columns[~self._cat_df.columns.isin(not_in_cols)]
+        # iterate over each col
+        for col in to_iter_cols:
 
             # column placeholder
             colhold = []
 
-            for groupby in self.groupbyvars:
-                logging.info("""Currently working on column: {}
-                                \nGroupby: {}\n""".format(col, groupby))
+            for groupby_var in self.groupbyvars:
+                print("""Currently working on column: {}
+                                \nGroupby: {}\n""".format(col, groupby_var))
                 # check if we are a col that is the groupbyvars
-                if col != groupby:
+                if col != groupby_var:
                     json_out = self._var_check(
                                                 col=col,
-                                                groupby=groupby)
+                                                groupby_var=groupby_var)
                     # append to placeholder
                     colhold.append(json_out)
 
                 else:
                     logging.info(
                                 """Creating accuracy metric for 
-                                groupby variable: {}""".format(groupby))
+                                groupby variable: {}""".format(groupby_var))
                     # create error metrics for slices of groupby data
-                    acc = self._create_accuracy(groupby=groupby)
+                    acc = wb_utils.create_accuracy(self.model_type,
+                                                   self._cat_df,
+                                                   self.error_type,
+                                                   groupby=groupby_var)
                     # append to insights dataframe placeholder
                     insights_df = insights_df.append(acc)
 
@@ -451,9 +254,9 @@ class WhiteBoxBase(object):
         # append to outputs
         placeholder.append(insights_json)
         # append percentiles
-        placeholder.append(self.percentiles)
+        placeholder.append(self.Percentiles.percentiles)
         # append groupby percnetiles
-        placeholder.append(self._group_percentiles_out)
+        placeholder.append(self.Percentiles.group_percentiles_out)
         # assign placeholder final outputs to class instance
         self.outputs = placeholder
         # save outputs if specified

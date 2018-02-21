@@ -75,15 +75,24 @@ WB = WhiteBoxSensitivity(modelobj=modelObjc,
                    cat_df=wine_sub,
                    groupbyvars=['volatile.acidity.bin'], #TODO case where groupbyvars not in modeldf
                    featuredict=None,
-                    autoformat=True)
+                    autoformat_types=True)
 
 
-WB.run()
+WB.run(output_type='html',
+       output_path='SENSITIVITYTEST.html')
+
+WB.outputs
+
+WB.debug_df[WB.debug_df.isnull()]
+WB.debug_df.shape
+
+WB.outputs
 # save the final outputs to disk
 WB.save(fpath = 'SENSITIVITYPERCENTILES.html')
-
-
 group = wine_sub.groupby('Type').get_group('Red')
 group.index
+
+
+finaldf.head(1)
 
 

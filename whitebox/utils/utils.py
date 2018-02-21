@@ -4,7 +4,6 @@
 import warnings
 import logging
 import requests
-import math
 import pandas as pd
 import numpy as np
 import pkg_resources
@@ -69,36 +68,6 @@ class ErrorWarningMsgs(object):
 
     warning_msgs = {'cat_df': cat_df_warning,
                     'auto_format': auto_format}
-
-
-
-
-def getvectors(dataframe):
-    """
-    getVectors calculates the percentiles 1 through 100 for data in
-    each columns of dataframe.
-    For categorical data, the mode is used.
-    :param dataframe: pandas dataframe object
-    :return: pandas dataframe object with percentiles
-    """
-    # ensure dataframe is pandas dataframe object
-    assert isinstance(dataframe, pd.DataFrame), """Supports pandas 
-                                                    dataframe, current class 
-                                                    type is {}""".format(type(dataframe))
-    # calculate the percentiles for numerical data and use the mode for
-    # categorical, string data
-    allresults = dataframe.describe(percentiles=np.linspace(0.01, 1, num=100),
-                                    include=[np.number])
-
-    # if top (or mode) in index
-    if 'top' in allresults.index:
-        # Pull out the percentiles for numerical data otherwise use the mode
-        tempvec = allresults.apply(lambda x: x['top'] if math.isnan(x['mean']) else x.filter(regex='[0-9]{1,2}\%',
-                                                                                             axis=0), axis=0)
-    else:
-        tempvec = allresults.filter(regex='[0-9]{1,2}\%', axis=0)
-
-    return tempvec
 
 
 def convert_categorical_independent(dataframe):
@@ -175,49 +144,6 @@ def to_json(
     json_out['Data'] = dataframe.to_dict(orient='records')
 
     return json_out
-
-
-def create_group_percentiles(df,
-                             groupbyvars,
-                             wanted_percentiles=[0, .01, .1, .25, .5, .75, .9, 1]):
-    """
-    create percentile buckets for based on groupby for numeric columns
-    :param df: dataframe
-    :param groupbyvars: groupby variable list
-    :param wanted_percentiles: desired percnetile lines for user intereface
-    :return: json formatted percentile outputs
-    """
-    groupbyvars = list(groupbyvars)
-    # subset numeric cols
-    num_cols = df.select_dtypes(include=[np.number])
-    final_out = {'Type': 'PercentileGroup'}
-    final_list = []
-    # iterate over
-    for col in num_cols:
-        data_out = {'variable': col}
-        groupbylist = []
-        # iterate groupbys
-        for group in groupbyvars:
-            # iterate over each slice of the groups
-            for name, group in df.groupby(group):
-                # get col of interest
-                group = group.loc[:, col]
-                # start data out for group
-                group_out = {'groupByVar': name}
-                # capture wanted percentiles
-                group_percent = group.quantile(wanted_percentiles).reset_index().rename(columns = {'index': 'percentiles',                                                                         col: 'value'})
-                # readjust percentiles to look nice
-                group_percent.loc[:, 'percentiles'] = group_percent.loc[:, 'percentiles'].apply(lambda x: str(int(x*100))+'%')
-                # convert percnetile dataframe into json format
-                group_out['percentileValues'] = group_percent.to_dict(orient='records')
-                # append group out to group placeholder list
-                groupbylist.append(group_out)
-        # assign groupbylist out
-        data_out['percentileList'] = groupbylist
-        final_list.append(data_out)
-    final_out['Data'] = final_list
-    return final_out
-
 
 def flatten_json(dictlist):
     """
@@ -378,3 +304,27 @@ def create_synthetic(nrows=100,
     groupby = catcols[0:num_groupby]
 
     return 'target', groupby, df
+
+
+def create_accuracy(model_type,
+                    cat_df,
+                    error_type,
+                    groupby=None):
+    """
+    create error metrics for each slice of the groupby variable.
+    i.e. if groupby is type of wine,
+    create error metric for all white wine, then all red wine.
+    :param groupby: groupby variable -- str -- i.e. 'Type'
+    :return: accuracy dataframe for groupby variable
+    """
+    # use this as an opportunity to capture error metrics for the groupby variable
+    if model_type == 'classification':
+        error_type = 'RAW'
+
+    acc = cat_df.groupby(groupby).apply(create_insights,
+                                        group_var=groupby,
+                                        error_type=error_type)
+    # drop the grouping indexing
+    acc.reset_index(drop=True, inplace=True)
+    # append to insights_df
+    return acc

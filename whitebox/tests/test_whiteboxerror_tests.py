@@ -426,24 +426,6 @@ class TestWhiteBoxError(unittest.TestCase):
                          'object',
                          msg="""autoformat returned dtype not object""")
 
-    def test_check_featuredict(self):
-        # test proper featuredict assignment
-        wb = WhiteBoxError(modelobj=self.modelobj,
-                           model_df=self.iris,
-                           ydepend='target',
-                           groupbyvars=['Type'],
-                           cat_df=self.cat_df,
-                           featuredict=None,
-                           autoformat=True)
-
-        test_featuredict = {'target': "SUPERTEST"}
-        wb._check_featuredict(test_featuredict)
-
-        self.assertEqual(test_featuredict,
-                         wb.featuredict,
-                         msg="""whitebox base _check_featuredict did not specify proper featuredict
-                                when given featuredict""")
-
     def test_check_null_featuredict(self):
         # test proper featuredict assignment
         wb = WhiteBoxError(modelobj=self.modelobj,

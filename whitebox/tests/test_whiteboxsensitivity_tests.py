@@ -46,7 +46,7 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
 
         self.modelobj = modelobj
 
-    def test_wbox_sensitivity_continuous_slice_outputs(self):
+    def test_wbox_sensitivity_continuous_slice_output_groupByValue(self):
         # test that groupByValue is inserted into continuous slice results for Sensitivity
         # copy iris data
         iris = self.cat_df.copy(deep=True)
@@ -61,11 +61,11 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
                                     groupbyvars=['Type'],
                                     cat_df=self.cat_df,
                                     featuredict=None,
-                                    autoformat=True)
+                                    autoformat_types=True)
 
         results = wb._continuous_slice(
                                         iris.groupby('Type').get_group('white'),
-                                        groupby='Subtype',
+                                        groupby_var='Subtype',
                                         col='sepall',
                                         vartype='Continuous')
 
@@ -94,7 +94,7 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
                                     groupbyvars=['Type'],
                                     cat_df=self.cat_df,
                                     featuredict=None,
-                                    autoformat=True)
+                                    autoformat_types=True)
 
         self.assertEqual(wb.__class__.__name__,
                          'WhiteBoxSensitivity',
@@ -118,12 +118,12 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
                                     groupbyvars=['Type'],
                                     cat_df=self.cat_df,
                                     featuredict=None,
-                                    autoformat=True)
+                                    autoformat_types=True)
 
         wb.run(output_type=None)
 
         var_check = wb._var_check(col='sepall',
-                     groupby='Type')
+                     groupby_var='Type')
 
         self.assertIn('Type', var_check.keys(),
                       msg="""Type not in json output from var_check for continuous variable
@@ -159,13 +159,13 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
                                     groupbyvars=['Type'],
                                     cat_df=self.cat_df,
                                     featuredict=None,
-                                    autoformat=True)
+                                    autoformat_types=True)
 
         wb.run(output_type=None)
 
         var_check = wb._var_check(
                                     col='Subtype',
-                                    groupby='Type')
+                                    groupby_var='Type')
 
         self.assertIn('Type', var_check.keys(),
                       msg="""Type not in json output from var_check for categorical variable
@@ -201,7 +201,7 @@ class TestWhiteBoxSensitivity(unittest.TestCase):
             groupbyvars=['Type'],
             cat_df=self.cat_df,
             featuredict=None,
-            autoformat=True)
+            autoformat_types=True)
 
         self.assertEqual(wb.called_class, 'WhiteBoxSensitivity',
                          msg="""WhiteBoxBase unable to detect correct super class
