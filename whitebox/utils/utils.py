@@ -1,12 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import warnings
-import logging
 import requests
 import pandas as pd
 import numpy as np
-import pkg_resources
 import io
 from sklearn.datasets import make_blobs, make_regression
 import random
@@ -70,30 +67,6 @@ class ErrorWarningMsgs(object):
                     'auto_format': auto_format}
 
 
-def convert_categorical_independent(dataframe):
-    """
-    convert pandas dtypes 'categorical' into numerical columns
-    :param dataframe: dataframe to perform adjustment on
-    :return: dataframe that has converted strings to numbers
-    """
-    # we want to change the data, not copy and change
-    dataframe = dataframe.copy(deep=True)
-    # convert all strings to categories and format codes
-    for str_col in dataframe.select_dtypes(include=['O', 'category']):
-        dataframe.loc[:, str_col] =pd.Categorical(dataframe.loc[:, str_col])
-    # convert all category datatypes into numeric
-    cats = dataframe.select_dtypes(include=['category'])
-    # warn user if no categorical variables detected
-    if cats.shape[1] == 0:
-        logging.warn("""Pandas categorical variable types not detected""")
-        warnings.warn('Pandas categorical variable types not detected', UserWarning)
-    # iterate over these columns
-    for category in cats.columns:
-        dataframe.loc[:, category] = dataframe.loc[:, category].cat.codes
-
-    return dataframe
-
-
 def create_insights(
                     group,
                     group_var=None,
@@ -118,60 +91,6 @@ def create_insights(
                           'Total': float(group.shape[0])}, index=[0])
     return msedf
 
-def to_json(
-                dataframe,
-                vartype='Continuous',
-                html_type='error',
-                incremental_val=None):
-    # convert dataframe values into a json like object for D3 consumption
-    assert vartype in ['Continuous', 'Categorical', 'Accuracy','Percentile'], """Vartypes should only be continuous, 
-                                                                                categorical,
-                                                                                Percentile or accuracy"""
-    assert html_type in ['error', 'sensitivity',
-                         'percentile'], 'html_type must be error or sensitivity'
-    # prepare for error
-    if html_type in ['error', 'percentile']:
-        # specify data type
-        json_out = {'Type': vartype}
-    # prepare for sensitivity
-    if html_type == 'sensitivity':
-        # convert incremental_val
-        if isinstance(incremental_val, float):
-            incremental_val = round(incremental_val, 2)
-        json_out = {'Type': vartype,
-                    'Change': str(incremental_val)}
-    # create data records from values in df
-    json_out['Data'] = dataframe.to_dict(orient='records')
-
-    return json_out
-
-def flatten_json(dictlist):
-    """
-    flatten lists of dictionaries of the same variable into one dict
-    structure. Inputs: [{'Type': 'Continuous', 'Data': [fixed.acid: 1, ...]},
-    {'Type': 'Continuous', 'Data': [fixed.acid : 2, ...]}]
-    outputs: {'Type' : 'Continuous', 'Data' : [fixed.acid: 1, fixed.acid: 2]}}
-    :param dictlist: current list of dictionaries containing certain column elements
-    :return: flattened structure with column variable as key
-    """
-    # make copy of dictlist
-    copydict = dictlist[:]
-    if len(copydict) > 1:
-        for val in copydict[1:]:
-            copydict[0]['Data'].extend(val['Data'])
-        # take the revised first element of the list
-        toreturn = copydict[0]
-    else:
-        if isinstance(copydict, list):
-            # return the dictionary object if list type
-            toreturn = copydict[0]
-        else:
-            # else return the dictionary itself
-            toreturn = copydict
-    assert isinstance(toreturn, dict), """flatten_json output object not of class dict.
-                                        \nOutput class type: {}""".format(type(toreturn))
-    return toreturn
-
 def prob_acc(true_class=0, pred_prob=0.2):
     """
     return the prediction error
@@ -181,36 +100,6 @@ def prob_acc(true_class=0, pred_prob=0.2):
     """
     return (true_class * (1-pred_prob)) + ((1-true_class)*pred_prob)
 
-
-class HTML(object):
-    @staticmethod
-    def get_html(htmltype='html_error'):
-        assert htmltype in ['html_error', 'html_sensitivity'], 'htmltype must be html_error or html_sensitivity'
-        html_path = pkg_resources.resource_filename('whitebox', '{}.txt'.format(htmltype))
-        # utility class to hold whitebox files
-        try:
-            wbox_html = open('{}.txt'.format(htmltype), 'r').read()
-        except IOError:
-            wbox_html = open(html_path, 'r').read()
-        return wbox_html
-
-def createmlerror_html(
-                        datastring,
-                        dependentvar,
-                        htmltype='html_error'):
-    """
-    create WhiteBox error plot html code
-    :param datastring: json like object containing data
-    :param dependentvar: name of dependent variable
-    :return: html string
-    """
-    assert htmltype in ['html_error', 'html_sensitivity'], """htmltype must be html_error 
-                                                                or html_sensitivity"""
-    output = HTML.get_html(htmltype=htmltype).replace('<***>',
-                                                        datastring
-                                                        ).replace('Quality', dependentvar)
-
-    return output
 
 def create_wine_data(cat_cols):
     """

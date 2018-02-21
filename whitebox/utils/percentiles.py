@@ -4,8 +4,10 @@ import math
 
 try:
     import utils.utils as wb_utils
+    import utils.formatting as formatting
 except:
     import whitebox.utils.utils as wb_utils
+    import whitebox.utils.formatting as formatting
 
 
 def create_group_percentiles(df,
@@ -119,7 +121,7 @@ class Percentiles(object):
         # melt to long format
         percentiles_melted = pd.melt(final_percentiles, id_vars='percentile')
         # convert to_json
-        self.percentiles = wb_utils.to_json(dataframe=percentiles_melted,
+        self.percentiles = formatting.FmtJson.to_json(dataframe=percentiles_melted,
                                    vartype='Percentile',
                                    html_type='percentile',
                                    incremental_val=None)

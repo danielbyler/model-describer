@@ -10,11 +10,13 @@ from pandas.api.types import is_object_dtype, is_numeric_dtype
 try:
     import utils.utils as wb_utils
     from utils.categorical_conversions import pandas_switch_modal_dummy
+    import utils.formatting as formatting
     from base import WhiteBoxBase
 except ImportError:
     import whitebox.utils.utils as wb_utils
     from whitebox.utils.categorical_conversions import pandas_switch_modal_dummy
     from whitebox.base import WhiteBoxBase
+    from whitebox.utils import formatting
 
 
 class WhiteBoxError(WhiteBoxBase):
@@ -128,9 +130,7 @@ class WhiteBoxError(WhiteBoxBase):
             agg_errors = self.aggregate_func(errors)
             # subtract the aggregate value for the group from the errors
             errors = errors.apply(lambda x: agg_errors - x)
-        # need non zero mask when concatenating non error columns back
-        # non_zero_errors_mask = errors != 0
-        # create separate columns for pos or neg errors
+        # create separate columns for pos or neg errors - average in zeros to both
         errors = pd.concat([errors[errors >= 0], errors[errors <= 0]], axis=1)
         # rename error columns
         errors.columns = ['errPos', 'errNeg']
@@ -157,7 +157,6 @@ class WhiteBoxError(WhiteBoxBase):
         assert vartype in ['Continuous', 'Categorical'], 'variable type needs to be continuous or categorical'
         # copy so we don't change the og data
         group_copy = group.reset_index(drop=True).copy(deep=True)
-        # print("""TRANFORMFUNCTION COL: {} --- GROUPBY: {}""".format(col, groupby_var))
         # create group errors dataframe
         toreturn = self._create_group_errors(group_copy)
 
@@ -178,15 +177,7 @@ class WhiteBoxError(WhiteBoxBase):
         debug_df = agg_errors.rename(columns={col: 'col_value'})
         debug_df['col_name'] = col
 
-        if any(pd.isnull(agg_errors['predictedYSmooth'])):
-            print("""*******************************************************************************************
-                    \n{}
-                    \n******************************************************************************""".format(toreturn))
-
-        self.debug_df = self.debug_df.append(debug_df)
-
-        #print(group_copy.head(1))
-        #print(agg_errors)
+        self.agg_df = self.agg_df.append(debug_df)
 
         return agg_errors
 
@@ -258,7 +249,7 @@ class WhiteBoxError(WhiteBoxBase):
         error_holder.reset_index(drop=True, inplace=True)
         error_holder.fillna('null', inplace=True)
         # convert to json structure
-        json_out = wb_utils.to_json(
+        json_out = formatting.FmtJson.to_json(
                                     error_holder,
                                     vartype=vartype,
                                     html_type='error',
@@ -406,7 +397,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
 
         debug_df = agg_errors.rename(columns={col: 'col_value'})
         debug_df['col_name'] = col
-        self.debug_df = self.debug_df.append(debug_df)
+        self.agg_df = self.agg_df.append(debug_df)
 
         return agg_errors
 
@@ -434,19 +425,19 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                                                 \nGroup: {}""".format(col, groupby))
         rev_col = self._reverse_featuredict[col]
         # switch modal column for predictions
-        modal_val, copydf = pandas_switch_modal_dummy(col,
+        modal_val, modaldf = pandas_switch_modal_dummy(col,
                                                       rev_col,
                                                       self._cat_df,
                                                       copydf)
         # make predictions with the switches to the dataset
         if self.model_type == 'classification':
-            copydf['new_predictions'] = self.predict_engine(copydf.loc[:, ~copydf.columns.isin([self.ydepend,
+            copydf['new_predictions'] = self.predict_engine(modaldf.loc[:, ~copydf.columns.isin([self.ydepend,
                                                                                                 'predictedYSmooth'])])[:, 1]
         elif self.model_type == 'regression':
-            copydf['new_predictions'] = self.predict_engine(copydf.loc[:, ~copydf.columns.isin([self.ydepend,
+            copydf['new_predictions'] = self.predict_engine(modaldf.loc[:, ~copydf.columns.isin([self.ydepend,
                                                                                                 'predictedYSmooth'])])
         # calculate difference between actual predictions and new_predictions
-        self._cat_df['diff'] = copydf['new_predictions'] - copydf['predictedYSmooth']
+        self._cat_df['diff'] = modaldf['new_predictions'] - modaldf['predictedYSmooth']
         # create mask of data to select rows that are not equal to the mode of the category.
         # This will prevent blank displays in HTML
         mode_mask = self._cat_df[col] != modal_val
@@ -538,7 +529,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         sensitivity = sensitivity.reset_index(drop=True).fillna('null')
         logging.info("""Converting output to json type using to_json utility function""")
         # convert to json structure
-        json_out = wb_utils.to_json(sensitivity, vartype=vartype, html_type = 'sensitivity',
+        json_out = formatting.FmtJson.to_json(sensitivity, vartype=vartype, html_type = 'sensitivity',
                                  incremental_val=incremental_val)
         # return json_out
         return json_out
