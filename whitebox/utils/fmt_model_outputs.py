@@ -6,7 +6,7 @@ except:
     import whitebox.utils.utils as wb_utils
 
 
-def sklearn_predict(predict_engine,
+def fmt_sklearn_preds(predict_engine,
                     modelobj,
                     model_df,
                     cat_df,
@@ -46,4 +46,9 @@ def sklearn_predict(predict_engine,
     model_df['predictedYSmooth'] = preds
     # return
     return cat_df, model_df
+
+def fmt_tf_preds():
+    pass
+
+
 

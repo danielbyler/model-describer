@@ -68,6 +68,8 @@ WB.run(output_type='html',
 
 WB.debug_df[WB.debug_df['predictedYSmooth'].isnull()]
 
+WB.groupbyvars
+
 
 WB.debug_df[WB.debug_df.duplicated()]['col_name'].unique()
 

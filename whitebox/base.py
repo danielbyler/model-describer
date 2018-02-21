@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import warnings
 from abc import abstractmethod, ABCMeta
 import logging
-import warnings
 
 import numpy as np
 import pandas as pd
@@ -15,13 +13,13 @@ try:
     import utils.check_utils as checks
     import utils.percentiles as percentiles
     import utils.formatting as format
-    import modelconfig.sklearn_predict as sklearn_predict
+    import modelconfig.fmt_sklearn_preds as fmt_sklearn_preds
 except:
     import whitebox.utils.utils as wb_utils
     import whitebox.utils.check_utils as checks
     import whitebox.utils.percentiles as percentiles
     import whitebox.utils.formatting as format
-    from whitebox.modelconfig import sklearn_predict
+    from whitebox.utils.fmt_model_outputs import fmt_sklearn_preds
 
 
 class WhiteBoxBase(object):
@@ -158,6 +156,7 @@ class WhiteBoxBase(object):
                             continuous grouping""")
             # pull out col being operated on
             group_col = group.loc[:, col]
+            # digitize needs monotonically increasing vector
             group_percentiles = sorted(list(set(percentiles.create_percentile_vecs(group_col))))
             print(group_percentiles)
             print('column: {}'.format(col))
@@ -196,7 +195,7 @@ class WhiteBoxBase(object):
             raise ValueError("""Output type {} not supported.
                                 \nCurrently support {} output""".format(output_type, supported))
         # run the prediction function first to assign the errors to the dataframe
-        self._cat_df, self._model_df = sklearn_predict(self.predict_engine,
+        self._cat_df, self._model_df = fmt_sklearn_preds(self.predict_engine,
                                                        self.modelobj,
                                                        self._model_df,
                                                        self._cat_df,
