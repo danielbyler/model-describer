@@ -126,7 +126,7 @@ class WhiteBoxError(WhiteBoxBase):
         errors = group_copy['errors'].reset_index(drop=True).copy(deep=True)
         # check if classification
         if self.model_type == 'classification':
-            # get user defined aggregate (central values) value of the errors
+            # get user defined aggregate (central values) of the errors
             agg_errors = self.aggregate_func(errors)
             # subtract the aggregate value for the group from the errors
             errors = errors.apply(lambda x: agg_errors - x)
@@ -330,7 +330,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                  featuredict=None,
                  groupbyvars=None,
                  aggregate_func=np.median,
-                 error_type='MSE',
+                 error_type='RAW',
                  std_num=0.5,
                  autoformat_types=False,
                  verbose=0,
@@ -382,6 +382,17 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         """
         assert 'errors' in group.columns, 'errors needs to be present in dataframe slice'
         assert vartype in ['Continuous', 'Categorical'], 'variable type needs to be continuous or categorical'
+
+        # reformat current slice of data for raw_df
+        raw_df = group.rename(columns={col: 'col_value',
+                                       groupby_var: 'groupby_level'}).reset_index(drop=True)
+
+        raw_df['groupByVar'] = groupby_var
+        raw_df['col_name'] = col
+        if 'fixed_bins' in raw_df.columns:
+            del raw_df['fixed_bins']
+
+        self.raw_df = self.raw_df.append(raw_df)
 
         # create switch for aggregate types based on continuous or categorical values
         if vartype == 'Categorical':

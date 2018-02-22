@@ -2,7 +2,7 @@ import logging
 
 try:
     import utils.utils as wb_utils
-except:
+except ImportError:
     import whitebox.utils.utils as wb_utils
 
 
@@ -18,9 +18,11 @@ def fmt_sklearn_preds(predict_engine,
     """
     logging.info("""Creating predictions using modelobj.
                     \nModelobj class name: {}""".format(modelobj.__class__.__name__))
-    # create predictions
+
+    unwanted_pred_cols = [ydepend, 'predictedYSmooth']
+    # create predictions, filter out extraneous columns
     preds = predict_engine(
-        model_df.loc[:, model_df.columns != ydepend])
+        model_df.loc[:, list(set(model_df.columns).difference(set(unwanted_pred_cols)))])
 
     if model_type == 'regression':
         # calculate error

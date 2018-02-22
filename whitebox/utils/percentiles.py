@@ -1,11 +1,10 @@
 import pandas as pd
 import numpy as np
-import math
 
 try:
     import utils.utils as wb_utils
     import utils.formatting as formatting
-except:
+except ImportError:
     import whitebox.utils.utils as wb_utils
     import whitebox.utils.formatting as formatting
 
@@ -14,17 +13,20 @@ def create_group_percentiles(df,
                              groupbyvars,
                              wanted_percentiles=None):
     """
-    create percentile buckets for based on groupby for numeric columns
-    :param df: dataframe
-    :param groupbyvars: groupby variable list
-    :param wanted_percentiles: desired percnetile lines for user intereface
-    :return: json formatted percentile outputs
+    create percentiles based on groupby variable
+
+    :param df: dataframe to create percentiles from
+    :param groupbyvars: list of groupby variables
+    :param wanted_percentiles: list of desired percentiles
+    :return json formatted percentile outputs
+    :rtype dict
     """
     # calibrate default percentiles
     if not wanted_percentiles:
-        wanted_percentiles = [0, .01, .1, .25, .5, .75, .9, 1]
+        wanted_percentiles = wb_utils.Settings.output_percentiles
 
-    groupbyvars = list(groupbyvars)
+    assert isinstance(groupbyvars, list),  """groupbyvars must be of type list"""
+
     # subset numeric cols
     num_cols = df.select_dtypes(include=[np.number])
     final_out = {'Type': 'PercentileGroup'}
@@ -57,47 +59,57 @@ def create_group_percentiles(df,
     return final_out
 
 
-def create_percentile_vecs(input,
+def create_percentile_vecs(input_var,
                            percentiles=None):
     """
-    # support dataframe and series objects
-    :param dataframe: pandas dataframe object
-    :return: pandas dataframe object with percentiles
+    # create percentiles for series and dataframe objects
+
+    :param input_var: series or dataframe object
+    :param percentiles: desired percentile buckets
+    :return: pandas dataframe or series object based on input
+    :rtype pd.DataFrame | pd.Series
     """
     # ensure dataframe is pandas dataframe object
     if percentiles is None:
         percentiles = np.linspace(0.01, 1, num=100)
 
     # check dtype of input
-    if isinstance(input, pd.DataFrame):
+    if isinstance(input_var, pd.DataFrame):
         # calculate the percentiles for numeric data
-        allresults = input.describe(percentiles=percentiles,
+        allresults = input_var.describe(percentiles=percentiles,
                                         include=[np.number])
-
 
         tempvec = allresults.filter(regex='[0-9]{1,2}\%', axis=0)
 
-    elif isinstance(input, pd.Series):
-        tempvec = input.quantile(percentiles)
+    elif isinstance(input_var, pd.Series):
+        tempvec = input_var.quantile(percentiles)
 
     else:
-        raise TypeError("""unsupported type for percentile creation: {}""".format(type(input)))
+        raise TypeError("""unsupported type for percentile creation: {}""".format(type(input_var)))
 
     return tempvec
 
+
 class Percentiles(object):
 
-    def __init__(self, df,
+    def __init__(self,
+                 df,
                  groupbyvars):
+        """
+        Percentiles creates and holds percentile information for dataframe object
 
+        :param df: dataframe input
+        :param groupbyvars: list of groupby variables
+        """
         self._df = df
         self._groupbyvars = groupbyvars
+        self.population_percentiles()
 
     def population_percentiles(self):
         """
-                create population percentiles, and group percentiles
-                :return: NA
-                """
+        create and assign class attribute df population and groupby percentiles
+
+        """
         # create instance wide percentiles for all numeric columns
         # including 0% through 100%
         self.population_percentile_vecs = create_percentile_vecs(self._df,
@@ -106,23 +118,22 @@ class Percentiles(object):
         self._percentiles_out()
         # create groupby percentiles
         self.group_percentiles_out = create_group_percentiles(self._df,
-                                                                        self._groupbyvars)
+                                                              self._groupbyvars)
 
     def _percentiles_out(self):
         """
         Create designated percentiles for user interface percentile bars
             percentiles calculated include: 0, 1, 10, 25, 50, 75 and 90th percentiles
-        :return: Save percentiles to instance for retrieval in final output
+
         """
         # send the percentiles to to_json to create percentile bars in UI
         percentiles = self.population_percentile_vecs.reset_index().rename(columns={"index": 'percentile'})
         # get 0, 1, 25, 50, 75, and 90th percentiles
-        final_percentiles = percentiles.iloc[[0, 1, 10, 25, 50, 75, 90]].copy(deep=True)
+        final_percentiles = percentiles.iloc[wb_utils.Settings.fmt_percentiles_out].copy(deep=True)
         # melt to long format
         percentiles_melted = pd.melt(final_percentiles, id_vars='percentile')
         # convert to_json
         self.percentiles = formatting.FmtJson.to_json(dataframe=percentiles_melted,
-                                   vartype='Percentile',
-                                   html_type='percentile',
-                                   incremental_val=None)
-
+                                                      vartype='Percentile',
+                                                      html_type='percentile',
+                                                      incremental_val=None)

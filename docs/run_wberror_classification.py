@@ -3,7 +3,7 @@ from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
 import numpy as np
 
-from whitebox.utils import create_wine_data
+from whitebox.utils.utils import create_wine_data
 
 df = create_wine_data(None)
 
@@ -20,12 +20,10 @@ model_df = pd.concat([df.select_dtypes(include=[np.number]),
 
 model_df.head()
 
-x = model_df.loc[:, model_df.columns != ydepend]
-y = model_df.loc[:, ydepend]
-
 # build model
 clf = RandomForestClassifier(max_depth=2, random_state=0)
-clf.fit(x, y)
+clf.fit(model_df.loc[:, model_df.columns != ydepend],
+        model_df.loc[:, ydepend])
 
 from sklearn.utils.validation import check_is_fitted
 
@@ -37,9 +35,17 @@ WB = WhiteBoxError(clf,
                    groupbyvars=['alcohol'],
                    aggregate_func=np.mean,
                    verbose=None,
-                   autoformat=True
+                   autoformat_types=True
                    )
-WB.run()
+df['alcohol'].unique()
+
+WB.run(output_path='CLASSIFICATIONTEST.html',
+       output_type='html')
+
+WB.agg_df[WB.agg_df['predictedYSmooth'].isnull()]
+WB.agg_df[WB.agg_df.duplicated()].shape
+
+WB.agg_df.shape
 
 WB.save("CLASSIFICATIONTEST.html")
 

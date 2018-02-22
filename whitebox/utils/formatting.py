@@ -1,41 +1,67 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import pkg_resources
 import warnings
 
 import pandas as pd
-import numpy as np
-import pkg_resources
-import warnings
-import logging
 
 try:
     import utils.utils as wb_utils
-except:
+except ImportError:
     import whitebox.utils.utils as wb_utils
 
 
 def autoformat_types(inputdf):
+    """
+    cast dtype category to strings
+
+    :param inputdf: dataframe input
+    :return: dataframe output categories casted as strings
+    :rtype: pd.DataFrame
+    """
     # convert categorical dtypes to strings
     catcols = inputdf.select_dtypes(include=['category']).columns
     inputdf[catcols] = inputdf[catcols].apply(lambda x: x.astype(str))
     return inputdf
 
 
-def format_inputs(input, format_dict,
+def format_inputs(input_val,
+                  format_dict,
                   subset=False):
+    """
+    format input by format_dict key, vals
+
+    :param input_val: input to format - supported types:
+        list, str, pd.DataFrame
+    :param format_dict: dict with key=original, value=formatted name
+    :param subset: boolean, subset dataframe on format_dict.keys
+    :return: formatted output same type as input
+    :rtype: str|list|pd.DataFrame
+    """
     # format string
-    if isinstance(input, str):
-        return format_dict.get(input, input)
+    if isinstance(input_val, str):
+        output = format_dict.get(input_val, input)
     # format pandas dataframe
-    if isinstance(input, pd.DataFrame):
+    elif isinstance(input_val, pd.DataFrame):
         if subset is False:
-            return input.rename(columns=format_dict)
+            output = input_val.rename(columns=format_dict)
         else:
-            return input.rename(columns=format_dict).loc[:, list(format_dict.values())]
+            output = input_val.rename(columns=format_dict).loc[:, list(format_dict.values())]
     # format list
-    if isinstance(input, list):
-        return [format_dict.get(list_val, list_val) for list_val in input]
+    elif isinstance(input_val, list):
+        output = [format_dict.get(list_val, list_val) for list_val in input_val]
+
+    else:
+        raise TypeError("""format_inputs received 
+                        unexpected type: {}""".format(type(input_val)))
+
+    return output
 
 
 class FmtJson(object):
+    """ utility class to house json formatting functionality """
+
     @staticmethod
     def to_json(
             dataframe,
@@ -43,12 +69,25 @@ class FmtJson(object):
             html_type='error',
             incremental_val=None,
             err_type=None):
+        """
+        convert input dataframe to json
+
+        :param dataframe: input dataframe
+        :param vartype: variable type for conversion (Continuous, Categorical, Accuracy, Percentile)
+        :param html_type: html output type (error, sensitivity, percentile, accuracy)
+        :param incremental_val: If sensitivity used, include incremental value
+            used to construct synthetic data
+        :param err_type: User defined error type
+        :return: formatted json output
+        :rtype: dict
+        """
         # convert dataframe values into a json like object for D3 consumption
-        assert vartype in ['Continuous', 'Categorical', 'Accuracy', 'Percentile'], """Vartypes should only be continuous, 
-                                                                                    categorical,
-                                                                                    Percentile or accuracy"""
-        assert html_type in ['error', 'sensitivity',
-                             'percentile', 'accuracy'], 'html_type must be error or sensitivity'
+        assert vartype in ['Continuous', 'Categorical', 'Accuracy', 'Percentile'], \
+            """Vartypes should only be continuous, categorical,
+            Percentile or accuracy"""
+
+        assert html_type in ['error', 'sensitivity', 'percentile', 'accuracy'], \
+            'html_type must be error, sensitivity, percentile, accuracy'
 
         json_dict = dict(percentile={'Type': vartype},
                          error={'Type': vartype},
@@ -67,11 +106,13 @@ class FmtJson(object):
     def flatten_json(dictlist):
         """
         flatten lists of dictionaries of the same variable into one dict
-        structure. Inputs: [{'Type': 'Continuous', 'Data': [fixed.acid: 1, ...]},
-        {'Type': 'Continuous', 'Data': [fixed.acid : 2, ...]}]
-        outputs: {'Type' : 'Continuous', 'Data' : [fixed.acid: 1, fixed.acid: 2]}}
-        :param dictlist: current list of dictionaries containing certain column elements
+            structure. Inputs: [{'Type': 'Continuous', 'Data': [fixed.acid: 1, ...]},
+            {'Type': 'Continuous', 'Data': [fixed.acid : 2, ...]}]
+            outputs: {'Type' : 'Continuous', 'Data' : [fixed.acid: 1, fixed.acid: 2]}}
+
+        :param dictlist: list of dictionaries
         :return: flattened structure with column variable as key
+        :rtype: dict
         """
         # make copy of dictlist
         copydict = dictlist[:]

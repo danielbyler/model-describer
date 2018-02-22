@@ -75,7 +75,7 @@ class TestWhiteBoxError(unittest.TestCase):
                             ydepend='target',
                             groupbyvars=['Type'],
                             cat_df=self.cat_df,
-                            autoformat=True)
+                            autoformat_types=True)
 
         wb.run(output_type=None)
 
@@ -244,7 +244,7 @@ class TestWhiteBoxError(unittest.TestCase):
                            groupbyvars=['Type'],
                            cat_df=iris,
                            featuredict=None,
-                           autoformat=True)
+                           autoformat_types=True)
 
         var_check = wb._var_check(
                                     col='sepall',
@@ -278,7 +278,7 @@ class TestWhiteBoxError(unittest.TestCase):
                            groupbyvars=['Type'],
                            cat_df=iris,
                            featuredict=None,
-                           autoformat=True)
+                           autoformat_types=True)
 
         var_check = wb._var_check(
                                     col='Type2',
@@ -374,7 +374,7 @@ class TestWhiteBoxError(unittest.TestCase):
 
         results = wb._continuous_slice(
                                         iris.groupby('Type').get_group('white'),
-                                        groupby='Type2',
+                                        groupby_var='Type2',
                                         col='sepall',
                                         vartype='Continuous')
 
@@ -402,8 +402,8 @@ class TestWhiteBoxError(unittest.TestCase):
                       msg="""sulphates not found in continuous slice results.
                                                       \nColumns: {}""".format(results.columns))
 
-    def test_autoformat(self):
-        # check that autoformat converts categorical columns to strings
+    def test_autoformat_types(self):
+        # check that autoformat_types converts categorical columns to strings
         iris = self.cat_df.copy(deep=True)
         iris['Type'] = pd.Categorical(iris['Type'])
         # test that whitebox can accurately detect regression model
@@ -413,18 +413,18 @@ class TestWhiteBoxError(unittest.TestCase):
                            groupbyvars=['Type'],
                            cat_df=iris,
                            featuredict=None,
-                           autoformat=True)
+                           autoformat_types=True)
 
         # check number of categorical columns
         cat_len = len(wb.cat_df.select_dtypes(include=['category']).columns)
 
         self.assertEqual(cat_len,
                          0,
-                         msg="""autoformat not converting categorical columns to strings""")
+                         msg="""autoformat_types not converting categorical columns to strings""")
 
         self.assertEqual(wb.cat_df['Type'].dtype,
                          'object',
-                         msg="""autoformat returned dtype not object""")
+                         msg="""autoformat_types returned dtype not object""")
 
     def test_check_null_featuredict(self):
         # test proper featuredict assignment
@@ -434,7 +434,7 @@ class TestWhiteBoxError(unittest.TestCase):
                            groupbyvars=['Type'],
                            cat_df=self.cat_df,
                            featuredict=None,
-                           autoformat=True)
+                           autoformat_types=True)
 
         if isinstance(wb.featuredict.keys(), list):
             to_check = wb.featuredict.keys()

@@ -14,7 +14,7 @@ try:
     import utils.percentiles as percentiles
     import utils.formatting as formatting
     import modelconfig.fmt_sklearn_preds as fmt_sklearn_preds
-except:
+except ImportError:
     import whitebox.utils.utils as wb_utils
     import whitebox.utils.check_utils as checks
     import whitebox.utils.percentiles as percentiles
@@ -185,29 +185,11 @@ class WhiteBoxBase(object):
 
         logging.info("""Applying transform function to continuous bins""")
         # group by bins
-        final_errors_out = pd.DataFrame()
-
         errors_out = continuous_group.groupby('fixed_bins').apply(self._transform_function,
                                                                   col=col,
                                                                   groupby_var=groupby_var,
                                                                   vartype=vartype)
-        # iterate over each bin
-        #for bin in continuous_group['fixed_bins'].unique():
-        #    # subset down to bin
-        #    bin_data = continuous_group[continuous_group['fixed_bins'] == bin].reset_index(drop=True).copy(deep=True)
-        #    # apply transformation function
-        #    errors_out = self._transform_function(bin_data,
-        #                                          col=col,
-        #                                          groupby_var=groupby_var,
-        #                                          vartype=vartype)
-        #    final_errors_out = final_errors_out.append(errors_out)
-
-        #errors = group.groupby('fixed_bins').apply(self._transform_function,
-        #                                           col=col,
-        #                                           groupby_var=groupby_var,
-        #                                           vartype=vartype)
-        final_errors_out = final_errors_out.append(errors_out)
-        return final_errors_out
+        return errors_out
 
     def run(self,
             output_type=None,

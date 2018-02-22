@@ -3,42 +3,55 @@ from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
 import numpy as np
 
-df = pd.read_csv('docs/datasets/winequality.csv')
+from whitebox.eval import WhiteBoxError
+from sklearn.ensemble import RandomForestClassifier
+import pandas as pd
+import numpy as np
+
+from whitebox.utils.utils import create_wine_data
+
+df = create_wine_data(None)
 
 # set up y var
 # set up some params
-ydepend = 'Type'
+ydepend = 'quality'
+
+# turn it into a binary classification problem
+df.loc[:, ydepend] = df.loc[:, ydepend].apply(lambda x: 0 if x < 5 else 1)
 
 # convert categorical
-df['AlcoholContent'] = pd.Categorical(df['AlcoholContent'])
-df['quality'] = pd.Categorical(df['quality'])
+model_df = pd.concat([df.select_dtypes(include=[np.number]),
+                      pd.get_dummies(df.select_dtypes(include=['O', 'category']))], axis=1)
 
-df.select_dtypes(include = ['category'])
-model_df = df.copy(deep = True)
+model_df.head()
 
-# create dummies example using all categorical columns
-dummies = pd.concat([pd.get_dummies(model_df.loc[:, col], prefix = col) for col in model_df.select_dtypes(include = ['category']).columns], axis = 1)
-finaldf = pd.concat([model_df.select_dtypes(include = [np.number]), dummies], axis = 1)
+# build model
+clf = RandomForestClassifier(max_depth=2, random_state=0)
+clf.fit(model_df.loc[:, model_df.columns != ydepend],
+        model_df.loc[:, ydepend])
 
-
-clf = RandomForestClassifier()
-# fit the model using the dummy dataframe
-clf.fit(finaldf.loc[:, finaldf.columns != ydepend], df.loc[:, ydepend])
-
+df.dtypes
 
 WB = WhiteBoxSensitivity(clf,
-                   model_df=finaldf,
+                   model_df=model_df,
                    ydepend=ydepend,
                    cat_df=df,
                    featuredict=None,
-                   groupbyvars=['AlcoholContent'],
+                   groupbyvars=['alcohol'],
                    aggregate_func=np.mean,
                    verbose=None,
-                    std_num=2
+                    std_num=2,
+                    autoformat_types=True,
                    )
 
 
 
-WB.run()
+WB.run(output_type='html',
+       output_path='WINEQUALITY_SENSITIVITY_CLASSIFICATION.html')
+
+WB.raw_df.head()
+WB.raw_df[WB.raw_df['fixed_bins'].notnull()]
+
+WB.agg_df.head(100)
 
 WB.save('./output/WINEQUALITY_SENSITIVITY_CLASSIFICATION.html')
