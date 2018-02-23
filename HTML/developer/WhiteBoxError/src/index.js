@@ -18,6 +18,8 @@ var appHelper = new AppHelper();
 var main = d3.select('#App');
 //Main Heading
 var heading = main.append("div").attr('class', "heading").append("a").attr("href", "https://github.com/DataScienceSquad/WhiteBox_Production").html("White Box - Prediction Error By Variable")
+
+var heading2 = main.append("div").attr('class', "subheading").append("a").attr("href", "https://github.com/DataScienceSquad/WhiteBox_Production/wiki/How-to-interpret-WhiteBox-charts").html("How to interpret WhiteBox Charts")
 //Heat map and the type dropdown
 var summary = main.append("div").attr("class", "summary")
 var heatMapContainer = summary.append('div').attr('class', 'heatMapContainer')
@@ -146,7 +148,7 @@ function showToolTipTreeMap(d, i) {
         .style("left", d3.event.pageX + "px")
         .style("top", d3.event.pageY + "px")
         .style("color", colorDict['heat'][d])
-        .html("Group <b>" + statEach['groupByValue'] + " </b> is " + percEach['perc'] + "% of the data and has an average error of <b>" + appHelper.formatLabel(statEach['MSE']) + "</b>")
+        .html("Group <b>" + statEach['groupByValue'] + " </b> is " + percEach['perc'] + "% of the data and has an average error of <b>" + appHelper.formatLabel(statEach[metaData['ErrType']]) + "</b>")
 }
 
 
@@ -165,7 +167,7 @@ function moveToolTipTreeMap(d, i) {
         .style("left", d3.event.pageX + "px")
         .style("top", d3.event.pageY + "px")
         .style("color", colorDict['heat'][d.data.name])
-        .html("Group <b>" + statEach['groupByValue'] + " </b> is " + appHelper.formatLabel(percEach['perc']) + "% of the data and has an average error of <b>" + appHelper.formatLabel(statEach['MSE']) + "</b>")
+        .html("Group <b>" + statEach['groupByValue'] + " </b> is " + appHelper.formatLabel(percEach['perc']) + "% of the data and has an average error of <b>" + appHelper.formatLabel(statEach[metaData['ErrType']]) + "</b>")
 }
 
 //Function to hide the tooltip on mouse out of treemap
@@ -241,7 +243,7 @@ function intializeTreeMap(type) {
             return d
         })
         .style("font-size", "16px")*/
-    var cellGroup = svgHeat.append("g").attr("class", "cell-group").attr("transform", "translate(0,20)")
+    var cellGroup = svgHeat.append("g").attr("class", "cell-group").attr("transform", "translate(0,0)")
     var cell = cellGroup.selectAll("g")
         .data(root.leaves())
         .enter().append("g")
@@ -321,7 +323,7 @@ function intializeTreeMap(type) {
                 var statEach = metaData['statData'].filter(function (s) {
                     return s['groupByVarName'] == groupBy && s['groupByValue'] == d.data.name
                 })[0]
-                return "Average Error: " + appHelper.formatLabel(statEach['MSE']);
+                return "Average Error: " + appHelper.formatLabel(statEach[metaData['ErrType']]);
             } else {
                 return ""
             }
@@ -367,6 +369,7 @@ function getTreeMapData(type) {
             return ids.length
         })
         .entries(filteredSample)
+    
     nestedSample.forEach(function (d) {
         var temp = {}
         temp['name'] = d.key
@@ -405,7 +408,6 @@ function getXthPercentaile(dataList, x, cat, varX) {
     var typeDict = varDict['percentileList'].filter(function (d) {
         return d.groupByVar == cat
     })[0]
-
     var percDict = typeDict['percentileValues'].filter(function (d) {
         return d.percentiles == x + "%"
     })[0]
@@ -470,7 +472,7 @@ function createQuartileData(dataList, varX, cats) {
     returnDict['underEst'] = {}
     statData['quartiles'] = []
     var diff = d3.quantile(varRange, 0.25) - d3.min(varRange)
-
+    console.log(cats)
 
     for (var c in cats) {
         var cat = cats[c]
@@ -481,6 +483,7 @@ function createQuartileData(dataList, varX, cats) {
             var quartile = {}
             quartile['quarter'] = i
             quartile['group'] = cat
+            console.log(varX,AppData)
             var low = getXthPercentaile(dataList, (i - 1) * 25, cat, varX)
             var high = getXthPercentaile(dataList, (i) * 25, cat, varX)
             quartile['range'] = [low, high]
@@ -661,6 +664,7 @@ function prepareAppData() {
     AppData.filter(function (d, i) {
         if (d.Type == "Accuracy") {
             metaData['statData'] = d.Data
+            metaData['ErrType'] = d.ErrType
             AppData.splice(i, 1)
         }
     })
@@ -709,8 +713,8 @@ function loopVariables(varInd) {
     var width = appHelper.getWidth() * 0.74 - margin.left - margin.right;
     var height = 300 - margin.top - margin.bottom;
     var chartLevel = mainApp.append("div").attr("class", "chart-lev").attr("id", "chlvl-" + varX.replace(/[^a-zA-Z]/g, "")).style("height", "430px")
-    var title = chartLevel.append('div').attr('class', 'Title')
     var main = chartLevel.append("div").attr("class", "app").attr("id", varX.replace(/[^a-zA-Z]/g, ""))
+    var title = main.append('div').attr('class', 'Title')
 
     var filterContainer = main.append('div').attr('class', 'Filtercontainer')
     var total = main.append('div').attr('class', 'Total')

@@ -11,13 +11,21 @@ model_df : pandas DataFrame, required
 ------------
 The data used for modeling (both continuous and dummy variables). This data frame must contain all of the 'X' columns and the 'y' column used in your modelobject.fit(X, y) modeling step. Dummy variables formed from categorical variables must have the form catvarname_value (Gender_Male, Gender_Female, etc.) or they will cause and error and not map to the output charts. 
 
+For dummies, all values in a categorical column (including nulls) must have a dummy column associated with them. The following code will create dummies in the correct format.
+
+.. code-block:: python
+  
+  #create dummies
+  dummies = pd.concat([pd.get_dummies(model_df.loc[:, col], prefix = col) for col in model_df.select_dtypes(include =   
+  ['object']).columns], dummy_na=True, axis = 1)
+
 ydepend : string, required
 ------------
 The dependent 'y' variable you are trying to predict. Dependent variables can be continuous or binary. 
 
 cat_df : pandas DataFrame, required
 ------------
-DataFrame of variables with the categorical `data type <https://pandas.pydata.org/pandas-docs/stable/categorical.html>`_. This dataframe may contain string variables not present in the model. The groupbyvars must be contained in this dataset. 
+DataFrame of variables with the object data type. This dataframe may contain string variables not present in the model. The groupbyvars must be contained in this dataset. The dependent variable (ydpend) must also be included in this dataset.  
 
 groupbyvars : List, required
 ------------
@@ -28,7 +36,6 @@ List of variables that 'groups' the output into discrete segments for comparison
 
   #add uniform
   cat_df['Entire_Population'] = 'Entire Population'
-  cat_df['Entire_Population'] = pd.Categorical(cat_df['Entire_Population'])
 
 featuredict : dictionary, optional
 ------------

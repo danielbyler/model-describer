@@ -53,11 +53,24 @@ html,body{
     z-index: 999;
     background-color: #fff;
 }
+.subheading{
+    position: fixed;
+    margin-left: 1%;
+    top:50px;
+    width: 98%;
+    height: 20px;
+    text-align: center;
+    font-size: 12px;
+    color: #00A3E0;
+    font-weight: 800;
+    box-shadow: rgba(0, 0, 0, 0.247059) 2px 2px 4px; 
+    z-index: 999;
+    background-color: #fff;
+}
 .filt-cont{
     width: 24%;
     height: 50px;
     float: left;
-    margin-top: 22px;
 }
 
 .dropdown{
@@ -179,11 +192,11 @@ svg text {
 .summary{
     padding-top: 5px;
     margin-top: 2px;
-    height: 150px;
+    height: 130px;
     box-shadow: rgba(0, 0, 0, 0.247059) 2px 2px 4px; 
     position: fixed;
     width: 98%;
-    top: 48px;
+    top: 68px;
     background-color: #fff;
     margin-left: 1%;
     z-index: 1000;
@@ -265,6 +278,14 @@ svg text {
 }
 
 .heading a:focus{ 
+    color: #00A3E0;
+}
+.subheading a{
+    
+    color: #00A3E0;
+}
+
+.subheading a:focus{ 
     color: #00A3E0;
 }
 .perc-check{
