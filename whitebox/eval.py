@@ -49,9 +49,9 @@ class WhiteBoxError(WhiteBoxBase):
         data type Categorical. These categorical designations are picked up throughout
         and are important for proper functioning of WhiteBoxSensitvitiy
 
-    featuredict : dict
-        Optional user defined dictionary to clean up column name and subset
-        the outputs to only columns defined in featuredict
+    keepfeaturelist : list
+        Optional user defined list to subset
+        the outputs to only columns defined in keepfeaturelist
 
     groupbyvars : list
         grouping variables to analyze impact of model for various groups of data. I.e.
@@ -80,7 +80,7 @@ class WhiteBoxError(WhiteBoxBase):
                     model_df,
                     ydepend,
                     cat_df=None,
-                    featuredict=None,
+                    keepfeaturelist=None,
                     groupbyvars=None,
                     aggregate_func=np.mean,
                     error_type='MSE',
@@ -92,7 +92,7 @@ class WhiteBoxError(WhiteBoxBase):
         :param model_df: Pandas Dataframe used to build/train model
         :param ydepend: Y dependent variable
         :param cat_df: Pandas Dataframe of raw data - with categorical datatypes
-        :param featuredict: Subset and rename columns
+        :param keepfeaturelist: Subset and rename columns
         :param groupbyvars: grouping variables
         :param aggregate_func: numpy aggregate function like np.mean
         :param dominate_class: in the case of binary classification, class of interest
@@ -105,7 +105,7 @@ class WhiteBoxError(WhiteBoxBase):
                                             model_df,
                                             ydepend,
                                             cat_df=cat_df,
-                                            featuredict=featuredict,
+                                            keepfeaturelist=keepfeaturelist,
                                             groupbyvars=groupbyvars,
                                             aggregate_func=aggregate_func,
                                             error_type=error_type,
@@ -327,7 +327,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                  model_df,
                  ydepend,
                  cat_df=None,
-                 featuredict=None,
+                 keepfeaturelist=None,
                  groupbyvars=None,
                  aggregate_func=np.median,
                  error_type='RAW',
@@ -359,7 +359,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                                                     model_df,
                                                     ydepend,
                                                     cat_df=cat_df,
-                                                    featuredict=featuredict,
+                                                    keepfeaturelist=keepfeaturelist,
                                                     groupbyvars=groupbyvars,
                                                     aggregate_func=aggregate_func,
                                                     error_type=error_type,
@@ -413,10 +413,10 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         return agg_errors
 
     def _handle_categorical_preds(self,
-                            col,
-                            groupby,
-                            copydf,
-                            col_indices):
+                                  col,
+                                  groupby,
+                                  copydf,
+                                  col_indices):
         """
         To measure sensitivity in the categorical case, the mode value of the categorical
         column is identified, and all other levels within the category are switch to the
@@ -434,12 +434,12 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         logging.info("""Column determined as categorical datatype, transforming data for categorical column
                                                 \nColumn: {}
                                                 \nGroup: {}""".format(col, groupby))
-        rev_col = self._reverse_featuredict[col]
+
         # switch modal column for predictions
         modal_val, modaldf = pandas_switch_modal_dummy(col,
-                                                      rev_col,
-                                                      self._cat_df,
-                                                      copydf)
+                                                       self._cat_df,
+                                                       copydf)
+
         # make predictions with the switches to the dataset
         if self.model_type == 'classification':
             copydf['new_predictions'] = self.predict_engine(modaldf.loc[:, ~copydf.columns.isin([self.ydepend,
@@ -480,7 +480,8 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         logging.info("""Column determined as continuous datatype, transforming data for continuous column
                                                             \nColumn: {}
                                                             \nGroup: {}""".format(col, groupby))
-        rev_col = self._reverse_featuredict[col]
+        # rev_col = self._reverse_featuredict[col]
+        rev_col = col
         incremental_val = copydf[rev_col].std() * self.std_num
         # tweak the currently column by the incremental_val
         copydf[rev_col] = copydf[rev_col] + incremental_val

@@ -25,6 +25,17 @@ def autoformat_types(inputdf):
     inputdf[catcols] = inputdf[catcols].apply(lambda x: x.astype(str))
     return inputdf
 
+def subset_input(input_df,
+                 keepfeaturelist,
+                 ydepend):
+
+    if keepfeaturelist is not None:
+        keepfeaturelist.append(ydepend)
+        wanted_cols = list(set(keepfeaturelist))
+        input_df = input_df.loc[:, wanted_cols]
+
+    return input_df
+
 
 def format_inputs(input_val,
                   format_dict,

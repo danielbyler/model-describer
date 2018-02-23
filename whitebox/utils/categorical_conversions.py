@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 def pandas_switch_modal_dummy(cur_col,
-                              rev_col,
                               cat_df,
                               copydf):
     """
@@ -10,7 +9,6 @@ def pandas_switch_modal_dummy(cur_col,
     for modelling with pd.get_dummies
 
     :param cur_col: str current column
-    :param rev_col: str reverse formatted current columns
     :param cat_df: dataframe original format
     :param copydf: dataframe copy of data used for modelling
     :return: modal value, dataframe with non-modal values switched
@@ -18,7 +16,7 @@ def pandas_switch_modal_dummy(cur_col,
     """
 
     # map categories with main column name to properly subset
-    all_type_cols = ['{}_{}'.format(rev_col, cat) for cat in cat_df.loc[:, cur_col].unique()]
+    all_type_cols = ['{}_{}'.format(cur_col, cat) for cat in cat_df.loc[:, cur_col].unique()]
     # find the mode from the original cat_df for this column
     modal_val = str(cat_df[cur_col].mode().values[0])
     # find the columns within all_type_cols related to the mode_val

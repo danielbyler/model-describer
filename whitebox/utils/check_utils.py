@@ -33,21 +33,22 @@ class CheckInputs(object):
         return predict_engine, model_type
 
     @staticmethod
-    def check_featuredict(featuredict, cat_df):
+    def check_keepfeaturelist(keepfeaturelist,
+                              cat_df):
         """
         check user defined featuredict - if blank assign all dataframe columns
         :param featuredict: user defined featuredict mapping original col names to cleaned col names
         :return: NA
         """
         # featuredict blank
-        if not featuredict:
-            featuredict = {col: col for col in cat_df.columns}
+        if not keepfeaturelist:
+            keepfeaturelist = cat_df.columns.values.tolist()
         else:
-            if not all([key in cat_df.columns for key in featuredict.keys()]):
+            if not all([feature in cat_df.columns for feature in keepfeaturelist]):
                 # identify missing keys
-                missing = list(set(featuredict.keys()).difference(set(cat_df.columns)))
+                missing = list(set(keepfeaturelist).difference(set(cat_df.columns)))
                 raise ValueError(wb_utils.ErrorWarningMsgs.error_msgs['featuredict'].format(missing))
-        return featuredict
+        return keepfeaturelist
 
     @staticmethod
     def check_agg_func(aggregate_func):

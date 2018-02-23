@@ -3,6 +3,7 @@
 
 from abc import abstractmethod, ABCMeta
 import logging
+import re
 
 import numpy as np
 import pandas as pd
@@ -33,7 +34,7 @@ class WhiteBoxBase(object):
                     model_df,
                     ydepend,
                     cat_df=None,
-                    featuredict=None,
+                    keepfeaturelist=None,
                     groupbyvars=None,
                     aggregate_func=np.mean,
                     error_type='MSE',
@@ -46,7 +47,7 @@ class WhiteBoxBase(object):
         :param ydepend: dependent variable
         :param cat_df: formatted dataset with categorical dtypes specified,
                        and non-dummy categories
-        :param featuredict: prettty printing and subsetting analysis
+        :param keepfeaturelist: prettty printing and subsetting analysis
         :param groupbyvars: grouping variables
         :param error_type: Aggregate error metric i.e. MSE, MAE, RMSE
         :param autoformat: experimental feature for formatting dataframe columns and dtypes
@@ -64,8 +65,17 @@ class WhiteBoxBase(object):
         # make copy, reset index and assign model dataframe
         self._model_df = model_df.copy(deep=True).reset_index(drop=True)
         # check cat_df
-        self._cat_df = checks.CheckInputs.check_cat_df(cat_df.copy(deep=True).reset_index(drop=True),
+        cat_df = checks.CheckInputs.check_cat_df(cat_df.copy(deep=True).reset_index(drop=True),
                                                         self._model_df)
+
+        # check keepfeaturelist
+        self.keepfeaturelist = checks.CheckInputs.check_keepfeaturelist(keepfeaturelist, cat_df)
+
+        # subset dataframe down based on user input
+        self._cat_df = formatting.subset_input(cat_df,
+                                               self.keepfeaturelist,
+                                               ydepend)
+
         # check modelobj
         self._modelobj = checks.CheckInputs.check_modelobj(modelobj)
         # check verbosity
@@ -73,26 +83,19 @@ class WhiteBoxBase(object):
             checks.CheckInputs.check_verbose(verbose)
         # check for classification or regression
         self.predict_engine, self.model_type = checks.CheckInputs.is_regression(modelobj)
-        # check featuredict
-        self.featuredict = checks.CheckInputs.check_featuredict(featuredict, cat_df)
-        # create reverse featuredict
-        self._reverse_featuredict = {val: key for key, val in self.featuredict.items()}
+
         # check aggregate func
         self.aggregate_func = checks.CheckInputs.check_agg_func(aggregate_func)
         # check error type supported
         self.error_type = error_type
         # assign dependent variable
-        self.ydepend = formatting.format_inputs(ydepend, self.featuredict)
+        self.ydepend = ydepend
         # create outputs toggle
         self.outputs = False
-        # if user specified featuredict, use column mappings otherwise use original groupby
-        self.groupbyvars = formatting.format_inputs(groupbyvars, self.featuredict)
+        # if user specified keepfeaturelist, use column mappings otherwise use original groupby
+        self.groupbyvars = groupbyvars
         # determine the calling class (WhiteBoxError or WhiteBoxSensitivity)
         self.called_class = self.__class__.__name__
-        # apply formatting to model_df and cat_df
-        self._cat_df = formatting.format_inputs(self._cat_df, self.featuredict,
-                                                subset=True)
-        self._model_df = formatting.format_inputs(self._model_df, self.featuredict)
         # create percentiles
         self.Percentiles = percentiles.Percentiles(self._cat_df,
                                                    self.groupbyvars)
@@ -195,7 +198,7 @@ class WhiteBoxBase(object):
             output_type=None,
             output_path=''):
         """
-        main run engine. Iterate over columns specified in featuredict,
+        main run engine. Iterate over columns specified in keepfeaturelist,
         and perform anlaysis
         :param output_type - output type - current support for html
         :param output_path - fpath to save output

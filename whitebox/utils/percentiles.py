@@ -46,6 +46,7 @@ def create_group_percentiles(df,
                 # capture wanted percentiles
                 group_percent = group.quantile(wanted_percentiles).reset_index().rename(columns={'index': 'percentiles',
                                                                                                  col: 'value'})
+                print(group_percent)
                 # readjust percentiles to look nice
                 group_percent.loc[:, 'percentiles'] = group_percent.loc[:, 'percentiles'].apply(lambda x: str(int(x*100))+'%')
                 # convert percnetile dataframe into json format

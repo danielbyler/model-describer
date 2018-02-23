@@ -39,14 +39,13 @@ modelObjc.fit(mod_df.loc[:, mod_df.columns != ydepend],
               mod_df.loc[:, ydepend])
 
 
-
-# specify featuredict as a subset of columns we want to focus on
-featuredict = {'fixed acidity': 'FIXED ACIDITY_test',
-               'Type': 'TYPE_test',
-               'quality': 'SUPERQUALITY_test',
-               'volatile.acidity.bin': 'VOLATILE ACIDITY BINS_test',
-               'alcohol': 'AC_test',
-               'sulphates': 'SULPHATES_test'}
+wine_sub.columns
+keepfeaturelist = ['fixed acidity',
+                   'Type',
+                   'quality',
+                   'volatile.acidity.bin',
+                   'alcohol',
+                   'sulphates']
 
 wine_sub['alcohol'] = wine_sub['alcohol'].astype('object')
 wine_sub.dtypes
@@ -58,7 +57,7 @@ WB = WhiteBoxError(modelobj=modelObjc,
                    ydepend=ydepend,
                    cat_df=wine_sub,
                    groupbyvars=['Type'],
-                   featuredict=featuredict,
+                   keepfeaturelist=keepfeaturelist,
                    verbose=None,
                    autoformat_types=True)
 
@@ -67,6 +66,15 @@ WB.run(output_type='html',
        output_path='REGRESSIONTEST2.html')
 
 
+import re
+import ast
+string_out = str(WB.outputs)
+
+for k, v in featuredict.items():
+    string_out = re.sub("(?<='){}(?=')".format(k), "{}".format(v), string_out)
+
+ast.literal_eval(string_out)
+test
 WB.debug_df[WB.debug_df['predictedYSmooth'].isnull()]
 
 any(pd.isnull(WB.debug_df))
