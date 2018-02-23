@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import warnings
 from abc import abstractmethod, ABCMeta
 import logging
-import warnings
 
 import numpy as np
 import pandas as pd
@@ -14,14 +12,14 @@ try:
     import utils.utils as wb_utils
     import utils.check_utils as checks
     import utils.percentiles as percentiles
-    import utils.formatting as format
-    import modelconfig.sklearn_predict as sklearn_predict
-except:
+    import utils.formatting as formatting
+    import modelconfig.fmt_sklearn_preds as fmt_sklearn_preds
+except ImportError:
     import whitebox.utils.utils as wb_utils
     import whitebox.utils.check_utils as checks
     import whitebox.utils.percentiles as percentiles
-    import whitebox.utils.formatting as format
-    from whitebox.modelconfig import sklearn_predict
+    import whitebox.utils.formatting as formatting
+    from whitebox.utils.fmt_model_outputs import fmt_sklearn_preds
 
 
 class WhiteBoxBase(object):
@@ -84,13 +82,17 @@ class WhiteBoxBase(object):
         # check error type supported
         self.error_type = error_type
         # assign dependent variable
-        self.ydepend = format.format_inputs(ydepend, self.featuredict)
+        self.ydepend = formatting.format_inputs(ydepend, self.featuredict)
         # create outputs toggle
         self.outputs = False
         # if user specified featuredict, use column mappings otherwise use original groupby
-        self.groupbyvars = format.format_inputs(groupbyvars, self.featuredict)
+        self.groupbyvars = formatting.format_inputs(groupbyvars, self.featuredict)
         # determine the calling class (WhiteBoxError or WhiteBoxSensitivity)
         self.called_class = self.__class__.__name__
+        # apply formatting to model_df and cat_df
+        self._cat_df = formatting.format_inputs(self._cat_df, self.featuredict,
+                                                subset=True)
+        self._model_df = formatting.format_inputs(self._model_df, self.featuredict)
         # create percentiles
         self.Percentiles = percentiles.Percentiles(self._cat_df,
                                                    self.groupbyvars)
@@ -98,21 +100,31 @@ class WhiteBoxBase(object):
         self.Percentiles.population_percentiles()
 
         if autoformat_types:
-            self._cat_df = format.autoformat_types(self._cat_df)
-
-        # apply formatting to model_df and cat_df
-        self._cat_df = format.format_inputs(self._cat_df, self.featuredict)
-        self._model_df = format.format_inputs(self._model_df, self.featuredict)
+            self._cat_df = formatting.autoformat_types(self._cat_df)
 
         # store results
-        self.debugdf = pd.DataFrame()
+        self.agg_df = pd.DataFrame()
+        # raw results
+        self.raw_df = pd.DataFrame()
 
     @property
     def modelobj(self):
         return self._modelobj
 
+    @property
+    def cat_df(self):
+        return self._cat_df
+
+    @property
+    def model_df(self):
+        return self._model_df
+
     @abstractmethod
-    def _transform_function(self, groupby_var):
+    def _transform_function(self,
+                            group,
+                            groupby_var=None,
+                            col=None,
+                            vartype='Continuous'):
         # method to operate on slices of data within groups
         pass
 
@@ -152,33 +164,32 @@ class WhiteBoxBase(object):
         # check right vartype
         assert vartype in ['Continuous', 'Categorical'], """Vartype must be 
                             Categorical or Continuous"""
+        continuous_group = group.reset_index(drop=True).copy(deep=True)
+        # pull out col being operated on
+        group_col_vals = continuous_group.loc[:, col]
         # if more than 100 values in the group, use percentile bins
         if group.shape[0] > 100:
             logging.info("""Creating percentile bins for current 
                             continuous grouping""")
-            # pull out col being operated on
-            group_col = group.loc[:, col]
-            group_percentiles = sorted(list(set(percentiles.create_percentile_vecs(group_col))))
-            print(group_percentiles)
-            print('column: {}'.format(col))
-            print('group name: {}'.format(group.name))
-            print('groupby: {}'.format(groupby_var))
-            group['fixed_bins'] = np.digitize(group_col,
+            # digitize needs monotonically increasing vector
+            group_percentiles = sorted(list(set(percentiles.create_percentile_vecs(group_col_vals))))
+            # create percentiles for slice
+            continuous_group['fixed_bins'] = np.digitize(group_col_vals,
                                               group_percentiles,
                                               right=True)
         else:
             logging.warning("""Slice of data less than 100 continuous observations, 
                                 using raw data as opposed to percentile groups.
                                 \nGroup size: {}""".format(group.shape))
-            group['fixed_bins'] = group.loc[:, col]
+            continuous_group['fixed_bins'] = group_col_vals
 
         logging.info("""Applying transform function to continuous bins""")
         # group by bins
-        errors = group.groupby('fixed_bins').apply(self._transform_function,
-                                                   col=col,
-                                                   groupby_var=groupby_var,
-                                                   vartype=vartype)
-        return errors
+        errors_out = continuous_group.groupby('fixed_bins').apply(self._transform_function,
+                                                                  col=col,
+                                                                  groupby_var=groupby_var,
+                                                                  vartype=vartype)
+        return errors_out
 
     def run(self,
             output_type=None,
@@ -196,7 +207,7 @@ class WhiteBoxBase(object):
             raise ValueError("""Output type {} not supported.
                                 \nCurrently support {} output""".format(output_type, supported))
         # run the prediction function first to assign the errors to the dataframe
-        self._cat_df, self._model_df = sklearn_predict(self.predict_engine,
+        self._cat_df, self._model_df = fmt_sklearn_preds(self.predict_engine,
                                                        self.modelobj,
                                                        self._model_df,
                                                        self._cat_df,
@@ -220,9 +231,8 @@ class WhiteBoxBase(object):
             colhold = []
 
             for groupby_var in self.groupbyvars:
-                print("""Currently working on column: {}
-                                \nGroupby: {}\n""".format(col, groupby_var))
-                # check if we are a col that is the groupbyvars
+                # if current column is the groupby variable,
+                # create error metrics
                 if col != groupby_var:
                     json_out = self._var_check(
                                                 col=col,
@@ -246,11 +256,14 @@ class WhiteBoxBase(object):
             # append to placeholder
             # dont append if placeholder is empty due to col being the same as groupby
             if len(colhold) > 0:
-                placeholder.append(wb_utils.flatten_json(colhold))
+                placeholder.append(formatting.FmtJson.flatten_json(colhold))
 
         logging.info('Converting accuracy outputs to json format')
         # finally convert insights_df into json object
-        insights_json = wb_utils.to_json(insights_df, vartype='Accuracy')
+        insights_json = formatting.FmtJson.to_json(insights_df,
+                                                   html_type='accuracy',
+                                                   vartype='Accuracy',
+                                                   err_type=self.error_type)
         # append to outputs
         placeholder.append(insights_json)
         # append percentiles
@@ -283,7 +296,7 @@ class WhiteBoxBase(object):
             ydepend_out = self.ydepend
 
         # create HTML output
-        html_out = wb_utils.createmlerror_html(
+        html_out = formatting.HTML.fmt_html_out(
                                             str(self.outputs),
                                             ydepend_out,
                                             htmltype=wb_utils.Settings.html_type[self.called_class])

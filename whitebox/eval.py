@@ -10,11 +10,13 @@ from pandas.api.types import is_object_dtype, is_numeric_dtype
 try:
     import utils.utils as wb_utils
     from utils.categorical_conversions import pandas_switch_modal_dummy
+    import utils.formatting as formatting
     from base import WhiteBoxBase
 except ImportError:
     import whitebox.utils.utils as wb_utils
     from whitebox.utils.categorical_conversions import pandas_switch_modal_dummy
     from whitebox.base import WhiteBoxBase
+    from whitebox.utils import formatting
 
 
 class WhiteBoxError(WhiteBoxBase):
@@ -121,21 +123,19 @@ class WhiteBoxError(WhiteBoxBase):
         :return: errors dataframe
         """
         # split out positive vs negative errors
-        errors = group_copy['errors']
+        errors = group_copy['errors'].reset_index(drop=True).copy(deep=True)
         # check if classification
         if self.model_type == 'classification':
-            # get user defined aggregate (central values) value of the errors
+            # get user defined aggregate (central values) of the errors
             agg_errors = self.aggregate_func(errors)
             # subtract the aggregate value for the group from the errors
             errors = errors.apply(lambda x: agg_errors - x)
-        # need non zero mask when concatenating non error columns back
-        non_zero_errors_mask = errors != 0
-        # create separate columns for pos or neg errors
-        errors = pd.concat([errors[errors > 0], errors[errors < 0]], axis=1)
+        # create separate columns for pos or neg errors - average in zeros to both
+        errors = pd.concat([errors[errors >= 0], errors[errors <= 0]], axis=1)
         # rename error columns
         errors.columns = ['errPos', 'errNeg']
         # merge back with orignial data
-        toreturn = pd.concat([group_copy.loc[non_zero_errors_mask, group_copy.columns != 'errors'], errors], axis=1)
+        toreturn = pd.concat([group_copy.loc[:, group_copy.columns != 'errors'], errors], axis=1)
         # return
         return toreturn
 
@@ -156,8 +156,7 @@ class WhiteBoxError(WhiteBoxBase):
         assert 'errors' in group.columns, 'errors needs to be present in dataframe slice'
         assert vartype in ['Continuous', 'Categorical'], 'variable type needs to be continuous or categorical'
         # copy so we don't change the og data
-        group_copy = group.copy(deep=True)
-        print("""TRANFORMFUNCTION COL: {} --- GROUPBY: {}""".format(col, groupby_var))
+        group_copy = group.reset_index(drop=True).copy(deep=True)
         # create group errors dataframe
         toreturn = self._create_group_errors(group_copy)
 
@@ -178,10 +177,7 @@ class WhiteBoxError(WhiteBoxBase):
         debug_df = agg_errors.rename(columns={col: 'col_value'})
         debug_df['col_name'] = col
 
-        self.debug_df = self.debug_df.append(debug_df)
-
-        print(group_copy.head(1))
-        print(agg_errors)
+        self.agg_df = self.agg_df.append(debug_df)
 
         return agg_errors
 
@@ -199,33 +195,62 @@ class WhiteBoxError(WhiteBoxBase):
         # subset col indices
         col_indices = [col, 'errors', 'predictedYSmooth', groupby_var]
 
-        # check if categorical
-        if is_object_dtype(self._cat_df.loc[:, col]):
-            # set variable type
-            vartype = 'Categorical'
-            group_errors = self._cat_df[col_indices].groupby(groupby_var).apply(self._transform_function,
-                                                                                col=col,
-                                                                                vartype=vartype,
-                                                                                groupby_var=groupby_var)
+        error_holder = pd.DataFrame()
 
-        elif is_numeric_dtype(self._cat_df.loc[:, col]):
-            vartype = 'Continuous'
+        # iterate over groups
+        for group_level in self._cat_df[groupby_var].unique():
+            # subset data to current group
+            cur_group = self._cat_df[self._cat_df[groupby_var] == group_level][col_indices].reset_index(drop=True).copy(deep=True)
 
-            print("VARCHECK --- COL: {} --- GROUPBY: {}".format(col, groupby_var))
-            group_errors = self._cat_df[col_indices].groupby(groupby_var).apply(self._continuous_slice,
-                                                                      col=col,
-                                                                      vartype=vartype,
-                                                                      groupby_var=groupby_var)
+            # check if categorical
+            if is_object_dtype(self._cat_df.loc[:, col]):
+                # set variable type
+                vartype = 'Categorical'
+                """
+                group_errors = self._cat_df[col_indices].groupby(groupby_var).apply(self._transform_function,
+                                                                                    col=col,
+                                                                                    vartype=vartype,
+                                                                                    groupby_var=groupby_var)
+                """
+                #TODO CLEANUP AND RMEOVE
 
-        else:
-            raise ValueError("""unsupported dtype: {}""".format(self._cat_df.loc[:, col].dtype))
+
+                # apply transform function
+                group_errors = self._transform_function(cur_group,
+                                                        col=col,
+                                                        vartype=vartype,
+                                                        groupby_var=groupby_var)
+
+
+            elif is_numeric_dtype(self._cat_df.loc[:, col]):
+                vartype = 'Continuous'
+
+                print("VARCHECK --- COL: {} --- GROUPBY: {}".format(col, groupby_var))
+                """
+                group_errors = self._cat_df[col_indices].groupby(groupby_var).apply(self._continuous_slice,
+                                                                          col=col,
+                                                                          vartype=vartype,
+                                                                          groupby_var=groupby_var)
+                """
+                # apply transform function
+                group_errors = self._continuous_slice(cur_group,
+                                                        col=col,
+                                                        vartype=vartype,
+                                                        groupby_var=groupby_var)
+
+            else:
+                raise ValueError("""unsupported dtype: {}""".format(self._cat_df.loc[:, col].dtype))
+
+            error_holder = error_holder.append(group_errors)
+
+
 
         # reset & drop index - replace NaN with 'null' for d3 out
-        group_errors.reset_index(drop=True, inplace=True)
-        group_errors.fillna('null', inplace=True)
+        error_holder.reset_index(drop=True, inplace=True)
+        error_holder.fillna('null', inplace=True)
         # convert to json structure
-        json_out = wb_utils.to_json(
-                                    group_errors,
+        json_out = formatting.FmtJson.to_json(
+                                    error_holder,
                                     vartype=vartype,
                                     html_type='error',
                                     incremental_val=None)
@@ -305,7 +330,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                  featuredict=None,
                  groupbyvars=None,
                  aggregate_func=np.median,
-                 error_type='MSE',
+                 error_type='RAW',
                  std_num=0.5,
                  autoformat_types=False,
                  verbose=0,
@@ -358,6 +383,17 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         assert 'errors' in group.columns, 'errors needs to be present in dataframe slice'
         assert vartype in ['Continuous', 'Categorical'], 'variable type needs to be continuous or categorical'
 
+        # reformat current slice of data for raw_df
+        raw_df = group.rename(columns={col: 'col_value',
+                                       groupby_var: 'groupby_level'}).reset_index(drop=True)
+
+        raw_df['groupByVar'] = groupby_var
+        raw_df['col_name'] = col
+        if 'fixed_bins' in raw_df.columns:
+            del raw_df['fixed_bins']
+
+        self.raw_df = self.raw_df.append(raw_df)
+
         # create switch for aggregate types based on continuous or categorical values
         if vartype == 'Categorical':
             col_val = group[col].mode()
@@ -372,7 +408,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
 
         debug_df = agg_errors.rename(columns={col: 'col_value'})
         debug_df['col_name'] = col
-        self.debug_df = self.debug_df.append(debug_df)
+        self.agg_df = self.agg_df.append(debug_df)
 
         return agg_errors
 
@@ -400,19 +436,19 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                                                 \nGroup: {}""".format(col, groupby))
         rev_col = self._reverse_featuredict[col]
         # switch modal column for predictions
-        modal_val, copydf = pandas_switch_modal_dummy(col,
+        modal_val, modaldf = pandas_switch_modal_dummy(col,
                                                       rev_col,
                                                       self._cat_df,
                                                       copydf)
         # make predictions with the switches to the dataset
         if self.model_type == 'classification':
-            copydf['new_predictions'] = self.predict_engine(copydf.loc[:, ~copydf.columns.isin([self.ydepend,
+            copydf['new_predictions'] = self.predict_engine(modaldf.loc[:, ~copydf.columns.isin([self.ydepend,
                                                                                                 'predictedYSmooth'])])[:, 1]
         elif self.model_type == 'regression':
-            copydf['new_predictions'] = self.predict_engine(copydf.loc[:, ~copydf.columns.isin([self.ydepend,
+            copydf['new_predictions'] = self.predict_engine(modaldf.loc[:, ~copydf.columns.isin([self.ydepend,
                                                                                                 'predictedYSmooth'])])
         # calculate difference between actual predictions and new_predictions
-        self._cat_df['diff'] = copydf['new_predictions'] - copydf['predictedYSmooth']
+        self._cat_df['diff'] = modaldf['new_predictions'] - modaldf['predictedYSmooth']
         # create mask of data to select rows that are not equal to the mode of the category.
         # This will prevent blank displays in HTML
         mode_mask = self._cat_df[col] != modal_val
@@ -504,7 +540,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         sensitivity = sensitivity.reset_index(drop=True).fillna('null')
         logging.info("""Converting output to json type using to_json utility function""")
         # convert to json structure
-        json_out = wb_utils.to_json(sensitivity, vartype=vartype, html_type = 'sensitivity',
+        json_out = formatting.FmtJson.to_json(sensitivity, vartype=vartype, html_type = 'sensitivity',
                                  incremental_val=incremental_val)
         # return json_out
         return json_out

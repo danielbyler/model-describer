@@ -58,15 +58,24 @@ WB = WhiteBoxError(modelobj=modelObjc,
                    ydepend=ydepend,
                    cat_df=wine_sub,
                    groupbyvars=['Type'],
-                   featuredict=None,
+                   featuredict=featuredict,
                    verbose=None,
                    autoformat_types=True)
+
 
 WB.run(output_type='html',
        output_path='REGRESSIONTEST2.html')
 
 
 WB.debug_df[WB.debug_df['predictedYSmooth'].isnull()]
+
+any(pd.isnull(WB.debug_df))
+
+WB.debug_df[WB.debug_df.duplicated()].shape
+
+WB.groupbyvars
+
+WB._cat_df.dtypes
 
 
 WB.debug_df[WB.debug_df.duplicated()]['col_name'].unique()

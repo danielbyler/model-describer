@@ -64,22 +64,32 @@ modelObjc.fit(finaldf.loc[:, finaldf.columns != yDepend], finaldf.loc[:, yDepend
 
 wine_sub['alcohol'] = wine_sub['alcohol'].astype(str)
 
-import warnings
-
-type(warnings.warn('test'))
 
 # instantiate whitebox sensitivity
 WB = WhiteBoxSensitivity(modelobj=modelObjc,
                    model_df=finaldf,
                    ydepend=yDepend,
                    cat_df=wine_sub,
-                   groupbyvars=['volatile.acidity.bin'], #TODO case where groupbyvars not in modeldf
+                   groupbyvars=['Type', 'volatile.acidity.bin'], #TODO case where groupbyvars not in modeldf
                    featuredict=None,
                     autoformat_types=True)
 
 
 WB.run(output_type='html',
        output_path='SENSITIVITYTEST.html')
+
+
+WB.agg_df.head()
+
+WB.agg_df[WB.agg_df['col_name'] == 'Type']
+
+WB.agg_df[WB.agg_df['predictedYSmooth'].isnull()]
+
+WB.agg_df.groupby('groupByVarName')['groupByValue'].unique()
+
+WB.agg_df.groupby('')
+
+WB.agg_df.head()
 
 WB.outputs
 
