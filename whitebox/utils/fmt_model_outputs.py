@@ -7,14 +7,23 @@ except ImportError:
 
 
 def fmt_sklearn_preds(predict_engine,
-                    modelobj,
-                    model_df,
-                    cat_df,
-                    ydepend,
-                    model_type):
+                      modelobj,
+                      model_df,
+                      cat_df,
+                      ydepend,
+                      model_type):
     """
-    create predictions based on trained model object, dataframe, and dependent variables
-    :return: dataframe with prediction column
+    create preds based on model type - in the case of binary classification,
+    pull predictions for the first index - preds corresponding to label 1
+
+    :param predict_engine: modelobjs prediction attribute
+    :param modelobj: sklearn model object
+    :param model_df: dataframe used to train modelobj
+    :param cat_df: dataframe in original form before categorical conversions
+    :param ydepend: str dependent variable name
+    :param model_type: str (classification, regression)
+    :return: cat_df and model_df with predictions inserted
+    :rtype: pd.DataFrame
     """
     logging.info("""Creating predictions using modelobj.
                     \nModelobj class name: {}""".format(modelobj.__class__.__name__))
@@ -49,8 +58,10 @@ def fmt_sklearn_preds(predict_engine,
     # return
     return cat_df, model_df
 
+
 def fmt_tf_preds():
     pass
+
 
 
 

@@ -138,16 +138,59 @@ class TestWhiteBoxError(unittest.TestCase):
                          ['Type', 'Change', 'Data'],
                          """json_out keys not expected for html_type sensitivity""")
 
-df = pd.DataFrame({'col1': np.random.rand(1000),
-                           'col2': np.random.rand(1000),
-                           'col3': ['a'] * 500 + ['b'] * 500})
+    def test_flatten_json_out(self):
+        """ test flatten_json flattening list of dicts """
+        test_data = test = [{'Type': 'Categorical', 'Data': [{'FIXED ACIDITY_test': 'low', 'errNeg': -1.3387746358183215, 'errPos': 0.47370517928286787, 'groupByValue': 'White', 'groupByVarName': 'TYPE_test', 'predictedYSmooth': 4.626276031033032}, {'FIXED ACIDITY_test': 'low', 'errNeg': -1.475259740259743, 'errPos': 0.35873015873015873, 'groupByValue': 'Red', 'groupByVarName': 'TYPE_test', 'predictedYSmooth': 4.22933083176985}]},
+                            {'Type': 'Categorical', 'Data': [{'VOLATILE ACIDITY BINS_test': 'bin_1', 'errNeg': -1.3387746358183215, 'errPos': 0.47370517928286787, 'groupByValue': 'White', 'groupByVarName': 'TYPE_test', 'predictedYSmooth': 4.626276031033032}, {'VOLATILE ACIDITY BINS_test': 'bin_0', 'errNeg': -1.475259740259743, 'errPos': 0.35873015873015873, 'groupByValue': 'Red', 'groupByVarName': 'TYPE_test', 'predictedYSmooth': 4.22933083176985}]},
+                            {'Type': 'Categorical', 'Data': [{'AC_test': 'low', 'errNeg': -1.3387746358183215, 'errPos': 0.47370517928286787, 'groupByValue': 'White', 'groupByVarName': 'TYPE_test', 'predictedYSmooth': 4.626276031033032}, {'AC_test': 'low', 'errNeg': -1.475259740259743, 'errPos': 0.35873015873015873, 'groupByValue': 'Red', 'groupByVarName': 'TYPE_test', 'predictedYSmooth': 4.22933083176985}]}]
 
-test = [{'Type': 'Continuous', 'Data': [{'fixed.acid': 1, 'fixed.acid': 2, 'fixed.acid': 3}]},
-        {'Type': 'Continuous', 'Data': ['fixed.acid': 1, 'fixed.acid': 2, 'fixed.acid': 3]}
+        test_flat = formatting.FmtJson.flatten_json(test_data)
+        self.assertEqual(len(test_flat),
+                         2,
+                         """flatten_json returned unexpected number of keys - check outputs""")
+
+    def test_get_html_error(self):
+        """ test HTML.get_html method to retrieve correct HTML file for erro r"""
+
+        html_error = formatting.HTML.get_html(htmltype='html_error')
+
+        self.assertIn('Prediction Error',
+                      html_error,
+                      """Prediction Error not located in html that was loaded for html_error""")
+
+    def test_get_html_sensitivity(self):
+        """ test HTML.get_html method to retrieve correct HTML file for sensitivity """
+
+        html_sensitivity = formatting.HTML.get_html(htmltype='html_sensitivity')
+
+        self.assertIn('Impact By Variable',
+                      html_sensitivity,
+                      """Impact By Variable not located in html that was loaded for html_sensitivity""")
+
+    def test_insert_data_html_error(self):
+        """ test HTML.get_html method to retrieve correct HTML file for erro r"""
+
+        testdatastring = '**TEST**'
+        html_error = formatting.HTML.fmt_html_out(testdatastring,
+                                                  'yDepend',
+                                                  htmltype='html_error')
+        self.assertIn('**TEST**',
+                      html_error,
+                      """TEST data insert not located in html that was created for html_error""")
+
+    def test_insert_data_html_sensitivity(self):
+        """ test HTML.get_html method to retrieve correct HTML file for sensitivity """
+
+        testdatastring = '**TEST**'
+        html_sensitivity = formatting.HTML.fmt_html_out(testdatastring,
+                                                  'yDepend',
+                                                  htmltype='html_error')
+        self.assertIn('**TEST**',
+                      html_sensitivity,
+                      """TEST data insert not located in html that was created for html_sensitivity""")
 
 
-
-
-
-
-
+if __name__ == '__main__':
+    from os import sys, path
+    sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+    unittest.main()

@@ -70,7 +70,7 @@ WB = WhiteBoxSensitivity(modelobj=modelObjc,
                    model_df=finaldf,
                    ydepend=yDepend,
                    cat_df=wine_sub,
-                   groupbyvars=['Type', 'volatile.acidity.bin'], #TODO case where groupbyvars not in modeldf
+                   groupbyvars=['Type', 'volatile.acidity.bin'],
                    featuredict=None,
                     autoformat_types=True)
 

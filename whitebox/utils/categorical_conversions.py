@@ -1,11 +1,22 @@
-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 def pandas_switch_modal_dummy(cur_col,
-                                rev_col,
-                                cat_df,
-                                copydf):
-    # switch modal value for categorical variable converted
-    # for modelling with pd.get_dummies
+                              rev_col,
+                              cat_df,
+                              copydf):
+    """
+    switch modal value for categorical variable converted
+    for modelling with pd.get_dummies
+
+    :param cur_col: str current column
+    :param rev_col: str reverse formatted current columns
+    :param cat_df: dataframe original format
+    :param copydf: dataframe copy of data used for modelling
+    :return: modal value, dataframe with non-modal values switched
+    :rtype: str, pd.DataFrame
+    """
+
     # map categories with main column name to properly subset
     all_type_cols = ['{}_{}'.format(rev_col, cat) for cat in cat_df.loc[:, cur_col].unique()]
     # find the mode from the original cat_df for this column

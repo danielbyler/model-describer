@@ -137,6 +137,13 @@ class HTML(object):
 
     @staticmethod
     def get_html(htmltype='html_error'):
+        """
+        retrieve html file from disc
+
+        :param htmltype: str html file to retrieve (html_error, html_sensitivity)
+        :return: html text
+        :rtype: str
+        """
         assert htmltype in ['html_error', 'html_sensitivity'], 'htmltype must be html_error or html_sensitivity'
         html_path = pkg_resources.resource_filename('whitebox', '{}.txt'.format(htmltype))
         # utility class to hold whitebox files
@@ -153,9 +160,12 @@ class HTML(object):
             htmltype='html_error'):
         """
         create WhiteBox error plot html code
+
         :param datastring: json like object containing data
         :param dependentvar: name of dependent variable
+        :param htmltype: str of html out type (error, sensitivity)
         :return: html string
+        :rtype: str
         """
         assert htmltype in ['html_error', 'html_sensitivity'], """htmltype must be html_error 
                                                                     or html_sensitivity"""
@@ -165,18 +175,20 @@ class HTML(object):
         return output
 
 
-
 def convert_categorical_independent(dataframe):
     """
-    convert pandas dtypes 'categorical' into numerical columns
+    utility function to convert pandas dtypes 'categorical'
+    into numerical columns
+
     :param dataframe: dataframe to perform adjustment on
     :return: dataframe that has converted strings to numbers
+    :rtype: pd.DataFrame
     """
     # we want to change the data, not copy and change
     dataframe = dataframe.copy(deep=True)
     # convert all strings to categories and format codes
     for str_col in dataframe.select_dtypes(include=['O', 'category']):
-        dataframe.loc[:, str_col] =pd.Categorical(dataframe.loc[:, str_col])
+        dataframe.loc[:, str_col] = pd.Categorical(dataframe.loc[:, str_col])
     # convert all category datatypes into numeric
     cats = dataframe.select_dtypes(include=['category'])
     # warn user if no categorical variables detected

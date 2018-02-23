@@ -1,7 +1,9 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import logging
 import warnings
 
-import pandas as pd
 from sklearn.utils.validation import (check_consistent_length,
                                       check_is_fitted)
 
@@ -16,6 +18,7 @@ class CheckInputs(object):
         """
         determined whether users modelobj is regression or classification based on
         presence of predict_proba
+
         :return: NA
         """
         # determine if in classification problem or regression problem
