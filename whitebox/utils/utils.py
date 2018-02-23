@@ -45,8 +45,8 @@ class ErrorWarningMsgs(object):
                                 WhiteBoxError only works with model 
                                 objects with predict method"""
 
-    # missing featuredict error message
-    missing_featuredict_error = """featuredict keys missing from assigned cat_df
+    # missing keepfeaturelist error message
+    missing_keepfeaturelist = """featuredict keys missing from assigned cat_df
                                     \ncheck featuredict keys and reassign.
                                     \nMissing keys: {}"""
 
@@ -65,7 +65,7 @@ class ErrorWarningMsgs(object):
                   'modelobj': predict_model_obj_error,
                   'wb_run_error': run_wb_error,
                   'agg_func': agg_func_error,
-                  'featuredict': missing_featuredict_error}
+                  'keepfeaturelist': missing_keepfeaturelist}
 
     # convert category dtypes to object dtypes warning message
     cat_df_warning = """model_df being used for processing. Given that most 

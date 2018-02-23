@@ -37,17 +37,17 @@ class CheckInputs(object):
                               cat_df):
         """
         check user defined featuredict - if blank assign all dataframe columns
-        :param featuredict: user defined featuredict mapping original col names to cleaned col names
+        :param keepfeaturelist: user defined featuredict mapping original col names to cleaned col names
         :return: NA
         """
-        # featuredict blank
+        # keepfeaturelist blank
         if not keepfeaturelist:
             keepfeaturelist = cat_df.columns.values.tolist()
         else:
             if not all([feature in cat_df.columns for feature in keepfeaturelist]):
                 # identify missing keys
                 missing = list(set(keepfeaturelist).difference(set(cat_df.columns)))
-                raise ValueError(wb_utils.ErrorWarningMsgs.error_msgs['featuredict'].format(missing))
+                raise ValueError(wb_utils.ErrorWarningMsgs.error_msgs['keepfeaturelist'].format(missing))
         return keepfeaturelist
 
     @staticmethod
