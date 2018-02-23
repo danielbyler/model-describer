@@ -10,9 +10,10 @@ var appHelper = new AppHelper();
 //Creating the layout for all the elements
 var main = d3.select('#App');
 
-
 //Main Heading
 var heading = main.append("div").attr('class', "heading").append("a").attr("href", "https://github.com/DataScienceSquad/WhiteBox_Production").html("White Box - Impact By Variable")
+var heading2 = main.append("div").attr('class', "subheading").append("a").attr("href", "https://github.com/DataScienceSquad/WhiteBox_Production/wiki/How-to-interpret-WhiteBox-charts").html("How to interpret WhiteBox Charts")
+
 //Heat map and the type dropdown
 var summary = main.append("div").attr("class", "summary")
 var heatMapContainer = summary.append('div').attr('class', 'heatMapContainer')
@@ -132,7 +133,7 @@ function showToolTipTreeMap(d, i) {
         .style("left", d3.event.pageX + "px")
         .style("top", d3.event.pageY + "px")
         .style("color", colorDict['heat'][d])
-        .html("Group <b>" + statEach['groupByValue'] + " </b> is " + percEach['perc'] + "% of the data and has an average error of <b>" + appHelper.formatLabel(statEach['MSE']) + "</b>")
+        .html("Group <b>" + statEach['groupByValue'] + " </b> is " + percEach['perc'] + "% of the data and has an average error of <b>" + appHelper.formatLabel(statEach[metaData['ErrType']]) + "</b>")
 }
 
 //Function to show the tooltip on hover of treemap
@@ -150,7 +151,7 @@ function moveToolTipTreeMap(d, i) {
         .style("left", d3.event.pageX + "px")
         .style("top", d3.event.pageY + "px")
         .style("color", colorDict['heat'][d.data.name])
-        .html("Group <b>" + statEach['groupByValue'] + " </b> is " + appHelper.formatLabel(percEach['perc']) + "% of the data and has an average error of <b>" + appHelper.formatLabel(statEach['MSE']) + "</b>")
+        .html("Group <b>" + statEach['groupByValue'] + " </b> is " + appHelper.formatLabel(percEach['perc']) + "% of the data and has an average error of <b>" + appHelper.formatLabel(statEach[metaData['ErrType']]) + "</b>")
 }
 
 //Function to hide the tooltip on mouse out of treemap
@@ -225,7 +226,7 @@ function intializeTreeMap(type) {
             return d
         })
         .style("font-size", "16px")*/
-    var cellGroup = svgHeat.append("g").attr("class", "cell-group").attr("transform", "translate(0,20)")
+    var cellGroup = svgHeat.append("g").attr("class", "cell-group").attr("transform", "translate(0,0)")
     var cell = cellGroup.selectAll("g")
         .data(root.leaves())
         .enter().append("g")
@@ -272,7 +273,7 @@ function intializeTreeMap(type) {
 
 
 
-
+    console.log(metaData['ErrType'])
 
     cell.append("text")
         .attr("clip-path", function (d) {
@@ -306,7 +307,25 @@ function intializeTreeMap(type) {
                 var statEach = metaData['statData'].filter(function (s) {
                     return s['groupByVarName'] == groupBy && s['groupByValue'] == d.data.name
                 })[0]
-                return "Average Error: " + appHelper.formatLabel(statEach['MSE']);
+                return "Average Error: " + appHelper.formatLabel(statEach[metaData['ErrType']]);
+            } else {
+                return ""
+            }
+        })
+        .style("fill", "#fff");
+    
+    cell.append("text")
+        .attr("clip-path", function (d) {
+            return "url(#clip-" + d.data.id + ")";
+        })
+        .attr("dx", 10)
+        .attr("dy", 60)
+        .text(function (d) {
+            if (d.x1 - d.x0 > 100) {
+                var statEach = metaData['statData'].filter(function (s) {
+                    return s['groupByVarName'] == groupBy && s['groupByValue'] == d.data.name
+                })[0]
+                return "Error Type: " + metaData['ErrType'];
             } else {
                 return ""
             }
@@ -341,10 +360,11 @@ function getTreeMapData(type) {
     var filteredSample = sample.filter(function (d) {
         return d['groupByVarName'] == type
     })
-    
     var statDataF = metaData['statData'].filter(function (d) {
         return d['groupByVarName'] == type
     })
+    
+    console.log(statDataF,metaData['statData'],type)
     var nestedSample = d3.nest()
         .key(function (d) {
             return d['groupByValue']
@@ -353,7 +373,6 @@ function getTreeMapData(type) {
             return ids.length
         })
         .entries(filteredSample)
-    
     nestedSample.forEach(function (d) {
         var temp = {}
         temp['name'] = d.key
@@ -635,7 +654,9 @@ function createColorDict() {
 function prepareAppData() {
     AppData.filter(function (d, i) {
         if (d.Type == "Accuracy") {
+            console.log(d)
             metaData['statData'] = d.Data
+            metaData['ErrType'] = d['ErrType']
             AppData.splice(i, 1)
         }
     })
@@ -678,8 +699,8 @@ function loopVariables(varInd) {
     var width = appHelper.getWidth() * 0.74 - margin.left - margin.right;
     var height = 300 - margin.top - margin.bottom;
     var chartLevel = mainApp.append("div").attr("class", "chart-lev").attr("id", "topchlvl-" + varX.replace(/[^a-zA-Z]/g, "")).style("height", "430px")
-    var title = chartLevel.append('div').attr('class', 'Title')
     var main = chartLevel.append("div").attr("class", "app").attr("id", "chlvl-" + varX.replace(/[^a-zA-Z]/g, ""))
+    var title = main.append('div').attr('class', 'Title')
     var legendGroup = main.append("div").attr("class", "legend").attr("width", width - 100).attr("height", height - 100)
 
     var filterContainer = main.append('div').attr('class', 'Filtercontainer')
@@ -733,7 +754,7 @@ function loopVariables(varInd) {
     function initializeAreaChart() {
         //creating the svg for the area chart
         svg = appHelper.createChart(chartContainer, width);
-        appHelper.setTitle(title, "Impact of Increasing " + varX + " by " + changePar + (AppData[varInd]['Change'].indexOf("Default") >= 0 ? " (1 standard deviation) " : "") + " on " + yVar);
+        appHelper.setTitle(title, "Impact of "+(changePar>=0?"increasing":"decreasing")+" " + varX + " by " + changePar + (AppData[varInd]['Change'].indexOf("Default") >= 0 ? " (1 standard deviation) " : "") + " on " + yVar);
         svg.selectAll('*').remove();
         svg.attr('width', width);
         
@@ -840,11 +861,12 @@ function loopVariables(varInd) {
             var chartData = []
             
             //extarcting the y-values in to new variable
-             chartRawData.filter(function (d) {
+             chartRawData.filter(function (d,i) {
                 var data = {}
                 data[varX] = d[varX]
                 filterCategories[varX].forEach(function (c) {
-                    data[c] = d[c]
+                    var prop = metaData['proportion'].filter(function(t){return t.name==c})[0].perc/100
+                    data[c] = categories.length==filterCategories[varX].length? d[c]*prop:d[c]
                 })
                 chartData.push(data)
             })
@@ -884,14 +906,18 @@ function loopVariables(varInd) {
             var stack = d3.stack()
                 .keys(filterCategories[varX].sort(appHelper.sortAlphaNum))
                 .order(d3.stackOrderAscending)
-
+                .offset(d3.stackOffsetNone)
+            
             
             stack(chartData).forEach(function (d) {
+                
+                
                 var sum = 0
                 d.forEach(function (c) {
                     sum += c[1]
+                    
                     if (d3.min([c[0], c[1]]) < minVal) {
-
+                        
                         minVal = d3.min([c[0], c[1]])
                     }
                     if (d3.max([c[0], c[1]]) > maxVal) {
@@ -899,7 +925,7 @@ function loopVariables(varInd) {
                     }
                 })
             })
-
+            
             //setting up the domain for y-axis based on the stacked values
             y.domain([minVal, maxVal])
             var xAxis = d3.axisBottom().scale(x)
@@ -1059,7 +1085,9 @@ function loopVariables(varInd) {
                 var filt = chartRawData.filter(function (d) {
                     return d[varX] == closestXValue
                 })
-                tooltip.html("Within the <span>" + d.key + " </span> group, the model believes that increasing <span>" + varX + "</span> from <span> " + appHelper.formatLabel(filt[0][varX]) + " </span> to <span>" + (appHelper.formatLabel(parseFloat(filt[0][varX]) + parseFloat(changePar))) + "</span> leads to, on average, a <span>" + Math.abs(appHelper.formatLabel(filt[0][d.key])) + (appHelper.formatLabel(filt[0][d.key]) >= 0 ? " increase" : " decrease") + "</span> in " + yVar)
+                
+                var prop = filterCategories[varX].length==categories.length? metaData['proportion'].filter(function(t){return t.name==d.key})[0].perc/100:1
+                tooltip.html("Within the <span>" + d.key + " </span> group, the model believes that "+(changePar>=0?"increasing":"decreasing")+" <span>" + varX + "</span> from <span> " + appHelper.formatLabel(filt[0][varX]) + " </span> to <span>" + (appHelper.formatLabel(parseFloat(filt[0][varX]) + parseFloat(changePar))) + "</span> leads to, on average, a <span>" + Math.abs(appHelper.formatLabel(filt[0][d.key]*prop)) + (appHelper.formatLabel(filt[0][d.key]*prop) >= 0 ? " increase" : " decrease") + "</span> in " + yVar)
 
             }
 
@@ -1081,7 +1109,7 @@ function loopVariables(varInd) {
                 })
                 tooltip.attr('class', "colorClass" + varInd + i);
                 tooltip.transition().duration(200).delay(100).style("opacity", 1);
-                tooltip.html("Within the <span>" + d.key + " </span> group, the model believes that increasing <span>" + varX + "</span> from <span> " + appHelper.formatLabel(filt[0][varX]) + " </span> to <span>" + (appHelper.formatLabel(parseFloat(filt[0][varX]) + parseFloat(changePar))) + "</span> leads to, on average, a <span>" + Math.abs(appHelper.formatLabel(filt[0][d.key])) + (appHelper.formatLabel(filt[0][d.key]) >= 0 ? " increase" : " decrease") + "</span> in " + yVar)
+                tooltip.html("Within the <span>" + d.key + " </span> group, the model believes that "+(changePar>=0?"increasing":"decreasing")+" <span>" + varX + "</span> from <span> " + appHelper.formatLabel(filt[0][varX]) + " </span> to <span>" + (appHelper.formatLabel(parseFloat(filt[0][varX]) + parseFloat(changePar))) + "</span> leads to, on average, a <span>" + Math.abs(appHelper.formatLabel(filt[0][d.key])) + (appHelper.formatLabel(filt[0][d.key]) >= 0 ? " increase" : " decrease") + "</span> in " + yVar)
                     .style("left", function () {
                         var tooltipWidth = this.getBoundingClientRect().width;
                         var currentMouseX = d3.event.pageX;
@@ -1163,7 +1191,7 @@ function loopVariables(varInd) {
             }
         })
         //settign up title for the chart
-        appHelper.setTitle(title, "Sensitivity Plot: Impact of changing " + varX + " to " + changePar);
+        appHelper.setTitle(title, "Sensitivity Plot: Impact of Changing " + varX );
         
         //sorting the group by variables
         categories = categories.sort(appHelper.sortAlphaNum)
@@ -1315,13 +1343,12 @@ function loopVariables(varInd) {
                 .attr("transform", "translate(0," + (y(chartRange[0]) - y(0)) + ")")
                 .call(wrap, x.bandwidth()*0.9)
             
-            
             //function to display tooltip on hover of bar elements
             function mouseover(d, i) {
                 tooltip.attr('class', "colorClass" + varInd + i);
                 tooltip.transition().duration(200).delay(100).style("opacity", 1);
 
-                tooltip.html("Within the <span>" + d.key + " </span> group, the model believes that increasing <span>" + varX + "</span> from <span> " + d['parent'] + " </span> to <span>" + changePar + "</span> leads to, on average, a <span>" + Math.abs(appHelper.formatLabel(d.value)) + (appHelper.formatLabel(d.value) >= 0 ? " increase" : " decrease") + "</span> in " + yVar)
+                tooltip.html("Within the <span>" + d.key + " </span> group, the model believes that changing <span>" + varX + "</span> from <span> " + d['parent'] + " </span> to <span>" + changePar + "</span> leads to, on average, a <span>" + Math.abs(appHelper.formatLabel(d.value)) + (appHelper.formatLabel(d.value) >= 0 ? " increase" : " decrease") + "</span> in " + yVar)
                     .style("left", function () {
                         var tooltipWidth = this.getBoundingClientRect().width;
                         var currentMouseX = d3.event.pageX;
@@ -1344,7 +1371,7 @@ function loopVariables(varInd) {
             function mousemove(d, i) {
                 tooltip.attr('class', "colorClass" + varInd + i);
                 tooltip.transition().duration(200).delay(100).style("opacity", 1);
-                tooltip.html("Within the <span>" + d.key + " </span> group, the model believes that increasing <span>" + varX + "</span> from <span> " + d['parent'] + " </span> to <span>" + changePar + "</span> leads to, on average, a <span>" + Math.abs(appHelper.formatLabel(d.value)) + (appHelper.formatLabel(d.value) >= 0 ? " increase" : " decrease") + "</span> in " + yVar)
+                tooltip.html("Within the <span>" + d.key + " </span> group, the model believes that changing <span>" + varX + "</span> from <span> " + d['parent'] + " </span> to <span>" + changePar + "</span> leads to, on average, a <span>" + Math.abs(appHelper.formatLabel(d.value)) + (appHelper.formatLabel(d.value) >= 0 ? " increase" : " decrease") + "</span> in " + yVar)
                     .style("left", function () {
                         var tooltipWidth = this.getBoundingClientRect().width;
                         var currentMouseX = d3.event.pageX;
