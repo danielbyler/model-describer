@@ -7,6 +7,7 @@ import numpy as np
 
 from sklearn.ensemble.forest import RandomForestRegressor
 from sklearn.ensemble.forest import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingRegressor
 
 try:
     import sys
@@ -28,8 +29,6 @@ class TestWhiteBoxError(unittest.TestCase):
                                                       ncat=1,
                                                       mod_type='regression',
                                                       )
-
-        self.df = df
 
         ydepend_class, groupby_class, df_class = utils.create_synthetic(nrows=1000,
                                                                         ncols=5,
@@ -84,5 +83,28 @@ class TestWhiteBoxError(unittest.TestCase):
 
 
 
+ydepend, groupby, df = utils.create_synthetic(nrows=1000,
+                                                      ncols=5,
+                                                      num_groupby=1,
+                                                      ncat=1,
+                                                      mod_type='regression',
+                                                      )
 
+ydepend_class, groupby_class, df_class = utils.create_synthetic(nrows=1000,
+                                                                ncols=5,
+                                                                num_groupby=1,
+                                                                ncat=1,
+                                                                mod_type='classification',
+                                                                )
 
+df = df.select_dtypes(include=[np.number])
+
+modelobj = GradientBoostingRegressor()
+modelobj = RandomForestRegressor()
+
+from sklearn.utils.validation import check_is_fitted
+
+modelobj.fit(df.loc[:, df.columns != 'target'],
+             df.loc[:, 'target'])
+
+check_is_fitted(modelobj, 'estimators_')

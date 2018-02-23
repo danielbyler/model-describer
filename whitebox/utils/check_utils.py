@@ -129,6 +129,6 @@ class CheckInputs(object):
             raise ValueError(wb_utils.ErrorWarningMsgs.error_msgs['modelobj'])
 
         # ensure modelobj has been previously fit
-        check_is_fitted(value, 'base_estimator_')
+        check_is_fitted(value, 'estimators_')
 
         return value
