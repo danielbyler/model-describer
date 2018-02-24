@@ -71,7 +71,7 @@ WB = WhiteBoxSensitivity(modelobj=modelObjc,
                    ydepend=yDepend,
                    cat_df=wine_sub,
                    groupbyvars=['Type', 'volatile.acidity.bin'],
-                   featuredict=None,
+                   keepfeaturelist=None,
                     autoformat_types=True)
 
 

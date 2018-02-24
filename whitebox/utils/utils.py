@@ -11,7 +11,7 @@ import random
 
 class Settings(object):
     """ module wide parameter settings """
-    supported_agg_errors = ['MSE', 'MAE', 'RMSE', 'RAW']
+    supported_agg_errors = ['MSE', 'MAE', 'RMSE', 'MEAN', 'MED']
     # placeholder class swithc - if Sensitivity then pull in html_sensitivity code
     # if Error then pull in html_error code
     html_type = {'WhiteBoxSensitivity': 'html_sensitivity',
@@ -23,6 +23,7 @@ class Settings(object):
     formatted_percentiles = [int(percent * 100) for percent in output_percentiles]
     # remove 100th percentile if present for percentiles._percentiles_out
     fmt_percentiles_out = [percent for percent in formatted_percentiles if percent != 100]
+
 
 class ErrorWarningMsgs(object):
     """ module wide error and warning messages """
@@ -195,7 +196,7 @@ def create_synthetic(nrows=100,
 def create_insights(
                     group,
                     group_var=None,
-                    error_type='MSE'):
+                    error_type='RMSE'):
     """
     aggregates user specified error metric from raw errors
 
@@ -205,13 +206,13 @@ def create_insights(
     :return error metric dataframe
     :rtype pd.DataFrame
     """
-    assert error_type in ['MSE', 'RMSE', 'MAE', 'RAW'], """Currently only supports
-                                                 MAE, MSE, RMSE, RAW"""
+    assert error_type in Settings.supported_agg_errors, """{} unspported error type""".format(error_type)
     errors = group['errors']
     error_dict = {'MSE': np.mean(errors ** 2),
                   'RMSE': (np.mean(errors ** 2)) ** (1 / 2),
                   'MAE': np.sum(np.absolute(errors))/group.shape[0],
-                  'RAW': np.mean(errors)}
+                  'MEAN': np.mean(errors),
+                  'MED': np.median(errors)}
 
     msedf = pd.DataFrame({'groupByValue': group.name,
                           'groupByVarName': group_var,
@@ -236,7 +237,7 @@ def create_accuracy(model_type,
     """
     # use this as an opportunity to capture error metrics for the groupby variable
     if model_type == 'classification':
-        error_type = 'RAW'
+        error_type = 'MEAN'
 
     acc = cat_df.groupby(groupby).apply(create_insights,
                                         group_var=groupby,

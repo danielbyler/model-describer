@@ -82,29 +82,7 @@ class TestWhiteBoxError(unittest.TestCase):
                       """fmt_sklearn_preds on classificaiton case does not return predictions""")
 
 
-
-ydepend, groupby, df = utils.create_synthetic(nrows=1000,
-                                                      ncols=5,
-                                                      num_groupby=1,
-                                                      ncat=1,
-                                                      mod_type='regression',
-                                                      )
-
-ydepend_class, groupby_class, df_class = utils.create_synthetic(nrows=1000,
-                                                                ncols=5,
-                                                                num_groupby=1,
-                                                                ncat=1,
-                                                                mod_type='classification',
-                                                                )
-
-df = df.select_dtypes(include=[np.number])
-
-modelobj = GradientBoostingRegressor()
-modelobj = RandomForestRegressor()
-
-from sklearn.utils.validation import check_is_fitted
-
-modelobj.fit(df.loc[:, df.columns != 'target'],
-             df.loc[:, 'target'])
-
-check_is_fitted(modelobj, 'estimators_')
+if __name__ == '__main__':
+    from os import sys, path
+    sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+    unittest.main()

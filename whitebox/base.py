@@ -3,12 +3,10 @@
 
 from abc import abstractmethod, ABCMeta
 import logging
-import re
 
 import numpy as np
 import pandas as pd
 
-#TODO fix imports
 try:
     import utils.utils as wb_utils
     import utils.check_utils as checks
@@ -37,19 +35,25 @@ class WhiteBoxBase(object):
                     keepfeaturelist=None,
                     groupbyvars=None,
                     aggregate_func=np.mean,
-                    error_type='MSE',
+                    error_type='RMSE',
                     autoformat_types=False,
                     verbose=None):
         """
-        initialize base class
+        WhiteBox base class instantiation and parameter checking
+
         :param modelobj: fitted sklearn model object
-        :param model_df: data used for training sklearn object
-        :param ydepend: dependent variable
-        :param cat_df: formatted dataset with categorical dtypes specified,
+        :param model_df: dataframe used for training sklearn object
+        :param ydepend: str dependent variable
+        :param cat_df: dataframe formatted with categorical dtypes specified,
                        and non-dummy categories
-        :param keepfeaturelist: prettty printing and subsetting analysis
-        :param groupbyvars: grouping variables
-        :param error_type: Aggregate error metric i.e. MSE, MAE, RMSE
+        :param keepfeaturelist: list of features to keep in output
+        :param groupbyvars: list of groupby variables
+        :param error_type: str aggregate error metric i.e. MSE, MAE, RMSE, MED, MEAN
+                MSE - Mean Squared Error
+                MAE - Mean Absolute Error
+                RMSE - Root Mean Squared Error
+                MED - Median Error
+                MEAN - Mean Error
         :param autoformat: experimental feature for formatting dataframe columns and dtypes
         :param verbose: set verbose level -- 0 = debug, 1 = warning, 2 = error
         """
@@ -90,8 +94,6 @@ class WhiteBoxBase(object):
         self.error_type = error_type
         # assign dependent variable
         self.ydepend = ydepend
-        # create outputs toggle
-        self.outputs = False
         # if user specified keepfeaturelist, use column mappings otherwise use original groupby
         self.groupbyvars = groupbyvars
         # determine the calling class (WhiteBoxError or WhiteBoxSensitivity)
@@ -277,18 +279,14 @@ class WhiteBoxBase(object):
         self.outputs = placeholder
         # save outputs if specified
         if output_type == 'html':
-            self.save(fpath=output_path)
+            self._save(fpath=output_path)
 
-    def save(self, fpath=''):
+    def _save(self, fpath=''):
         """
         save html output to disc
         :param fpath: file path to save html file to
         :return: None
         """
-        if not self.outputs:
-            RuntimeError(wb_utils.ErrorWarningMsgs.error_msgs['wb_run_error'].format(self.called_class))
-            logging.warning(wb_utils.ErrorWarningMsgs.error_msgs['wb_run_error'].format(self.called_class))
-
         logging.info("""creating html output for type: {}""".format(wb_utils.Settings.html_type[self.called_class]))
 
         # tweak self.ydepend if classification case (add dominate class)

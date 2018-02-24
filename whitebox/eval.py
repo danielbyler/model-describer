@@ -330,7 +330,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                  keepfeaturelist=None,
                  groupbyvars=None,
                  aggregate_func=np.median,
-                 error_type='RAW',
+                 error_type='MEAN',
                  std_num=0.5,
                  autoformat_types=False,
                  verbose=0,
@@ -429,8 +429,6 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         :param col_indices: column indices to include
         :return: incremental bump value, sensitivity dataframe
         """
-        # TODO need to handle case where user adds columns to cat_df but is not in model_df - can't select these cols
-        # TODO split this into two additional methods - categorical and continuous case
         logging.info("""Column determined as categorical datatype, transforming data for categorical column
                                                 \nColumn: {}
                                                 \nGroup: {}""".format(col, groupby))

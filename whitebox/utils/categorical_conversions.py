@@ -6,7 +6,8 @@ def pandas_switch_modal_dummy(cur_col,
                               copydf):
     """
     switch modal value for categorical variable converted
-    for modelling with pd.get_dummies
+    for modelling with pd.get_dummies. If col n-modal,
+    select first modal value sorted alphabetically
 
     :param cur_col: str current column
     :param cat_df: dataframe original format
@@ -18,6 +19,8 @@ def pandas_switch_modal_dummy(cur_col,
     # map categories with main column name to properly subset
     all_type_cols = ['{}_{}'.format(cur_col, cat) for cat in cat_df.loc[:, cur_col].unique()]
     # find the mode from the original cat_df for this column
+    # if column is bimodal, selecting the first modal
+    # value which is sorted alphabetically
     modal_val = str(cat_df[cur_col].mode().values[0])
     # find the columns within all_type_cols related to the mode_val
     mode_col = list(filter(lambda x: modal_val in x, all_type_cols))

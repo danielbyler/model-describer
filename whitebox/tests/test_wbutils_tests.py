@@ -32,6 +32,38 @@ class TestWhiteBoxError(unittest.TestCase):
                                 \nActual MSE: {}
                                 \nRetuend MSE: {}""".format(mse_act, insights_out['MSE']))
 
+    def test_create_insights_med(self):
+        """test create_insights MED calc"""
+        df = pd.DataFrame({'errors': list(range(100))})
+
+        actual = np.median(df['errors'].values.tolist())
+
+        setattr(df, 'name', 'testname')
+
+        results = utils.create_insights(df,
+                                        group_var='groupvar',
+                                        error_type='MED')
+
+        self.assertEqual(actual,
+                         results['MED'].values[0],
+                         """unexpected calculation create_insights MED param""")
+
+    def test_create_insights_mean(self):
+        """test create_insights MEAN calc"""
+        df = pd.DataFrame({'errors': list(range(100))})
+
+        actual = np.median(df['errors'].values.tolist())
+
+        setattr(df, 'name', 'testname')
+
+        results = utils.create_insights(df,
+                                        group_var='groupvar',
+                                        error_type='MEAN')
+
+        self.assertEqual(actual,
+                         results['MEAN'].values[0],
+                         """unexpected calculation create_insights MEAN param""")
+
     def test_create_insights_output_shape(self):
         """test utils.create_insights output shape"""
 

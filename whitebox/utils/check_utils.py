@@ -9,8 +9,9 @@ from sklearn.utils.validation import (check_consistent_length,
 
 try:
     import utils.utils as wb_utils
-except:
+except ImportError:
     import whitebox.utils.utils as wb_utils
+
 
 class CheckInputs(object):
     @staticmethod
@@ -19,7 +20,9 @@ class CheckInputs(object):
         determined whether users modelobj is regression or classification based on
         presence of predict_proba
 
-        :return: NA
+        :param modelobj: sklearn model object
+        :return: sklearn predict method, str classification type
+        :rtype: sklearn predict, str
         """
         # determine if in classification problem or regression problem
         if hasattr(modelobj, 'predict_proba'):
@@ -37,8 +40,11 @@ class CheckInputs(object):
                               cat_df):
         """
         check user defined featuredict - if blank assign all dataframe columns
-        :param keepfeaturelist: user defined featuredict mapping original col names to cleaned col names
-        :return: NA
+
+        :param keepfeaturelist: user defined featurelist
+        :param cat_df: dataframe
+        :return: validated keepfeaturelist
+        :rtype: list
         """
         # keepfeaturelist blank
         if not keepfeaturelist:
@@ -53,9 +59,12 @@ class CheckInputs(object):
     @staticmethod
     def check_agg_func(aggregate_func):
         """
-        check user defined aggregate function
+        check user defined aggregate function returns scalar when
+        passed a list
+
         :param aggregate_func: user defined aggregate function
-        :return: NA
+        :return: validated aggregate_func
+        :rtype: func
         """
 
         try:
@@ -99,15 +108,18 @@ class CheckInputs(object):
     @staticmethod
     def check_cat_df(cat_df, model_df):
         """
-        ensure validity of assigned cat_df - must have same length of model_df
-        and if None, is replaced by model_df
-        :param value: user defined cat_df
-        :return: NA
+        ensure validity of assigned cat_df - must have same length and
+         index of model_df. If cat_df None, replaced by model_df
+
+        :param cat_df: user defined cat_df
+        :param model_df: user defined dataframe used to build model
+        :return: validated cat_df
+        :rtype: pd.DataFrame
         """
         # if cat_df not assigned, use model_df
         if cat_df is None:
             warnings.warn(wb_utils.ErrorWarningMsgs.warning_msgs['cat_df'])
-            cat_df = model_df
+            cat_df = model_df.copy(deep=True)
         else:
             # check both model_df and cat_df have the same length
             check_consistent_length(cat_df, model_df)
@@ -116,20 +128,22 @@ class CheckInputs(object):
                 raise ValueError("""Indices of cat_df and model_df are not aligned. Ensure Index's are 
                                             \nexactly the same before WhiteBox use.""")
             # reset users index in case of multi index or otherwise
-            return cat_df
+        return cat_df
 
     @staticmethod
-    def check_modelobj(value):
+    def check_modelobj(modelobject):
         """
-        check user defined model object has been fit before use within WhiteBox
-        :param value: user defined model object
-        :return: NA
+        check user defined model object has been fit before use
+
+        :param modelobject: user defined model object
+        :return: validated modelobj
+        :rtype: sklearn model
         """
         # basic parameter checks
-        if not hasattr(value, 'predict'):
+        if not hasattr(modelobject, 'predict'):
             raise ValueError(wb_utils.ErrorWarningMsgs.error_msgs['modelobj'])
 
-        # ensure modelobj has been previously fit
-        check_is_fitted(value, 'estimators_')
+        # ensure modelobject has been previously fit
+        check_is_fitted(modelobject, 'estimators_')
 
-        return value
+        return modelobject
