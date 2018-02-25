@@ -12,16 +12,12 @@ try:
     sys.path.insert(0, "/home/travis/build/Data4Gov/WhiteBox_Production")
     from whitebox.utils import check_utils
 
-except:
+except ImportError:
     from utils import check_utils
 
 Check = check_utils.CheckInputs
 
-modobj = RandomForestClassifier()
-Check.is_regression(modobj)[0].__name__
-Check.is_regression(modobj)
-
-class TestWhiteBoxError(unittest.TestCase):
+class TestCheckUtils(unittest.TestCase):
 
     def setUp(self):
         pass

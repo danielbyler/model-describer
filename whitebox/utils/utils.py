@@ -23,6 +23,8 @@ class Settings(object):
     formatted_percentiles = [int(percent * 100) for percent in output_percentiles]
     # remove 100th percentile if present for percentiles._percentiles_out
     fmt_percentiles_out = [percent for percent in formatted_percentiles if percent != 100]
+    # specify supported output types
+    supported_out_types = ['html', 'raw_data', 'agg_data', None]
 
 
 class ErrorWarningMsgs(object):

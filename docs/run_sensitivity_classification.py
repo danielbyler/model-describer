@@ -36,7 +36,7 @@ WB = WhiteBoxSensitivity(clf,
                    model_df=model_df,
                    ydepend=ydepend,
                    cat_df=df,
-                   featuredict=None,
+                   keepfeaturelist=None,
                    groupbyvars=['alcohol'],
                    aggregate_func=np.mean,
                    verbose=None,
@@ -48,6 +48,8 @@ WB = WhiteBoxSensitivity(clf,
 
 WB.run(output_type='html',
        output_path='WINEQUALITY_SENSITIVITY_CLASSIFICATION.html')
+
+
 
 WB.raw_df.head()
 WB.raw_df[WB.raw_df['fixed_bins'].notnull()]

@@ -34,7 +34,7 @@ class WhiteBoxBase(object):
                     cat_df=None,
                     keepfeaturelist=None,
                     groupbyvars=None,
-                    aggregate_func=np.mean,
+                    aggregate_func=np.nanmedian,
                     error_type='RMSE',
                     autoformat_types=False,
                     verbose=None):
@@ -54,7 +54,7 @@ class WhiteBoxBase(object):
                 RMSE - Root Mean Squared Error
                 MED - Median Error
                 MEAN - Mean Error
-        :param autoformat: experimental feature for formatting dataframe columns and dtypes
+        :param autoformat_types: boolean to auto format categorical columns to objects
         :param verbose: set verbose level -- 0 = debug, 1 = warning, 2 = error
         """
 
@@ -69,15 +69,15 @@ class WhiteBoxBase(object):
         # make copy, reset index and assign model dataframe
         self._model_df = model_df.copy(deep=True).reset_index(drop=True)
         # check cat_df
-        cat_df = checks.CheckInputs.check_cat_df(cat_df.copy(deep=True).reset_index(drop=True),
-                                                        self._model_df)
+        cat_df = checks.CheckInputs.check_cat_df(cat_df.copy(deep=True).reset_index(drop=True), 
+                                                 self._model_df)
 
         # check keepfeaturelist
-        self.keepfeaturelist = checks.CheckInputs.check_keepfeaturelist(keepfeaturelist, cat_df)
+        self._keepfeaturelist = checks.CheckInputs.check_keepfeaturelist(keepfeaturelist, cat_df)
 
         # subset dataframe down based on user input
         self._cat_df = formatting.subset_input(cat_df,
-                                               self.keepfeaturelist,
+                                               self._keepfeaturelist,
                                                ydepend)
 
         # check modelobj
@@ -104,7 +104,7 @@ class WhiteBoxBase(object):
         # get population percentiles
         self.Percentiles.population_percentiles()
 
-        if autoformat_types:
+        if autoformat_types is True:
             self._cat_df = formatting.autoformat_types(self._cat_df)
 
         # store results
@@ -123,6 +123,10 @@ class WhiteBoxBase(object):
     @property
     def model_df(self):
         return self._model_df
+    
+    @property
+    def keepfeaturelist(self):
+        return self._keepfeaturelist
 
     @abstractmethod
     def _transform_function(self,
@@ -141,34 +145,35 @@ class WhiteBoxBase(object):
         """
         _var_check tests for categorical or continuous variable and performs operations
         dependent upon the var type
+
         :param col: current column being operated on
-        :param groupby: current groupby level
-        :return: NA
+        :param groupby_var: current groupby level
         """
         pass
 
-    #TODO add weighted schematics function
+    # TODO add weighted schematics function
     def _continuous_slice(
                         self,
                         group,
                         col=None,
-                        groupby_var=None,
-                        vartype='Continuous'):
+                        groupby_var=None):
         """
-        _continuous_slice operates on portions of the data that correspond
-        to a particular group of data from the groupby
-        variable. For instance, if working on the wine quality dataset with
-        Type representing your groupby variable, then
-        _continuous_slice would operate on 'White' wine data
+        _continuous_slice operates on portions of continuous data that correspond
+        to a particular group specified by groupby. If current group
+        has more than 100 observations, create 100 percentile buckets.
+        Otherwise, use raw data values. Data is only assigned to percentile bucket if
+        data actually exists. In cases where there are big gaps between data points,
+        even with more than 100 observations, there could be far less percentile buckets
+        that align with the actual data.
+
+
         :param group: slice of data with columns, etc.
         :param col: current continuous variable being operated on
-        :param vartype: continuous
+        :param groupby_var: str current groupby variable
         :return: transformed data with col data max, errPos mean, errNeg mean,
                 and prediction means for this group
+        :rtype: pd.DataFrame
         """
-        # check right vartype
-        assert vartype in ['Continuous', 'Categorical'], """Vartype must be 
-                            Categorical or Continuous"""
         continuous_group = group.reset_index(drop=True).copy(deep=True)
         # pull out col being operated on
         group_col_vals = continuous_group.loc[:, col]
@@ -179,9 +184,9 @@ class WhiteBoxBase(object):
             # digitize needs monotonically increasing vector
             group_percentiles = sorted(list(set(percentiles.create_percentile_vecs(group_col_vals))))
             # create percentiles for slice
-            continuous_group['fixed_bins'] = np.digitize(group_col_vals,
-                                              group_percentiles,
-                                              right=True)
+            continuous_group['fixed_bins'] = np.digitize(group_col_vals, 
+                                                         group_percentiles, 
+                                                         right=True)
         else:
             logging.warning("""Slice of data less than 100 continuous observations, 
                                 using raw data as opposed to percentile groups.
@@ -193,38 +198,87 @@ class WhiteBoxBase(object):
         errors_out = continuous_group.groupby('fixed_bins').apply(self._transform_function,
                                                                   col=col,
                                                                   groupby_var=groupby_var,
-                                                                  vartype=vartype)
+                                                                  vartype='Continuous')
         return errors_out
 
+    def fmt_raw_df(self,
+                   col,
+                   groupby_var,
+                   cur_group):
+        """
+        format raw_df by renaming various columns and appending to instance
+        raw_df
+
+        :param col: str current col being operated on
+        :param groupby_var: str current groupby variable
+        :param cur_group: current slice of group data
+        :return: Formatted dataframe
+        :rtype: pd.DataFrame
+        """
+
+        # take copy
+        group_copy = cur_group.copy(deep=True)
+        # reformat current slice of data for raw_df
+        raw_df = group_copy.rename(columns={col: 'col_value',
+                                            groupby_var: 'groupby_level'}).reset_index(drop=True)
+
+        raw_df['groupByVar'] = groupby_var
+        raw_df['col_name'] = col
+        if 'fixed_bins' in raw_df.columns:
+            del raw_df['fixed_bins']
+
+        self.raw_df = self.raw_df.append(raw_df)
+
+    def fmt_agg_df(self,
+                   col,
+                   agg_errors):
+        """
+        format agg_df by renaming various columns and appending to
+        instance agg_df
+
+        :param col: str current col being operated on
+        :param agg_errors: aggregated error data for group
+        :return: Formatted dataframe
+        :rtype: pd.DataFrame
+        """
+
+        group_copy = agg_errors.copy(deep=True)
+        debug_df = group_copy.rename(columns={col: 'col_value'})
+        debug_df['col_name'] = col
+        self.agg_df = self.agg_df.append(debug_df)
+
     def run(self,
-            output_type=None,
+            output_type='html',
             output_path=''):
         """
         main run engine. Iterate over columns specified in keepfeaturelist,
         and perform anlaysis
-        :param output_type - output type - current support for html
-        :param output_path - fpath to save output
-        :return: None - does put outputs in place
+        :param output_type: str output type:
+                html - save html to output_path
+                raw_data - return raw analysis dataframe
+                agg_data - return aggregate analysis dataframe
+        :param output_path: - fpath to save output
+        :return: pd.DataFrame or saved html output
+        :rtype: pd.DataFrame or .html
         """
         # ensure supported output types
-        supported = ['html', None]
-        if output_type not in supported:
+        if output_type not in wb_utils.Settings.supported_out_types:
             raise ValueError("""Output type {} not supported.
-                                \nCurrently support {} output""".format(output_type, supported))
+                                \nCurrently support {} output""".format(output_type,
+                                                                        wb_utils.Settings.supported_out_types))
         # run the prediction function first to assign the errors to the dataframe
         self._cat_df, self._model_df = fmt_sklearn_preds(self.predict_engine,
-                                                       self.modelobj,
-                                                       self._model_df,
-                                                       self._cat_df,
-                                                       self.ydepend,
-                                                       self.model_type)
+                                                         self.modelobj,
+                                                         self._model_df,
+                                                         self._cat_df,
+                                                         self.ydepend,
+                                                         self.model_type)
         # create placeholder for outputs
         placeholder = []
         # create placeholder for all insights
         insights_df = pd.DataFrame()
         logging.info("""Running main program. Iterating over 
                     columns and applying functions depednent on datatype""")
-
 
         not_in_cols = ['errors', 'predictedYSmooth', self.ydepend]
         # filter columns to iterate through
@@ -273,19 +327,47 @@ class WhiteBoxBase(object):
         placeholder.append(insights_json)
         # append percentiles
         placeholder.append(self.Percentiles.percentiles)
-        # append groupby percnetiles
+        # append groupby percentiles
         placeholder.append(self.Percentiles.group_percentiles_out)
         # assign placeholder final outputs to class instance
         self.outputs = placeholder
         # save outputs if specified
         if output_type == 'html':
             self._save(fpath=output_path)
+        elif output_type == 'raw_data':
+            return self.get_raw_df()
+        elif output_type == 'agg_data':
+            return self.get_agg_df()
+
+    def get_raw_df(self):
+        """
+        return unaggregated analysis dataframe
+
+        :return: unaggregated analysis dataframe
+        :rtype: pd.DataFrame
+        """
+        if not hasattr(self, 'outputs'):
+            raise RuntimeError(""".run() must be called before returning analysis data""")
+
+        return self.raw_df.reset_index()
+
+    def get_agg_df(self):
+        """
+        return aggregated analysis dataframe
+
+        :return: aggregated analysis dataframe
+        :rtype: pd.DataFrame
+        """
+        if not hasattr(self, 'outputs'):
+            raise RuntimeError(""".run() must be called before returning analysis data""")
+
+        return self.agg_df.reset_index()
 
     def _save(self, fpath=''):
         """
         save html output to disc
+        
         :param fpath: file path to save html file to
-        :return: None
         """
         logging.info("""creating html output for type: {}""".format(wb_utils.Settings.html_type[self.called_class]))
 

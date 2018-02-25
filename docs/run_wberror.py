@@ -38,8 +38,6 @@ mod_df = pd.concat([pd.get_dummies(wine_sub.loc[:, wine_sub.columns != ydepend].
 modelObjc.fit(mod_df.loc[:, mod_df.columns != ydepend],
               mod_df.loc[:, ydepend])
 
-
-wine_sub.columns
 keepfeaturelist = ['fixed acidity',
                    'Type',
                    'quality',
@@ -48,9 +46,6 @@ keepfeaturelist = ['fixed acidity',
                    'sulphates']
 
 wine_sub['alcohol'] = wine_sub['alcohol'].astype('object')
-wine_sub.dtypes
-
-wine_sub.head()
 
 WB = WhiteBoxError(modelobj=modelObjc,
                    model_df=mod_df,
@@ -65,6 +60,10 @@ WB = WhiteBoxError(modelobj=modelObjc,
 WB.run(output_type='html',
        output_path='REGRESSIONTEST2.html')
 
+WB.raw_df.head()
+
+WB.raw_df.head(100)
+WB.agg_df.tail()
 
 import re
 import ast
