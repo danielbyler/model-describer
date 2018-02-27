@@ -7,6 +7,7 @@ import numpy as np
 import io
 from sklearn.datasets import make_blobs, make_regression
 import random
+import logging
 
 
 class Settings(object):
@@ -25,6 +26,11 @@ class Settings(object):
     fmt_percentiles_out = [percent for percent in formatted_percentiles if percent != 100]
     # specify supported output types
     supported_out_types = ['html', 'raw_data', 'agg_data', None]
+    # setup log verbose lookup
+    verbose2log = {None: logging.NOTSET,
+                   0: logging.DEBUG,
+                   1: logging.WARNING,
+                   2: logging.ERROR}
 
 
 class ErrorWarningMsgs(object):
@@ -248,3 +254,12 @@ def create_accuracy(model_type,
     acc.reset_index(drop=True, inplace=True)
     # append to insights_df
     return acc
+
+def util_logger(name):
+    logger = logging.getLogger(name)
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter('%asctime)s %(name)-12s %(levelname)-8s %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
+    return logger

@@ -12,12 +12,13 @@ try:
     from utils.categorical_conversions import pandas_switch_modal_dummy
     import utils.formatting as formatting
     from base import WhiteBoxBase
-except ImportError:
+except ModuleNotFoundError:
     import whitebox.utils.utils as wb_utils
     from whitebox.utils.categorical_conversions import pandas_switch_modal_dummy
     from whitebox.base import WhiteBoxBase
     from whitebox.utils import formatting
 
+logger = wb_utils.util_logger(__name__)
 
 class WhiteBoxError(WhiteBoxBase):
 
@@ -100,6 +101,7 @@ class WhiteBoxError(WhiteBoxBase):
         :param autoformat: experimental autoformatting of dataframe
         :param verbose: Logging level
         """
+        logger.setLevel(wb_utils.Settings.verbose2log[verbose])
         super(WhiteBoxError, self).__init__(
                                             modelobj,
                                             model_df,
@@ -126,6 +128,8 @@ class WhiteBoxError(WhiteBoxBase):
         errors = group_copy['errors'].reset_index(drop=True).copy(deep=True)
         # check if classification
         if self.model_type == 'classification':
+            logging.info("""classification model detected - subtracting errors from 
+                        overall aggregate error value""")
             # get user defined aggregate (central values) of the errors
             agg_errors = self.aggregate_func(errors)
             # subtract the aggregate value for the group from the errors
@@ -155,6 +159,11 @@ class WhiteBoxError(WhiteBoxBase):
         """
         assert 'errors' in group.columns, 'errors needs to be present in dataframe slice'
         assert vartype in ['Continuous', 'Categorical'], 'variable type needs to be continuous or categorical'
+
+        logger.info("""Processing -- groupby_var: {} -- col: {} -- vartype: {} -- group shape: {}""".format(groupby_var,
+                                                                                                            col,
+                                                                                                            vartype,
+                                                                                                            group.shape))
 
         # copy so we don't change the org. data
         group_copy = group.reset_index(drop=True).copy(deep=True)
@@ -211,6 +220,7 @@ class WhiteBoxError(WhiteBoxBase):
             if is_object_dtype(self._cat_df.loc[:, col]):
                 # set variable type
                 vartype = 'Categorical'
+                logger.info("""Categorical variable detected - group_level: {}""".format(group_level))
                 # apply transform function
                 group_errors = self._transform_function(cur_group,
                                                         col=col,
@@ -219,14 +229,14 @@ class WhiteBoxError(WhiteBoxBase):
 
             elif is_numeric_dtype(self._cat_df.loc[:, col]):
                 vartype = 'Continuous'
-
-                print("VARCHECK --- COL: {} --- GROUPBY: {}".format(col, groupby_var))
+                logger.info("""Categorical variable detected - group_level: {}""".format(group_level))
                 # apply transform function
                 group_errors = self._continuous_slice(cur_group,
                                                       col=col,
                                                       groupby_var=groupby_var)
 
             else:
+                logger.error("""unsupported dtype detected: {}""".format(self._cat_df.loc[:, col].dtype))
                 raise ValueError("""unsupported dtype: {}""".format(self._cat_df.loc[:, col].dtype))
 
             error_holder = error_holder.append(group_errors)
@@ -334,6 +344,8 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         :param std_num: Standard deviation adjustment
         """
 
+        logger.info('Initilizing {} parameters'.format(self.__class__.__name__))
+
         if std_num > 3 or std_num < -3:
             raise ValueError("""Standard deviation adjustment must be between -3 and 3
                                 \nCurrent value: {}""".format(std_num))
@@ -368,6 +380,10 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         """
         assert 'errors' in group.columns, 'errors needs to be present in dataframe slice'
         assert vartype in ['Continuous', 'Categorical'], 'variable type needs to be continuous or categorical'
+        logger.info("""Processing -- groupby_var: {} -- col: {} -- vartype: {} -- group shape: {}""".format(groupby_var,
+                                                                                                            col,
+                                                                                                            vartype,
+                                                                                                            group.shape))
 
         # append raw_df to instance attribute raw_df
         self.fmt_raw_df(col=col,
@@ -410,7 +426,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         :param col_indices: column indices to include
         :return: incremental bump value, sensitivity dataframe
         """
-        logging.info("""Column determined as categorical datatype, transforming data for categorical column
+        logger.info("""Column determined as categorical datatype, transforming data for categorical column
                                                 \nColumn: {}
                                                 \nGroup: {}""".format(col, groupby))
 
@@ -456,9 +472,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         :param col_indices: column indices to include
         :return: incremental bump value, sensitivity dataframe
         """
-        logging.info("""Column determined as continuous datatype, transforming data for continuous column
-                                                            \nColumn: {}
-                                                            \nGroup: {}""".format(col, groupby))
+        logger.info("""Column determined as continuous datatype, transforming data for continuous column -- Column: {} -- Group: {}""".format(col, groupby))
         incremental_val = copydf[col].std() * self.std_num
         # tweak the currently column by the incremental_val
         copydf[col] = copydf[col] + incremental_val
@@ -487,6 +501,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                     groupby_var=None):
         """
         handle continuous and categorical variable types
+
         :param col: specific column being operated on within dataset -- str
         :param groupby_var: specific groupby variable being operated on within dataset -- str
         :return: errors dataframe for particular column and groupby variable
@@ -499,6 +514,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         if is_object_dtype(self._cat_df.loc[:, col]):
             # set variable type
             vartype = 'Categorical'
+            logger.info("""Categorical variable detected""")
             incremental_val, sensitivity = self._handle_categorical_preds(col,
                                                                           groupby_var,
                                                                           copydf,
@@ -506,6 +522,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         elif is_numeric_dtype(self._cat_df.loc[:, col]):
             # set variable type
             vartype = 'Continuous'
+            logger.info("""Continuous variable detected""")
             incremental_val, sensitivity = self._handle_continuous_preds(col,
                                                                          groupby_var,
                                                                          copydf,
@@ -521,5 +538,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                                               vartype=vartype,
                                               html_type='sensitivity',
                                               incremental_val=incremental_val)
+
+        logger.info("""Converted output to json format""")
         # return json_out
         return json_out

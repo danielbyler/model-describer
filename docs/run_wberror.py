@@ -5,8 +5,6 @@ from whitebox.utils import percentiles
 from whitebox.eval import WhiteBoxError
 import numpy as np
 
-
-
 #====================
 # wine quality dataset example
 # featuredict - cat and continuous variables
@@ -52,10 +50,26 @@ WB = WhiteBoxError(modelobj=modelObjc,
                    ydepend=ydepend,
                    cat_df=wine_sub,
                    groupbyvars=['Type'],
-                   keepfeaturelist=keepfeaturelist,
+                   keepfeaturelist=None,
                    verbose=None,
                    autoformat_types=True)
 
+
+WB.run(output_type='html',
+       output_path='REGRESSIONTEST2.html')
+
+dir(WB)
+WB.__doc__
+help(WB)
+import timeit
+from timeit import Timer
+
+t = Timer(lambda: WB.run(output_type='html',
+       output_path='REGRESSIONTEST2.html'))
+
+ti = t.timeit(number=5)
+
+WB.groupbyvars
 
 WB.run(output_type='html',
        output_path='REGRESSIONTEST2.html')

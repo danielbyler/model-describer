@@ -3,6 +3,9 @@
 
 from abc import abstractmethod, ABCMeta
 import logging
+from logging.config import fileConfig
+import sys
+import yaml
 
 import numpy as np
 import pandas as pd
@@ -13,13 +16,14 @@ try:
     import utils.percentiles as percentiles
     import utils.formatting as formatting
     import modelconfig.fmt_sklearn_preds as fmt_sklearn_preds
-except ImportError:
+except ModuleNotFoundError:
     import whitebox.utils.utils as wb_utils
     import whitebox.utils.check_utils as checks
     import whitebox.utils.percentiles as percentiles
     import whitebox.utils.formatting as formatting
     from whitebox.utils.fmt_model_outputs import fmt_sklearn_preds
 
+logger = wb_utils.util_logger(__name__)
 
 class WhiteBoxBase(object):
 
@@ -57,7 +61,8 @@ class WhiteBoxBase(object):
         :param autoformat_types: boolean to auto format categorical columns to objects
         :param verbose: set verbose level -- 0 = debug, 1 = warning, 2 = error
         """
-
+        logger.setLevel(wb_utils.Settings.verbose2log[verbose])
+        logger.info('Initilizing {} parameters'.format(self.__class__.__name__))
         # check error type is supported format
         if error_type not in wb_utils.Settings.supported_agg_errors:
             raise wb_utils.ErrorWarningMsgs.error_msgs['error_type']
@@ -174,13 +179,16 @@ class WhiteBoxBase(object):
                 and prediction means for this group
         :rtype: pd.DataFrame
         """
+        logger.info("""Creating percentile bins
+                    \nCol: {}
+                    \nGroupby_var: {}
+                    \nGroup shape: {}""".format(col, groupby_var, group.shape))
+
         continuous_group = group.reset_index(drop=True).copy(deep=True)
         # pull out col being operated on
         group_col_vals = continuous_group.loc[:, col]
         # if more than 100 values in the group, use percentile bins
         if group.shape[0] > 100:
-            logging.info("""Creating percentile bins for current 
-                            continuous grouping""")
             # digitize needs monotonically increasing vector
             group_percentiles = sorted(list(set(percentiles.create_percentile_vecs(group_col_vals))))
             # create percentiles for slice
@@ -188,12 +196,11 @@ class WhiteBoxBase(object):
                                                          group_percentiles, 
                                                          right=True)
         else:
-            logging.warning("""Slice of data less than 100 continuous observations, 
-                                using raw data as opposed to percentile groups.
-                                \nGroup size: {}""".format(group.shape))
+            logger.warning("""Slice of data less than 100 continuous observations, 
+                                using raw data as opposed to percentile groups - Group size: {}""".format(group.shape))
             continuous_group['fixed_bins'] = group_col_vals
 
-        logging.info("""Applying transform function to continuous bins""")
+        logger.info("""Applying transform function to continuous bins""")
         # group by bins
         errors_out = continuous_group.groupby('fixed_bins').apply(self._transform_function,
                                                                   col=col,
@@ -215,6 +222,7 @@ class WhiteBoxBase(object):
         :return: Formatted dataframe
         :rtype: pd.DataFrame
         """
+        logger.info("""Formatting specifications - col: {} - groupbvy_var: {} - cur_group shape: {}""".format(col, groupby_var, cur_group.shape))
 
         # take copy
         group_copy = cur_group.copy(deep=True)
@@ -242,6 +250,8 @@ class WhiteBoxBase(object):
         :rtype: pd.DataFrame
         """
 
+        logger.info("""Formatting specifications - col: {} - agg_errors shape: {}""".format(col, agg_errors.shape))
+
         group_copy = agg_errors.copy(deep=True)
         debug_df = group_copy.rename(columns={col: 'col_value'})
         debug_df['col_name'] = col
@@ -263,9 +273,14 @@ class WhiteBoxBase(object):
         """
         # ensure supported output types
         if output_type not in wb_utils.Settings.supported_out_types:
-            raise ValueError("""Output type {} not supported.
+            error_out = """Output type {} not supported.
                                 \nCurrently support {} output""".format(output_type,
-                                                                        wb_utils.Settings.supported_out_types))
+                                                                        wb_utils.Settings.supported_out_types)
+
+            logger.error(error_out)
+
+            raise ValueError(error_out)
+
         # run the prediction function first to assign the errors to the dataframe
         self._cat_df, self._model_df = fmt_sklearn_preds(self.predict_engine,
                                                          self.modelobj,
@@ -281,10 +296,11 @@ class WhiteBoxBase(object):
                     columns and applying functions depednent on datatype""")
 
         not_in_cols = ['errors', 'predictedYSmooth', self.ydepend]
+
         # filter columns to iterate through
         to_iter_cols = self._cat_df.columns[~self._cat_df.columns.isin(not_in_cols)]
-        # iterate over each col
-        for col in to_iter_cols:
+
+        for idx, col in enumerate(to_iter_cols):
 
             # column placeholder
             colhold = []
@@ -311,11 +327,16 @@ class WhiteBoxBase(object):
                     # append to insights dataframe placeholder
                     insights_df = insights_df.append(acc)
 
+                logger.info("""Run processed - Col: {} - groupby_var: {}""".format(col, groupby_var))
+
             # map all of the same columns errors to the first element and
             # append to placeholder
             # dont append if placeholder is empty due to col being the same as groupby
             if len(colhold) > 0:
                 placeholder.append(formatting.FmtJson.flatten_json(colhold))
+            # TODO redirect stdout so progress bar can output to single line
+            sys.stdout.write('\rPercent Complete: {per:2.0f}%'.format(per=(idx/len(to_iter_cols))*100))
+            sys.stdout.flush()
 
         logging.info('Converting accuracy outputs to json format')
         # finally convert insights_df into json object
@@ -387,3 +408,12 @@ class WhiteBoxBase(object):
         with open(fpath, 'w') as outfile:
             logging.info("""Writing html file out to disk""")
             outfile.write(html_out)
+
+    def __str__(self):
+        """
+        Print readable version of class and params
+        """
+        header = '{name}:\n'.format(name=self.__class__.__name__)
+        footer = '\n '.join(['{k}: {v}'.format(k=key, v=self.__dict__.get(key)) for key in self.__dict__ if not isinstance(self.__dict__.get(key),
+                                                                                                                         pd.DataFrame)])
+        return header + footer
