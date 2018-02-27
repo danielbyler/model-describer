@@ -37,16 +37,12 @@ List of variables that 'groups' the output into discrete segments for comparison
   #add uniform
   cat_df['Entire_Population'] = 'Entire Population'
 
-featuredict : dictionary, optional
+keepfeaturelist  : list, optional
 ------------
 
-Dictionary of variables that serves two purposes: Limiting and Labeling. 
+The items in this list limit the output. Only variables present in the list will display in the final HTML output. 
 
-Limiting: The keys of the dictionary limit the output. Only variables present in the keys will display in the final HTML output. 
-
-Labeling: The values of the dictionary label the output. For example 'GenderSelected': 'Gender of Respondent' would replace the variable label for 'GenderSelected' with 'Gender of Respondent' in all of the HTML output. 
-
-Note- all variables (including ydepend and groupbyvars) must be listed and labeled if featuredict is specified.
+Note- Groupbyvars must be listed if featuredict is specified.
 
 verbose : int, optional 
 -------------
