@@ -12,7 +12,7 @@ try:
     from utils.categorical_conversions import pandas_switch_modal_dummy
     import utils.formatting as formatting
     from base import WhiteBoxBase
-except ModuleNotFoundError:
+except ImportError:
     import whitebox.utils.utils as wb_utils
     from whitebox.utils.categorical_conversions import pandas_switch_modal_dummy
     from whitebox.base import WhiteBoxBase
@@ -164,9 +164,9 @@ class WhiteBoxError(WhiteBoxBase):
                                                                                                             col,
                                                                                                             vartype,
                                                                                                             group.shape))
-
+        group_copy = group
         # copy so we don't change the org. data
-        group_copy = group.reset_index(drop=True).copy(deep=True)
+        # group_copy = group.reset_index(drop=True).copy(deep=True)
         # create group errors dataframe
         toreturn = self._create_group_errors(group_copy)
 

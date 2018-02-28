@@ -258,7 +258,10 @@ def create_accuracy(model_type,
 def util_logger(name):
     logger = logging.getLogger(name)
     handler = logging.StreamHandler()
-    formatter = logging.Formatter('%asctime)s %(name)-12s %(levelname)-8s %(message)s')
+    # formatter = logging.Formatter('%asctime)s %(name)-12s %(levelname)-8s %(message)s')
+    formatter = logging.Formatter("""%(asctime)s:[%(filename)s:%(lineno)s - 
+                                        %(funcName)20s()]
+                                        %(levelname)s:\n%(message)s""")
     handler.setFormatter(formatter)
     logger.addHandler(handler)
     logger.setLevel(logging.DEBUG)

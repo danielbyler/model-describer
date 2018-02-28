@@ -56,8 +56,12 @@ WB = WhiteBoxError(modelobj=modelObjc,
                    verbose=None,
                    autoformat_types=True)
 
-WB.Percentiles.group_percentiles_out
-WB.Percentiles.percentiles
+from timeit import Timer
+
+T = Timer(lambda: WB.run(output_type='html',
+                         output_path='REGRESSIONTEST2.html'))
+
+T.timeit(number=1)
 
 WB.run(output_type='html',
        output_path='REGRESSIONTEST2.html')

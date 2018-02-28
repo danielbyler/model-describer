@@ -3,9 +3,7 @@
 
 from abc import abstractmethod, ABCMeta
 import logging
-from logging.config import fileConfig
 import sys
-import yaml
 
 import numpy as np
 import pandas as pd
@@ -16,7 +14,7 @@ try:
     import utils.percentiles as percentiles
     import utils.formatting as formatting
     import modelconfig.fmt_sklearn_preds as fmt_sklearn_preds
-except ModuleNotFoundError:
+except ImportError:
     import whitebox.utils.utils as wb_utils
     import whitebox.utils.check_utils as checks
     import whitebox.utils.percentiles as percentiles

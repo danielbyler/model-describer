@@ -94,7 +94,8 @@ class CheckInputs(object):
                     \nLevel 2: Info""")
 
             # create log dict
-            log_dict = {0: logging.DEBUG,
+            log_dict = {None: logging.NOTSET,
+                        0: logging.DEBUG,
                         1: logging.WARNING,
                         2: logging.INFO}
 
