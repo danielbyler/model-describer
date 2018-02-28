@@ -4,7 +4,8 @@ from sklearn.ensemble import GradientBoostingRegressor
 from whitebox.eval import WhiteBoxSensitivity
 
 
-df = pd.read_csv('C:/Users/dbyler/Desktop/Tester/WhiteBox_Production/docs/output/final_data.csv', low_memory=False)
+df = pd.read_csv('docs/output/final_data.csv', low_memory=False)
+
 
 
 dependentVar = 'JobSatisfaction'
