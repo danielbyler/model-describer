@@ -143,7 +143,4 @@ class CheckInputs(object):
         if not hasattr(modelobject, 'predict'):
             raise ValueError(wb_utils.ErrorWarningMsgs.error_msgs['modelobj'])
 
-        # ensure modelobject has been previously fit
-        check_is_fitted(modelobject, 'estimators_')
-
         return modelobject

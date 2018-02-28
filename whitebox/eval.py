@@ -86,7 +86,7 @@ class WhiteBoxError(WhiteBoxBase):
                     aggregate_func=np.nanmedian,
                     error_type='MSE',
                     autoformat_types=False,
-                    verbose=0):
+                    verbose=None):
 
         """
         :param modelobj: sklearn model object
@@ -329,7 +329,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                  error_type='MEAN',
                  std_num=0.5,
                  autoformat_types=False,
-                 verbose=0,
+                 verbose=None,
                  ):
         """
         :param modelobj: sklearn model object
@@ -343,7 +343,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         :param verbose: Logging level
         :param std_num: Standard deviation adjustment
         """
-
+        logger.setLevel(wb_utils.Settings.verbose2log[verbose])
         logger.info('Initilizing {} parameters'.format(self.__class__.__name__))
 
         if std_num > 3 or std_num < -3:
