@@ -14,7 +14,7 @@ wine.head()
 
 
 # init randomforestregressor
-modelObjc = RandomForestRegressor()
+modelObjc = RandomForestRegressor(random_state=2)
 
 ###
 #
@@ -54,10 +54,25 @@ WB = WhiteBoxError(modelobj=modelObjc,
                    groupbyvars=['Type', 'alcohol'],
                    keepfeaturelist=None,
                    verbose=None,
-                   autoformat_types=True)
+                   autoformat_types=True,
+                   round_num=4)
 
 WB.Percentiles.group_percentiles_out
 WB.Percentiles.percentiles
 
+df = pd.DataFrame({"col1": np.random.rand(100),
+                   'col2': np.random.rand(100)})
+
+df['val2'] = 0.000000000000000000000000000000000000000000000005
+
+df.round(2)
+df.head()
+df['test'] = 'a'
+df.round(2)
+
 WB.run(output_type='html',
        output_path='REGRESSIONTEST2.html')
+
+WB.outputs
+
+WB.agg_df.tail(100)

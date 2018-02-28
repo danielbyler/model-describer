@@ -41,6 +41,7 @@ class WhiteBoxBase(object):
                     aggregate_func=np.nanmedian,
                     error_type='RMSE',
                     autoformat_types=False,
+                    round_num=2,
                     verbose=None):
         """
         WhiteBox base class instantiation and parameter checking
@@ -59,6 +60,7 @@ class WhiteBoxBase(object):
                 MED - Median Error
                 MEAN - Mean Error
         :param autoformat_types: boolean to auto format categorical columns to objects
+        :param round_num: round numeric columns to specified level for output
         :param verbose: set verbose level -- 0 = debug, 1 = warning, 2 = error
         """
         logger.setLevel(wb_utils.Settings.verbose2log[verbose])
@@ -105,17 +107,17 @@ class WhiteBoxBase(object):
         self.called_class = self.__class__.__name__
         # create percentiles
         self.Percentiles = percentiles.Percentiles(self._cat_df,
-                                                   self.groupbyvars)
+                                                   self.groupbyvars,
+                                                   round_num=round_num)
         # get population percentiles
         self.Percentiles.population_percentiles()
 
         if autoformat_types is True:
             self._cat_df = formatting.autoformat_types(self._cat_df)
 
-        # store results
         self.agg_df = pd.DataFrame()
-        # raw results
         self.raw_df = pd.DataFrame()
+        self.round_num = round_num
 
     @property
     def modelobj(self):
@@ -235,7 +237,8 @@ class WhiteBoxBase(object):
         if 'fixed_bins' in raw_df.columns:
             del raw_df['fixed_bins']
 
-        self.raw_df = self.raw_df.append(raw_df)
+        # self.raw_df = self.raw_df.append(raw_df)
+        self.raw_df = pd.concat([self.raw_df, raw_df])
 
     def fmt_agg_df(self,
                    col,
@@ -255,7 +258,8 @@ class WhiteBoxBase(object):
         group_copy = agg_errors.copy(deep=True)
         debug_df = group_copy.rename(columns={col: 'col_value'})
         debug_df['col_name'] = col
-        self.agg_df = self.agg_df.append(debug_df)
+        # self.agg_df = self.agg_df.append(debug_df)
+        self.agg_df = pd.concat([self.agg_df, debug_df])
 
     def run(self,
             output_type='html',
@@ -291,7 +295,7 @@ class WhiteBoxBase(object):
         # create placeholder for outputs
         placeholder = []
         # create placeholder for all insights
-        insights_df = pd.DataFrame()
+        insights_list = []
         logging.info("""Running main program. Iterating over 
                     columns and applying functions depednent on datatype""")
 
@@ -325,7 +329,9 @@ class WhiteBoxBase(object):
                                                    self.error_type,
                                                    groupby=groupby_var)
                     # append to insights dataframe placeholder
-                    insights_df = insights_df.append(acc)
+                    # insights_df = insights_df.append(acc)
+                    # insights_df = pd.concat([insights_df, acc])
+                    insights_list.append(acc)
 
                 logger.info("""Run processed - Col: {} - groupby_var: {}""".format(col, groupby_var))
 
@@ -340,7 +346,9 @@ class WhiteBoxBase(object):
 
         logging.info('Converting accuracy outputs to json format')
         # finally convert insights_df into json object
-        insights_json = formatting.FmtJson.to_json(insights_df,
+        # convert insights list to dataframe
+        insights_df = pd.concat(insights_list)
+        insights_json = formatting.FmtJson.to_json(insights_df.round(self.round_num),
                                                    html_type='accuracy',
                                                    vartype='Accuracy',
                                                    err_type=self.error_type)

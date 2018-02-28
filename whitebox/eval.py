@@ -86,6 +86,7 @@ class WhiteBoxError(WhiteBoxBase):
                     aggregate_func=np.nanmedian,
                     error_type='MSE',
                     autoformat_types=False,
+                    round_num=2,
                     verbose=None):
 
         """
@@ -98,6 +99,7 @@ class WhiteBoxError(WhiteBoxBase):
         :param aggregate_func: numpy aggregate function like np.mean
         :param dominate_class: in the case of binary classification, class of interest
             to measure probabilities from
+        :param round_num: round numeric values for output
         :param autoformat: experimental autoformatting of dataframe
         :param verbose: Logging level
         """
@@ -112,6 +114,7 @@ class WhiteBoxError(WhiteBoxBase):
                                             aggregate_func=aggregate_func,
                                             error_type=error_type,
                                             autoformat_types=autoformat_types,
+                                            round_num=round_num,
                                             verbose=verbose)
 
         self.debug_df = pd.DataFrame()
@@ -193,7 +196,7 @@ class WhiteBoxError(WhiteBoxBase):
         self.fmt_agg_df(col=col,
                         agg_errors=agg_errors)
 
-        return agg_errors
+        return agg_errors.round(self.round_num)
 
     def _var_check(
                     self,
@@ -208,7 +211,7 @@ class WhiteBoxError(WhiteBoxBase):
         # subset col indices
         col_indices = [col, 'errors', 'predictedYSmooth', groupby_var]
 
-        error_holder = pd.DataFrame()
+        error_list = []
 
         # iterate over groups
         for group_level in self._cat_df[groupby_var].unique():
@@ -239,14 +242,16 @@ class WhiteBoxError(WhiteBoxBase):
                 logger.error("""unsupported dtype detected: {}""".format(self._cat_df.loc[:, col].dtype))
                 raise ValueError("""unsupported dtype: {}""".format(self._cat_df.loc[:, col].dtype))
 
-            error_holder = error_holder.append(group_errors)
+            error_list.append(group_errors)
 
         # reset & drop index - replace NaN with 'null' for d3 out
-        error_holder.reset_index(drop=True, inplace=True)
-        error_holder.fillna('null', inplace=True)
+        error_df = pd.concat(error_list)
+        error_df = (error_df.reset_index(drop=True)
+                            .fillna('null')
+                            .round(self.round_num))
         # convert to json structure
         json_out = formatting.FmtJson.to_json(
-                                    error_holder,
+                                    error_df,
                                     vartype=vartype,
                                     html_type='error',
                                     incremental_val=None)
@@ -329,6 +334,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                  error_type='MEAN',
                  std_num=0.5,
                  autoformat_types=False,
+                 round_num=2,
                  verbose=None,
                  ):
         """
@@ -340,6 +346,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         :param groupbyvars: grouping variables
         :param aggregate_func: function to aggregate sensitivity results by group
         :param autoformat: experimental auto formatting of dataframe
+        :param round_num: round numeric values for output
         :param verbose: Logging level
         :param std_num: Standard deviation adjustment
         """
@@ -362,6 +369,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                                                     aggregate_func=aggregate_func,
                                                     error_type=error_type,
                                                     autoformat_types=autoformat_types,
+                                                    round_num=round_num,
                                                     verbose=verbose)
 
     def _transform_function(
@@ -531,7 +539,10 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         else:
             raise ValueError("""Unsupported dtypes: {}""".format(self._cat_df.loc[:, col].dtype))
 
-        sensitivity = sensitivity.reset_index(drop=True).fillna('null')
+        sensitivity = (sensitivity.reset_index(drop=True)
+                                    .fillna('null')
+                                    .round(self.round_num))
+
         logging.info("""Converting output to json type using to_json utility function""")
         # convert to json structure
         json_out = formatting.FmtJson.to_json(sensitivity,
