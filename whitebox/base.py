@@ -211,6 +211,16 @@ class WhiteBoxBase(object):
                                                                   vartype='Continuous')
         return errors_out
 
+    def _create_preds(self,
+                      df):
+
+        if self.model_type == 'classification':
+            preds = self.predict_engine(df)[:, 1]
+        else:
+            preds = self.predict_engine(df)
+
+        return preds
+
     def fmt_raw_df(self,
                    col,
                    groupby_var,

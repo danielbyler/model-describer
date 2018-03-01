@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import gc
 
 import numpy as np
 import pandas as pd
@@ -411,35 +412,42 @@ class WhiteBoxSensitivity(WhiteBoxBase):
             """Column determined as {} datatype, transforming data for continuous column -- Column: {} -- Group: {}""".format(
                 vartype, col, groupby))
 
+        # create copy of cat_df
+        cat_df = self._cat_df.copy(deep=True)
+
         if vartype == 'Continuous':
             incremental_val = copydf[col].std() * self.std_num
             # tweak the currently column by the incremental_val
             copydf[col] = copydf[col] + incremental_val
-            # specify transform func
-            transform_func = self._continuous_slice
 
         else:
-            # switch modal column for predictions
-            incremental_val, copydf = pandas_switch_modal_dummy(col,
-                                                                self._cat_df,
+            # switch modal column for predictions and subset
+            # rows that are not already the mode value
+            incremental_val, copydf, cat_df = pandas_switch_modal_dummy(col,
+                                                                cat_df,
                                                                 copydf)
-            # specify transform func
-            transform_func = self._transform_function
 
         # make predictions with the switches to the dataset
-        if self.model_type == 'classification':
-            # binary classification - pull prediction probabilities for the class designated as 1
-            copydf['new_predictions'] = self.predict_engine(copydf)[:, 1]
-        elif self.model_type == 'regression':
-            copydf['new_predictions'] = self.predict_engine(copydf)
+        copydf['new_predictions'] = self._create_preds(copydf)
 
         # calculate difference between actual predictions and new_predictions
-        self._cat_df['diff'] = copydf['new_predictions'] - self._cat_df['predictedYSmooth']
-        # groupby and apply
-        sensitivity = self._cat_df[col_indices].groupby(groupby).apply(transform_func,
-                                                                       col=col,
-                                                                       groupby_var=groupby,
-                                                                       vartype=vartype)
+        cat_df['diff'] = copydf['new_predictions'] - cat_df['predictedYSmooth']
+
+        if vartype == 'Continuous':
+            # groupby and apply
+            sensitivity = cat_df[col_indices].groupby(groupby).apply(self._continuous_slice,
+                                                                           col=col,
+                                                                           groupby_var=groupby,
+                                                                           vartype=vartype)
+        else:
+            sensitivity = cat_df[col_indices].groupby([col, groupby]).apply(self._transform_function,
+                                                                     col=col,
+                                                                     groupby_var=groupby,
+                                                                     vartype=vartype)
+
+        # cleanup
+        del cat_df
+        gc.collect()
 
         # return sensitivity
         return incremental_val, sensitivity

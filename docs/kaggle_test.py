@@ -28,12 +28,16 @@ keepfeaturelist = ['WorkChallengeFrequencyPolitics',
                    'AlgorithmUnderstandingLevel',
                    'UniversityImportance'
                    ]
-
+# there is a duplicate in keep feature list
+keepfeaturelist = list(set(keepfeaturelist))
 
 df = pd.read_csv('docs/notebooks/datasets/final_data.csv', low_memory=False)
-df = df.loc[:, keepfeaturelist]
+df = df.loc[:, keepfeaturelist].copy(deep=True)
 
-df.columns
+df.fillna('nan', inplace=True)
+
+
+
 
 dependentVar = 'JobSatisfaction'
 
@@ -42,9 +46,6 @@ spike_cols = [col for col in df.columns if 'WorkToolsSelect' in col]
 df = df.drop(spike_cols, axis=1)
 spike_cols = [col for col in df.columns if 'WorkHardwareSelect' in col]
 df = df.drop(spike_cols, axis=1)
-
-#drop country specific axis as it's hard to interpret and clouds the impact of other variables
-df= df.drop('Average Salary Within Country', axis=1)
 
 #drop people who don't consider themselves Data Scientists
 df = df[df['DataScienceIdentitySelect'] !='No']
@@ -79,8 +80,39 @@ WB = WhiteBoxSensitivity(est,
 WB.run(output_type='html',
        output_path='kaggle_test_5groupby.html')
 
-WB.outputs
+finaldf.filter(regex='WorkChallengeFrequencyPolitics').columns
+copydf = finaldf.copy(deep=True)
+copydf.shape
+non_mode_mask = copydf['WorkChallengeFrequencyPolitics_Never'] != 1
+
+copydf = copydf.loc[non_mode_mask, :]
+copydf.loc[:, 'WorkChallengeFrequencyPolitics_Most of the time']= 0
+copydf.loc[:, 'WorkChallengeFrequencyPolitics_Never'] = 1
+copydf.loc[:, 'WorkChallengeFrequencyPolitics_Often'] = 0
+copydf.loc[:, 'WorkChallengeFrequencyPolitics_Rarely'] = 0
+copydf.loc[:, 'WorkChallengeFrequencyPolitics_Sometimes'] = 0
+copydf.loc[:, 'WorkChallengeFrequencyPolitics_nan'] = 0
+
+
+preds = est.predict(copydf)
+og_preds = est.predict(finaldf.loc[non_mode_mask, :])
+
+diff = preds -og_preds
+
+cat_df = df.loc[non_mode_mask, :].copy(deep=True)
+
+cat_df['diff'] = diff
+
+cat_df.groupby(['Continent', 'WorkChallengeFrequencyPolitics'])['diff'].mean()
+
+df.groupby('WorkChallengeFrequencyPolitics')['TitleFit'].count()
 
 WB.outputs
+
+og_col = 'WorkDataVisualizations'
+levels = cat_df['WorkDataVisualizations'].unique().tolist()
+mode = cat_df['WorkDataVisualizations'].mode()[0]
+mode_col = '{}_{}'.format(og_col, mode)
+non_mode_mask = cat_df.loc[cat_df[mode_col] == 1, :]
 
 print('hello')
