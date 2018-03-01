@@ -19,6 +19,8 @@ except ImportError:
     from eval import WhiteBoxError
 
 
+GLOBAL_ROUND = 2
+
 class TestWBBaseMethods(unittest.TestCase):
 
     def setUp(self):
@@ -57,37 +59,10 @@ class TestWBBaseMethods(unittest.TestCase):
                            groupbyvars=['Type'],
                            keepfeaturelist=keepfeaturelist,
                            verbose=None,
-                           autoformat_types=True)
+                           autoformat_types=True,
+                                round_num=GLOBAL_ROUND)
 
         self.wine = wine
-
-    def test_create_group_errors_errPos(self):
-        """test create_group_errors inserts errPos when called"""
-
-        df = pd.DataFrame({'errors': np.random.uniform(-1, 1, 1000),
-                           'col2': np.random.rand(1000),
-                           'col3': np.random.rand(1000)})
-
-        res = self.WB._create_group_errors(df)
-
-        self.assertIn('errPos',
-                      res.columns.tolist(),
-                      """errPos not present in dataframe after 
-                      _create_group_errors run""")
-
-    def test_create_group_errors_errNeg(self):
-        """test create_group_errors inserts errNeg when called"""
-
-        df = pd.DataFrame({'errors': np.random.uniform(-1, 1, 1000),
-                           'col2': np.random.rand(1000),
-                           'col3': np.random.rand(1000)})
-
-        res = self.WB._create_group_errors(df)
-
-        self.assertIn('errNeg',
-                      res.columns.tolist(),
-                      """errNeg not present in dataframe after 
-                      _create_group_errors run""")
 
     def test_transform_function_predictedYSmooth(self):
         """test predictedYSmooth present after _transform_function called"""
@@ -129,7 +104,7 @@ class TestWBBaseMethods(unittest.TestCase):
                                           groupby_var='Type')
 
         self.assertEqual(res['predictedYSmooth'].values.tolist()[0],
-                         correct,
+                         round(correct, GLOBAL_ROUND),
                          """unexpected value for predictedYSmooth - should be median default""")
 
     def test_transform_function_errPos_val(self):
@@ -151,7 +126,7 @@ class TestWBBaseMethods(unittest.TestCase):
                                           groupby_var='Type')
 
         self.assertEqual(res['errPos'].values.tolist()[0],
-                         correct,
+                         round(correct, GLOBAL_ROUND),
                          """unexpected value for errPos - should be median default""")
 
     def test_transform_function_errNeg_val(self):
@@ -173,7 +148,7 @@ class TestWBBaseMethods(unittest.TestCase):
                                           groupby_var='Type')
 
         self.assertEqual(res['errNeg'].values.tolist()[0],
-                         correct,
+                         round(correct, GLOBAL_ROUND),
                          """unexpected value for errNeg - should be median default""")
 
     def test_transform_function_errPos_classification(self):
@@ -202,7 +177,7 @@ class TestWBBaseMethods(unittest.TestCase):
         correct = np.nanmedian(errPos)
 
         self.assertEqual(res['errPos'].values.tolist()[0],
-                         correct,
+                         round(correct, GLOBAL_ROUND),
                          """transform_func classification not returning 
                          correct aggregate value for errPos""")
 
@@ -232,7 +207,7 @@ class TestWBBaseMethods(unittest.TestCase):
         correct = np.nanmedian(errNeg)
 
         self.assertEqual(res['errNeg'].values.tolist()[0],
-                         correct,
+                         round(correct, GLOBAL_ROUND),
                          """transform_func classification not returning 
                          correct aggregate value for errNeg""")
 
