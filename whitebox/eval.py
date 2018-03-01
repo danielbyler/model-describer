@@ -119,33 +119,6 @@ class WhiteBoxError(WhiteBoxBase):
 
         self.debug_df = pd.DataFrame()
 
-    def _create_group_errors(self,
-                             group_copy):
-        """
-        split errors into positive and negative errors, concatenate poisitive and negative
-        errosr on index. Concatenate with original group columns for final dataset
-        :param group_copy: deep copy of region of data driven by groupby level
-        :return: errors dataframe
-        """
-        # split out positive vs negative errors
-        errors = group_copy['errors'].reset_index(drop=True).copy(deep=True)
-        # check if classification
-        if self.model_type == 'classification':
-            logging.info("""classification model detected - subtracting errors from 
-                        overall aggregate error value""")
-            # get user defined aggregate (central values) of the errors
-            agg_errors = self.aggregate_func(errors)
-            # subtract the aggregate value for the group from the errors
-            errors = errors.apply(lambda x: agg_errors - x)
-        # create separate columns for pos or neg errors - average in zeros to both
-        errors = pd.concat([errors[errors >= 0], errors[errors <= 0]], axis=1)
-        # rename error columns
-        errors.columns = ['errPos', 'errNeg']
-        # merge back with orignial data
-        toreturn = pd.concat([group_copy.loc[:, group_copy.columns != 'errors'], errors], axis=1)
-        # return
-        return toreturn
-
     def _transform_function(
                             self,
                             group,
@@ -167,30 +140,28 @@ class WhiteBoxError(WhiteBoxBase):
                                                                                                             col,
                                                                                                             vartype,
                                                                                                             group.shape))
-
-        # copy so we don't change the org. data
-        group_copy = group.reset_index(drop=True).copy(deep=True)
-        # create group errors dataframe
-        toreturn = self._create_group_errors(group_copy)
-
-        # fmt and append to instance raw_df
-        self.fmt_raw_df(col=col,
-                        groupby_var=groupby_var,
-                        cur_group=toreturn)
+        # pull out errors
+        error_arr = group['errors'].values
+        # subtract errors from group median
+        if self.model_type == 'classification':
+            # get user defined aggregate (central values) of the errors
+            agg_errors = self.aggregate_func(error_arr)
+            # subtract the aggregate value for the group from the errors
+            error_arr = agg_errors - error_arr
 
         # create switch for aggregate types based on continuous or categorical values
         if vartype == 'Categorical':
-            col_val = toreturn[col].mode()
+            col_val = group[col].mode()
         else:
-            col_val = toreturn[col].max()
+            col_val = group[col].max()
 
         # aggregate errors
         agg_errors = pd.DataFrame({col: col_val,
-                                   'groupByValue': toreturn[groupby_var].mode(),
+                                   'groupByValue': group[groupby_var].mode(),
                                    'groupByVarName': groupby_var,
-                                   'predictedYSmooth': self.aggregate_func(toreturn['predictedYSmooth']),
-                                   'errPos': self.aggregate_func(toreturn['errPos']),
-                                   'errNeg': self.aggregate_func(toreturn['errNeg'])}, index=[0])
+                                   'predictedYSmooth': self.aggregate_func(group['predictedYSmooth']),
+                                   'errPos': self.aggregate_func(error_arr[error_arr >= 0]),
+                                   'errNeg': self.aggregate_func(error_arr[error_arr <= 0])}, index=[0])
 
         # fmt and append to instance agg_df attribute
         self.fmt_agg_df(col=col,
@@ -445,10 +416,10 @@ class WhiteBoxSensitivity(WhiteBoxBase):
 
         # make predictions with the switches to the dataset
         if self.model_type == 'classification':
-            copydf['new_predictions'] = self.predict_engine(modaldf.loc[:, ~copydf.columns.isin([self.ydepend,
+            modaldf['new_predictions'] = self.predict_engine(modaldf.loc[:, ~modaldf.columns.isin([self.ydepend,
                                                                                                 'predictedYSmooth'])])[:, 1]
         elif self.model_type == 'regression':
-            copydf['new_predictions'] = self.predict_engine(modaldf.loc[:, ~copydf.columns.isin([self.ydepend,
+            modaldf['new_predictions'] = self.predict_engine(modaldf.loc[:, ~modaldf.columns.isin([self.ydepend,
                                                                                                 'predictedYSmooth'])])
         # calculate difference between actual predictions and new_predictions
         self._cat_df['diff'] = modaldf['new_predictions'] - modaldf['predictedYSmooth']
@@ -540,8 +511,8 @@ class WhiteBoxSensitivity(WhiteBoxBase):
             raise ValueError("""Unsupported dtypes: {}""".format(self._cat_df.loc[:, col].dtype))
 
         sensitivity = (sensitivity.reset_index(drop=True)
-                                    .fillna('null')
-                                    .round(self.round_num))
+                                                .fillna('null')
+                                                .round(self.round_num))
 
         logging.info("""Converting output to json type using to_json utility function""")
         # convert to json structure

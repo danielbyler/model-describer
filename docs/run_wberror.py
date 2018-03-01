@@ -33,6 +33,17 @@ mod_df = pd.concat([pd.get_dummies(wine_sub.loc[:, wine_sub.columns != ydepend].
            wine_sub.select_dtypes(include=[np.number])], axis=1)
 
 
+arr = np.random.uniform(-1, 1, 500)
+arr.shape
+
+df = pd.DataFrame({'col1': np.random.uniform(-1, 1, 500),
+                   'col2': np.random.uniform(-1, 1, 500)})
+
+arr = df['col1'].values
+
+arr[arr <= 0]
+
+
 modelObjc.fit(mod_df.loc[:, mod_df.columns != ydepend],
               mod_df.loc[:, ydepend])
 
@@ -57,18 +68,13 @@ WB = WhiteBoxError(modelobj=modelObjc,
                    autoformat_types=True,
                    round_num=4)
 
-WB.Percentiles.group_percentiles_out
-WB.Percentiles.percentiles
 
-df = pd.DataFrame({"col1": np.random.rand(100),
-                   'col2': np.random.rand(100)})
+from timeit import Timer
 
-df['val2'] = 0.000000000000000000000000000000000000000000000005
+#T = Timer(lambda: WB.run(output_type='html',
+#       output_path='REGRESSIONTEST2.html'))
 
-df.round(2)
-df.head()
-df['test'] = 'a'
-df.round(2)
+#T.timeit(number=1)
 
 WB.run(output_type='html',
        output_path='REGRESSIONTEST2.html')
