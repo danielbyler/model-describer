@@ -163,7 +163,8 @@ class WhiteBoxBase(object):
                         self,
                         group,
                         col=None,
-                        groupby_var=None):
+                        groupby_var=None,
+                        vartype='Continuous'):
         """
         _continuous_slice operates on portions of continuous data that correspond
         to a particular group specified by groupby. If current group
@@ -286,12 +287,12 @@ class WhiteBoxBase(object):
             raise ValueError(error_out)
 
         # run the prediction function first to assign the errors to the dataframe
-        self._cat_df, self._model_df = fmt_sklearn_preds(self.predict_engine,
-                                                         self.modelobj,
-                                                         self._model_df,
-                                                         self._cat_df,
-                                                         self.ydepend,
-                                                         self.model_type)
+        self._cat_df = fmt_sklearn_preds(self.predict_engine,
+                                         self.modelobj,
+                                         self._model_df,
+                                         self._cat_df,
+                                         self.ydepend,
+                                         self.model_type)
         # create placeholder for outputs
         placeholder = []
         # create placeholder for all insights
@@ -329,8 +330,6 @@ class WhiteBoxBase(object):
                                                    self.error_type,
                                                    groupby=groupby_var)
                     # append to insights dataframe placeholder
-                    # insights_df = insights_df.append(acc)
-                    # insights_df = pd.concat([insights_df, acc])
                     insights_list.append(acc)
 
                 logger.info("""Run processed - Col: {} - groupby_var: {}""".format(col, groupby_var))

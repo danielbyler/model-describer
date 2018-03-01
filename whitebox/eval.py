@@ -388,88 +388,58 @@ class WhiteBoxSensitivity(WhiteBoxBase):
 
         return agg_errors
 
-    def _handle_categorical_preds(self,
-                                  col,
-                                  groupby,
-                                  copydf,
-                                  col_indices):
-        """
-        To measure sensitivity in the categorical case, the mode value of the categorical
-        column is identified, and all other levels within the category are switch to the
-        mode value. New predictions are created with this synthetic dataset and the
-        difference between the original predictions with the real data vs the synthetic
-        predictions are calculated and returned.
-        :param col: current column being operated on
-        :param groupby: current groupby being operated on
-        :param copydf: deep copy of cat_df
-        :param col_indices: column indices to include
-        :return: incremental bump value, sensitivity dataframe
-        """
-        logger.info("""Column determined as categorical datatype, transforming data for categorical column
-                                                \nColumn: {}
-                                                \nGroup: {}""".format(col, groupby))
-
-        # switch modal column for predictions
-        modal_val, modaldf = pandas_switch_modal_dummy(col,
-                                                       self._cat_df,
-                                                       copydf)
-
-        # make predictions with the switches to the dataset
-        if self.model_type == 'classification':
-            modaldf['new_predictions'] = self.predict_engine(modaldf.loc[:, ~modaldf.columns.isin([self.ydepend,
-                                                                                                'predictedYSmooth'])])[:, 1]
-        elif self.model_type == 'regression':
-            modaldf['new_predictions'] = self.predict_engine(modaldf.loc[:, ~modaldf.columns.isin([self.ydepend,
-                                                                                                'predictedYSmooth'])])
-        # calculate difference between actual predictions and new_predictions
-        self._cat_df['diff'] = modaldf['new_predictions'] - modaldf['predictedYSmooth']
-        # create mask of data to select rows that are not equal to the mode of the category.
-        # This will prevent blank displays in HTML
-        mode_mask = self._cat_df[col] != modal_val
-        # slice over the groupby variable and the categories within the current column
-        sensitivity = self._cat_df[mode_mask][col_indices].groupby([groupby, col]).apply(self._transform_function,
-                                                                                         col=col,
-                                                                                         groupby_var=groupby,
-                                                                                         vartype='Categorical')
-        # return sensitivity
-        return modal_val, sensitivity
-
-    def _handle_continuous_preds(self,
-                                 col,
-                                 groupby,
-                                 copydf,
-                                 col_indices):
+    def _predict_synthetic(self,
+                           col,
+                           groupby,
+                           copydf,
+                           col_indices,
+                           vartype='Continuous'):
         """
         In the continuous case, the standard deviation is determined by the values of
         the continuous column. This is multipled by the user defined std_num and applied
         to the values in the continuous column. New predictions are generated on this synthetic
         dataset, and the difference between the original predictions and the new predictions are
         captured and assigned.
+
         :param col: current column being operated on
         :param groupby: current groupby being operated on
         :param copydf: deep copy of cat_df
         :param col_indices: column indices to include
         :return: incremental bump value, sensitivity dataframe
         """
-        logger.info("""Column determined as continuous datatype, transforming data for continuous column -- Column: {} -- Group: {}""".format(col, groupby))
-        incremental_val = copydf[col].std() * self.std_num
-        # tweak the currently column by the incremental_val
-        copydf[col] = copydf[col] + incremental_val
+        logger.info(
+            """Column determined as {} datatype, transforming data for continuous column -- Column: {} -- Group: {}""".format(
+                vartype, col, groupby))
+
+        if vartype == 'Continuous':
+            incremental_val = copydf[col].std() * self.std_num
+            # tweak the currently column by the incremental_val
+            copydf[col] = copydf[col] + incremental_val
+            # specify transform func
+            transform_func = self._continuous_slice
+
+        else:
+            # switch modal column for predictions
+            incremental_val, copydf = pandas_switch_modal_dummy(col,
+                                                                self._cat_df,
+                                                                copydf)
+            # specify transform func
+            transform_func = self._transform_function
+
         # make predictions with the switches to the dataset
         if self.model_type == 'classification':
             # binary classification - pull prediction probabilities for the class designated as 1
-            copydf['new_predictions'] = self.predict_engine(copydf.loc[:, ~copydf.columns.isin([self.ydepend,
-                                                                                                'predictedYSmooth'])])[:,1]
+            copydf['new_predictions'] = self.predict_engine(copydf)[:, 1]
         elif self.model_type == 'regression':
-            copydf['new_predictions'] = self.predict_engine(copydf.loc[:, ~copydf.columns.isin([self.ydepend,
-                                                                                                'predictedYSmooth'])])
+            copydf['new_predictions'] = self.predict_engine(copydf)
 
         # calculate difference between actual predictions and new_predictions
-        self._cat_df['diff'] = copydf['new_predictions'] - copydf['predictedYSmooth']
+        self._cat_df['diff'] = copydf['new_predictions'] - self._cat_df['predictedYSmooth']
         # groupby and apply
-        sensitivity = self._cat_df[col_indices].groupby(groupby).apply(self._continuous_slice,
+        sensitivity = self._cat_df[col_indices].groupby(groupby).apply(transform_func,
                                                                        col=col,
-                                                                       groupby_var=groupby)
+                                                                       groupby_var=groupby,
+                                                                       vartype=vartype)
 
         # return sensitivity
         return incremental_val, sensitivity
@@ -494,25 +464,24 @@ class WhiteBoxSensitivity(WhiteBoxBase):
             # set variable type
             vartype = 'Categorical'
             logger.info("""Categorical variable detected""")
-            incremental_val, sensitivity = self._handle_categorical_preds(col,
-                                                                          groupby_var,
-                                                                          copydf,
-                                                                          col_indices)
+
         elif is_numeric_dtype(self._cat_df.loc[:, col]):
             # set variable type
             vartype = 'Continuous'
             logger.info("""Continuous variable detected""")
-            incremental_val, sensitivity = self._handle_continuous_preds(col,
-                                                                         groupby_var,
-                                                                         copydf,
-                                                                         col_indices)
 
         else:
             raise ValueError("""Unsupported dtypes: {}""".format(self._cat_df.loc[:, col].dtype))
 
+        incremental_val, sensitivity = self._predict_synthetic(col,
+                                                               groupby_var,
+                                                               copydf,
+                                                               col_indices,
+                                                               vartype=vartype)
+
         sensitivity = (sensitivity.reset_index(drop=True)
-                                                .fillna('null')
-                                                .round(self.round_num))
+                                                .fillna('null'))
+                                                #.round(self.round_num)) # TODO discuss rounding issue
 
         logging.info("""Converting output to json type using to_json utility function""")
         # convert to json structure
