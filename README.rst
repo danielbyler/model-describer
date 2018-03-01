@@ -135,7 +135,7 @@ WhiteBox currently only supports traditional tabular data. WhiteBox is hoping to
 Other Python Machine Learning Interpretability Projects
 ------------------------------------------------
 
-For those looking for intepretation of individual points, please see the `Lime <https://github.com/marcotcr/lime>`_ project and its good work. `PyCEbox <https://github.com/AustinRochford/PyCEbox>`_ also has a different take on `classic partial dependence plots <http://scikit-learn.org/stable/auto_examples/ensemble/plot_partial_dependence.html>`_.
+For those looking for intepretation of individual points, please see the `Lime <https://github.com/marcotcr/lime>`_ project and its good work. `PyCEbox <https://github.com/AustinRochford/PyCEbox>`_ also has a different take on `classic partial dependence plots <http://scikit-learn.org/stable/auto_examples/ensemble/plot_partial_dependence.html>`_. `SHAP <https://github.com/slundberg/shap>`_ is another model-agnostic method for machine learning interpretation. 
 
 
 Authors:
