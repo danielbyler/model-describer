@@ -54,6 +54,8 @@ WB = WhiteBoxError(modelobj=modelObjc,
                    round_num=2,
                    autoformat_types=True)
 
+import tqdm
+tqdm.__version__
 WB.run(output_type='html',
        output_path='REGRESSIONTEST2.html')
 
