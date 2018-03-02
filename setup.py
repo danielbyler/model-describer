@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='whitebox',
     version='0.0.7.7',
-    packages=['whitebox'],
+    packages=find_packages("."),
     url='https://github.com/Data4Gov/WhiteBox_Production',
     license='MIT',
     author='Jason Lewris, Daniel Byler, Venkat Gangavarapu, Shruti Panda',
