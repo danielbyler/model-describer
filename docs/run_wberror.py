@@ -59,6 +59,24 @@ tqdm.__version__
 WB.run(output_type='html',
        output_path='REGRESSIONTEST2.html')
 
+import math
+df = pd.DataFrame({'col1': np.random.uniform(100000, 200000),
+                   'col2': np.random.rand(100),
+                   'col3': ['a'] * 50 + ['b'] * 50})
+
+df['col3'].ix[50] = math.nan
+
+res = df.apply(lambda x: x.fillna(0) if x.dtype.kind in 'biufc' else x.fillna('.'))
+
+df.apply(lambda x: x.fillna('null') if x.dtype.kind == 'O' else x)
+
+df[df['col3'].isnull()]
+
+df['col3'].dtype.kind
+
+res = df.select_dtypes(include=['O']).fillna('null')
+res.ix[50]
+df['col3'].ix[50]
 preds = modelObjc.predict(mod_df)
 
 wine_sub['errors'] = preds - wine_sub[ydepend]

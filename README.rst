@@ -114,6 +114,29 @@ In many models, categorical variables are present as independent variables. To p
    model_df = df.loc[:, df.columns != ydepend]
    model_df = pd.get_dummies(model_df)
 
+Handling NaN's
+----------------
+
+Missing data needs to be specially handled. Some machine learning models are more adept to handling missing data than others. Dependent upon your model, you may have an interest in keeping your missing data as is. Numeric columns must maintain the original missing value NaN, however categories can map NaN to a string for more informative output. In order to map missing data into the html output, you can use the following construct:
+
+.. code-block:: python
+    # fill object dtype columns with null to map to html output as a category
+    df = df.apply(lambda x: x.fillna('null') if x.dtype.kind == 'O' else x)
+    # and get dummies as usual
+    ydepend = 'target'
+    model_df = pd.get_dummies(df.loc[:, df.columns != ydepend])
+    # build and train model, etc.
+    ...
+    # pass to whitebox
+    WB = WhiteBoxError(...cat_df = df, model_df = model_df)
+
+Handling large and small numbers
+----------------
+If you have large or small numbers that will influence how the html is rendered, you can use the following recipe to rename columns to respective units and revalue the numbers
+
+.. code-block:: python
+
+
 Managing Output Length
 ----------------------
 
@@ -159,7 +182,7 @@ For those looking for intepretation of individual points, please see the `Lime <
 Authors:
 ========
 
-Authors include: `Daniel Byler <https://www.linkedin.com/in/danielbyler/>`_, `Venkatesh Gangavarapu <https://www.linkedin.com/in/venkatesh-gangavarapu-9845b36b/>`_, `Jason Lewris <https://www.linkedin.com/in/jasonlewris/>`_, `Shruti Panda <https://www.linkedin.com/in/shruti-panda-1466216a/>`_, and `Shanti Jha <https://www.linkedin.com/in/shantijha/>`_ 
+Authors include: `Daniel Byler <https://www.linkedin.com/in/danielbyler/>`_, `Venkatesh Gangavarapu <https://www.linkedin.com/in/venkatesh-gangavarapu-9845b36b/>`_, `Jason Lewris <https://www.linkedin.com/in/jasonlewris/>`_, `Shruti Panda <https://www.linkedin.com/in/shruti-panda-1466216a/>`_
 
 Acknowledgements
 ----------
