@@ -356,7 +356,8 @@ class WhiteBoxBase(object):
             # TODO redirect stdout so progress bar can output to single line
             sys.stdout.write('\rPercent Complete: {per:2.0f}%'.format(per=(idx/len(to_iter_cols))*100))
             sys.stdout.flush()
-
+        sys.stdout.write('\rPercent Complete: 100%')
+        sys.stdout.flush()
         logging.info('Converting accuracy outputs to json format')
         # finally convert insights_df into json object
         # convert insights list to dataframe
