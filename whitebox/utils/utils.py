@@ -256,6 +256,12 @@ def create_accuracy(model_type,
     return acc
 
 def util_logger(name):
+    """
+    general logging framework
+
+    :param name: logger name
+    :return: logger
+    """
     logger = logging.getLogger(name)
     handler = logging.StreamHandler()
     # formatter = logging.Formatter('%asctime)s %(name)-12s %(levelname)-8s %(message)s')

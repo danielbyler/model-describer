@@ -57,6 +57,17 @@ WB = WhiteBoxError(modelobj=modelObjc,
 WB.run(output_type='html',
        output_path='REGRESSIONTEST2.html')
 
+preds = modelObjc.predict(mod_df)
+
+wine_sub['errors'] = preds - wine_sub[ydepend]
+errors = preds - wine_sub[ydepend]
+def err(errors):
+    errors = errors.values
+    return np.nanmedian(errors[errors >=0]), np.nanmedian(errors[errors <= 0])
+
+wine_sub.groupby(['Type', 'volatile.acidity.bin'])['errors'].apply(lambda x: err(x))
+
+wine_sub.columns
 WB._cat_df['predictedYSmooth'].mean()
 
 #wine_sub['preds'] =modelObjc.predict(mod_df.loc[:, mod_df.columns != ydepend])

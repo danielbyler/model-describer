@@ -161,8 +161,7 @@ class WhiteBoxBase(object):
                         self,
                         group,
                         col=None,
-                        groupby_var=None,
-                        vartype='Continuous'):
+                        groupby_var=None):
         """
         _continuous_slice operates on portions of continuous data that correspond
         to a particular group specified by groupby. If current group
@@ -197,7 +196,7 @@ class WhiteBoxBase(object):
                                                          group_percentiles, 
                                                          right=True)
         else:
-            logger.warning("""Slice of data less than 100 continuous observations, 
+            logger.info("""Slice of data less than 100 continuous observations, 
                                 using raw data as opposed to percentile groups - Group size: {}""".format(group.shape))
             continuous_group['fixed_bins'] = group_col_vals
 
@@ -211,7 +210,14 @@ class WhiteBoxBase(object):
 
     def _create_preds(self,
                       df):
+        """
+        create predictions based on model type. If classification, take corresponding
+        probabilities related to the 1st class. If regression, take predictions as is.
 
+        :param df: input dataframe
+        :return: predictions
+        :rtype: list
+        """
         if self.model_type == 'classification':
             preds = self.predict_engine(df)[:, 1]
         else:
@@ -219,10 +225,10 @@ class WhiteBoxBase(object):
 
         return preds
 
-    def fmt_raw_df(self,
-                   col,
-                   groupby_var,
-                   cur_group):
+    def _fmt_raw_df(self,
+                    col,
+                    groupby_var,
+                    cur_group):
         """
         format raw_df by renaming various columns and appending to instance
         raw_df
@@ -249,9 +255,9 @@ class WhiteBoxBase(object):
         # self.raw_df = self.raw_df.append(raw_df)
         self.raw_df = pd.concat([self.raw_df, raw_df])
 
-    def fmt_agg_df(self,
-                   col,
-                   agg_errors):
+    def _fmt_agg_df(self,
+                    col,
+                    agg_errors):
         """
         format agg_df by renaming various columns and appending to
         instance agg_df

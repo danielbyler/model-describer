@@ -27,10 +27,24 @@ class WhiteBoxError(WhiteBoxBase):
     Error model analysis.
 
     In the continuous case with over 100 datapoints for a particular slice of data,
-    calculate percentiles of group of shrink data to 100 datapoints for scalability.
-    Calculate average errors within this region of the data for positive and negative errors.
+    calculate percentiles of group to shrink data to 100 datapoints for scalability.
+    Calculate average positive and negative errors within this region of the data.
 
-    In the categorical case, calculate average positive/negative error within region of data
+    In the categorical case, calculate average positive/negative error within specific
+    level of category
+
+    Example:
+    >>> WB = WhiteBoxError(modelobj=modelObjc,
+    ...                model_df=mod_df,
+    ...                ydepend=ydepend,
+    ...                cat_df=wine_sub,
+    ...                groupbyvars=['Type', 'alcohol'],
+    ...                keepfeaturelist=None,
+    ...                verbose=None,
+    ...                round_num=2,
+    ...                autoformat_types=True)
+    >>> # run MLReveal error calibration and save output to local html file
+    >>> WB.run(output_type='html', output_path='path/to/save.html')
 
     Parameters
 
@@ -165,8 +179,8 @@ class WhiteBoxError(WhiteBoxBase):
                                    'errNeg': self.aggregate_func(error_arr[error_arr <= 0])}, index=[0])
 
         # fmt and append to instance agg_df attribute
-        self.fmt_agg_df(col=col,
-                        agg_errors=agg_errors)
+        self._fmt_agg_df(col=col,
+                         agg_errors=agg_errors)
 
         return agg_errors.round(self.round_num)
 
@@ -286,6 +300,18 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         Number of standard deviations to push data for syntehtic variable creation and senstivity analysis. Appropriate
         values include -3, -2, -1, 1, 2, 3
 
+    >>> WB = WhiteBoxSensitivity(modelobj=modelObjc,
+    ...               model_df=mod_df,
+    ...               ydepend=ydepend,
+    ...               cat_df=wine_sub,
+    ...               groupbyvars=['Type', 'alcohol'],
+    ...               keepfeaturelist=None,
+    ...               verbose=None,
+    ...               round_num=2,
+    ...               autoformat_types=True)
+    >>> # run MLReveal sensity calibration and save final output to html
+    >>> WB.run(output_type='html', output_path='path/to/save.html')
+
     See also
 
     ------------
@@ -366,9 +392,9 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                                                                                                             group.shape))
 
         # append raw_df to instance attribute raw_df
-        self.fmt_raw_df(col=col,
-                        groupby_var=groupby_var,
-                        cur_group=group)
+        self._fmt_raw_df(col=col,
+                         groupby_var=groupby_var,
+                         cur_group=group)
 
         # create switch for aggregate types based on continuous or categorical values
         if vartype == 'Categorical':
@@ -384,8 +410,8 @@ class WhiteBoxSensitivity(WhiteBoxBase):
 
         # fmt and append agg_df to instance attribute
         # agg_df
-        self.fmt_agg_df(col=col,
-                        agg_errors=agg_errors)
+        self._fmt_agg_df(col=col,
+                         agg_errors=agg_errors)
 
         return agg_errors
 
@@ -424,8 +450,8 @@ class WhiteBoxSensitivity(WhiteBoxBase):
             # switch modal column for predictions and subset
             # rows that are not already the mode value
             incremental_val, copydf, cat_df = pandas_switch_modal_dummy(col,
-                                                                cat_df,
-                                                                copydf)
+                                                                        cat_df,
+                                                                        copydf)
 
         # make predictions with the switches to the dataset
         copydf['new_predictions'] = self._create_preds(copydf)
@@ -436,14 +462,13 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         if vartype == 'Continuous':
             # groupby and apply
             sensitivity = cat_df[col_indices].groupby(groupby).apply(self._continuous_slice,
-                                                                           col=col,
-                                                                           groupby_var=groupby,
-                                                                           vartype=vartype)
+                                                                     col=col,
+                                                                     groupby_var=groupby)
         else:
             sensitivity = cat_df[col_indices].groupby([col, groupby]).apply(self._transform_function,
-                                                                     col=col,
-                                                                     groupby_var=groupby,
-                                                                     vartype=vartype)
+                                                                            col=col,
+                                                                            groupby_var=groupby,
+                                                                            vartype=vartype)
 
         # cleanup
         del cat_df
