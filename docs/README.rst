@@ -51,9 +51,9 @@ Logging level of output. Level -- 0 = debug, 1 = warning, 2 = error.
 aggregate_func : numpy function, optional
 ---------------------
 
-Numpy function which summarizes the center of the series in question (error or sensitivity depending on the function). For example, passing np.mean in WhiteBox error will make the central line in the plot for each group the average error. Passing np.median to WhiteBoxSensitivity will show the median sensitivity for each group selected. 
+Numpy function which summarizes the center of the series in question (error or sensitivity depending on the function). For example, passing np.mean in WhiteBox error will make the central line in the plot for each group the average error. Passing np.median to SensitivityViz will show the median sensitivity for each group selected.
 
-WhiteBoxError Specific Parameter
+ErrorViz Specific Parameter
 =======================
 
 error_type : string, optional
@@ -61,7 +61,7 @@ error_type : string, optional
 
 Aggregate error metric that summarizes the positive and negative error vectors. It can take the values: 'MSE' (mean squared error), 'MAE' (mean absolute error), or 'RMSE' (root mean squared error). By default, it is the MAE so errors of [-2,-1,3,4,5] would result in an average negative error of (2+1)/2 and an average positive error of (3+4+5)/3. 
 
-WhiteBoxSensitivity Specific Parameter
+SensitivityViz Specific Parameter
 =======================
 
 std_num : float, optional

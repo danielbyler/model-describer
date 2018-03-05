@@ -1,4 +1,4 @@
-from whitebox.eval import WhiteBoxSensitivity
+from mdesc.eval import SensitivityViz
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
@@ -6,7 +6,7 @@ import numpy as np
 
 from sklearn.ensemble import RandomForestClassifier
 
-from whitebox.utils.utils import create_wine_data
+from mdesc.utils.utils import create_wine_data
 
 df = create_wine_data(None)
 
@@ -28,17 +28,17 @@ clf = LogisticRegression()
 clf.fit(model_df,
         df.loc[:, ydepend])
 
-WB = WhiteBoxSensitivity(clf,
-                   model_df=model_df,
-                   ydepend=ydepend,
-                   cat_df=df,
-                   keepfeaturelist=None,
-                   groupbyvars=['alcohol', 'Type'],
-                   aggregate_func=np.mean,
-                   verbose=None,
+WB = SensitivityViz(clf,
+                    model_df=model_df,
+                    ydepend=ydepend,
+                    cat_df=df,
+                    keepfeaturelist=None,
+                    groupbyvars=['alcohol', 'Type'],
+                    aggregate_func=np.mean,
+                    verbose=None,
                     std_num=2,
                     autoformat_types=True,
-                   )
+                    )
 
 
 
@@ -48,3 +48,5 @@ WB.run(output_type='html',
 rdf = WB.raw_df
 
 rdf[(rdf['groupByVar'] == 'Type') & (rdf['col_name'] == 'fixed acidity')]
+
+sum(range(49999951,50000000))

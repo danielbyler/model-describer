@@ -10,7 +10,7 @@ from sklearn.ensemble import RandomForestClassifier
 try:
     import sys
     sys.path.insert(0, "/home/travis/build/Data4Gov/WhiteBox_Production")
-    from whitebox.utils import check_utils
+    from mdesc.utils import check_utils
 
 except ImportError:
     from utils import check_utils

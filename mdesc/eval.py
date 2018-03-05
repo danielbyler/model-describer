@@ -12,16 +12,16 @@ try:
     import utils.utils as wb_utils
     from utils.categorical_conversions import pandas_switch_modal_dummy
     import utils.formatting as formatting
-    from base import WhiteBoxBase
+    from base import MdescBase
 except ImportError:
-    import whitebox.utils.utils as wb_utils
-    from whitebox.utils.categorical_conversions import pandas_switch_modal_dummy
-    from whitebox.base import WhiteBoxBase
-    from whitebox.utils import formatting
+    import mdesc.utils.utils as wb_utils
+    from mdesc.utils.categorical_conversions import pandas_switch_modal_dummy
+    from mdesc.base import MdescBase
+    from mdesc.utils import formatting
 
 logger = wb_utils.util_logger(__name__)
 
-class WhiteBoxError(WhiteBoxBase):
+class ErrorViz(MdescBase):
 
     """
     Error model analysis.
@@ -34,7 +34,9 @@ class WhiteBoxError(WhiteBoxBase):
     level of category
 
     Example:
-    >>> WB = WhiteBoxError(modelobj=modelObjc,
+    >>> from mdesc.eval import ErrorViz
+    ...
+    >>> WB = ErrorViz(modelobj=modelObjc,
     ...                model_df=mod_df,
     ...                ydepend=ydepend,
     ...                cat_df=wine_sub,
@@ -85,8 +87,8 @@ class WhiteBoxError(WhiteBoxBase):
 
     ------------
 
-    WhiteBoxSensitivity : analyze how the model errors are doing for various groups of data
-    WhiteBoxBase : base class inherited from WhiteBoxSensitivity to perform key functionality
+    SensitivityViz : analyze how the model errors are doing for various groups of data
+    MdescBase : base class inherited from SensitivityViz to perform key functionality
         and grouping logic
     """
 
@@ -119,7 +121,7 @@ class WhiteBoxError(WhiteBoxBase):
         :param verbose: Logging level
         """
         logger.setLevel(wb_utils.Settings.verbose2log[verbose])
-        super(WhiteBoxError, self).__init__(
+        super(ErrorViz, self).__init__(
                                             modelobj,
                                             model_df,
                                             ydepend,
@@ -245,7 +247,7 @@ class WhiteBoxError(WhiteBoxBase):
         return json_out
 
 
-class WhiteBoxSensitivity(WhiteBoxBase):
+class SensitivityViz(MdescBase):
 
     """
     Sensitivity model analysis.
@@ -300,7 +302,9 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         Number of standard deviations to push data for syntehtic variable creation and senstivity analysis. Appropriate
         values include -3, -2, -1, 1, 2, 3
 
-    >>> WB = WhiteBoxSensitivity(modelobj=modelObjc,
+    >>> from mdesc.eval import SensitivityViz
+    ...
+    >>> SV = SensitivityViz(modelobj=modelObjc,
     ...               model_df=mod_df,
     ...               ydepend=ydepend,
     ...               cat_df=wine_sub,
@@ -310,14 +314,14 @@ class WhiteBoxSensitivity(WhiteBoxBase):
     ...               round_num=2,
     ...               autoformat_types=True)
     >>> # run MLReveal sensity calibration and save final output to html
-    >>> WB.run(output_type='html', output_path='path/to/save.html')
+    >>> SV.run(output_type='html', output_path='path/to/save.html')
 
     See also
 
     ------------
 
-    WhiteBoxError : analyze how the model errors are doing for various groups of data
-    WhiteBoxBase : base class inherited from WhiteBoxSensitivity to perform key functionality
+    ErrorViz : analyze how the model errors are doing for various groups of data
+    MdescBase : base class inherited from WhiteBoxSensitivity to perform key functionality
         and grouping logic
     """
 
@@ -357,7 +361,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
 
         self.std_num = std_num
 
-        super(WhiteBoxSensitivity, self).__init__(
+        super(SensitivityViz, self).__init__(
                                                     modelobj,
                                                     model_df,
                                                     ydepend,

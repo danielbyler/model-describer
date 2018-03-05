@@ -1,17 +1,17 @@
 # sensitivity plot creation and testing
 
 from sklearn.ensemble import RandomForestRegressor
-from whitebox.eval import WhiteBoxSensitivity
+from mdesc.eval import SensitivityViz
 from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
 import numpy as np
 
-from whitebox.eval import WhiteBoxError
+from mdesc.eval import ErrorViz
 from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
 import numpy as np
 
-from whitebox.utils.utils import create_wine_data
+from mdesc.utils.utils import create_wine_data
 
 df = create_wine_data(None)
 
@@ -28,19 +28,19 @@ clf.fit(model_df,
         df.loc[:, ydepend])
 
 
-WB = WhiteBoxSensitivity(clf,
-                   model_df=model_df,
-                   ydepend=ydepend,
-                   cat_df=df,
-                   keepfeaturelist=None,
-                   groupbyvars=['alcohol', 'Type'],
-                   verbose=None,
+WB = SensitivityViz(clf,
+                    model_df=model_df,
+                    ydepend=ydepend,
+                    cat_df=df,
+                    keepfeaturelist=None,
+                    groupbyvars=['alcohol', 'Type'],
+                    verbose=None,
                     std_num=2,
                     autoformat_types=True,
-                   )
+                    )
 
 WB.run(output_type='html',
-       output_path='SENSITIVITYTEST.html')
+       output_path='SENSITIVITYTESTPYTHON2.html')
 
 df = pd.DataFrame({'col1': np.random.uniform(10000000, 20000000, 1000)})
 

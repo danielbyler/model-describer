@@ -8,8 +8,8 @@ import numpy as np
 try:
     import sys
     sys.path.insert(0, "/home/travis/build/Data4Gov/WhiteBox_Production")
-    from whitebox.utils import percentiles
-    from whitebox.utils import utils as wb_utils
+    from mdesc.utils import percentiles
+    from mdesc.utils import utils as wb_utils
 except ImportError:
     from utils import percentiles
     from utils import utils as wb_utils

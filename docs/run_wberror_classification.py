@@ -1,9 +1,9 @@
-from whitebox.eval import WhiteBoxError
+from mdesc.eval import ErrorViz
 from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
 import numpy as np
 
-from whitebox.utils.utils import create_wine_data
+from mdesc.utils.utils import create_wine_data
 
 df = create_wine_data(None)
 
@@ -27,16 +27,16 @@ clf.fit(model_df.loc[:, model_df.columns != ydepend],
 
 from sklearn.utils.validation import check_is_fitted
 
-WB = WhiteBoxError(clf,
-                   model_df=model_df,
-                   ydepend=ydepend,
-                   cat_df=df,
-                   keepfeaturelist=None,
-                   groupbyvars=['alcohol'],
-                   aggregate_func=np.mean,
-                   verbose=None,
-                   autoformat_types=True
-                   )
+WB = ErrorViz(clf,
+              model_df=model_df,
+              ydepend=ydepend,
+              cat_df=df,
+              keepfeaturelist=None,
+              groupbyvars=['alcohol'],
+              aggregate_func=np.mean,
+              verbose=None,
+              autoformat_types=True
+              )
 df['alcohol'].unique()
 
 WB.run(output_path='CLASSIFICATIONTEST.html',

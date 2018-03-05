@@ -8,8 +8,8 @@ def readme():
         return f.read()
 
 setup(
-    name='whitebox',
-    version='0.0.7.9.3',
+    name='mdesc',
+    version='0.0.7.9.6',
     packages=find_packages("."),
     url='https://github.com/Data4Gov/WhiteBox_Production',
     license='MIT',
@@ -43,7 +43,7 @@ setup(
               'machine learning interpretability',
               'visualization',
               ],
-    package_data={'whitebox': ['html_error.txt', 'html_sensitivity.txt']},
+    package_data={'mdesc': ['html_error.txt', 'html_sensitivity.txt']},
     test_suite='nose.collector',
     tests_require=['nose'],
 )

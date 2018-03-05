@@ -5,11 +5,12 @@ import pkg_resources
 import warnings
 
 import pandas as pd
+import numpy as np
 
 try:
     import utils.utils as wb_utils
 except ImportError:
-    import whitebox.utils.utils as wb_utils
+    import mdesc.utils.utils as wb_utils
 
 
 def autoformat_types(inputdf):
@@ -112,6 +113,12 @@ class FmtJson(object):
 
         json_out = json_dict[html_type]
         # create data records from values in df
+        # remove long numbers by recasting
+        numcols = dataframe.select_dtypes(include=[np.number])
+        # iterate over cols and conform numbers
+        for col in numcols:
+            dataframe[col] = dataframe.loc[:, col].apply(lambda x: float(x))
+        # assign to data out
         json_out['Data'] = dataframe.to_dict(orient='records')
 
         return json_out
@@ -159,8 +166,8 @@ class HTML(object):
         :rtype: str
         """
         assert htmltype in ['html_error', 'html_sensitivity'], 'htmltype must be html_error or html_sensitivity'
-        html_path = pkg_resources.resource_filename('whitebox', '{}.txt'.format(htmltype))
-        # utility class to hold whitebox files
+        html_path = pkg_resources.resource_filename('mdesc', '{}.txt'.format(htmltype))
+        # utility class to hold mdesc files
         try:
             wbox_html = open('{}.txt'.format(htmltype), 'r').read()
         except IOError:
