@@ -34,12 +34,11 @@ class TestWBBaseMethods(unittest.TestCase):
         # subset dataframe down
         wine_sub = wine.copy(deep=True)
 
-        mod_df = pd.concat(
-            [pd.get_dummies(wine_sub.loc[:, wine_sub.columns != ydepend].select_dtypes(include=['category', 'O'])),
-             wine_sub.select_dtypes(include=[np.number])], axis=1)
+        mod_df = pd.get_dummies(wine_sub.loc[:, wine_sub.columns != ydepend])
 
-        modelObjc.fit(mod_df.loc[:, mod_df.columns != ydepend],
-                      mod_df.loc[:, ydepend])
+
+        modelObjc.fit(mod_df,
+                      wine_sub.loc[:, ydepend])
 
         keepfeaturelist = ['fixed acidity',
                            'Type',

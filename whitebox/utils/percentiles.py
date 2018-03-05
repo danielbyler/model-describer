@@ -11,7 +11,8 @@ except ImportError:
 
 def create_group_percentiles(df,
                              groupbyvars,
-                             wanted_percentiles=None):
+                             wanted_percentiles=None,
+                             round_num=2):
     """
     create percentiles based on groupby variable
 
@@ -45,7 +46,7 @@ def create_group_percentiles(df,
                 group_out = {'groupByVar': name}
                 # capture wanted percentiles
                 group_percent = group.quantile(wanted_percentiles).reset_index().rename(columns={'index': 'percentiles',
-                                                                                                 col: 'value'})
+                                                                                                 col: 'value'}).round(round_num)
                 # readjust percentiles to look nice
                 group_percent.loc[:, 'percentiles'] = group_percent.loc[:, 'percentiles'].apply(lambda x: str(int(x*100))+'%')
                 # convert percnetile dataframe into json format
@@ -94,7 +95,8 @@ class Percentiles(object):
 
     def __init__(self,
                  df,
-                 groupbyvars):
+                 groupbyvars,
+                 round_num=2):
         """
         Percentiles creates and holds percentile information for dataframe object
 
@@ -102,8 +104,10 @@ class Percentiles(object):
         :param groupbyvars: list of groupby variables
         """
         self._df = df
+        self.round_num = round_num
         self._groupbyvars = groupbyvars
         self.population_percentiles()
+
 
     def population_percentiles(self):
         """
@@ -118,7 +122,8 @@ class Percentiles(object):
         self._percentiles_out()
         # create groupby percentiles
         self.group_percentiles_out = create_group_percentiles(self._df,
-                                                              self._groupbyvars)
+                                                              self._groupbyvars,
+                                                              round_num=self.round_num)
 
     def _percentiles_out(self):
         """
@@ -131,7 +136,7 @@ class Percentiles(object):
         # get 0, 1, 25, 50, 75, and 90th percentiles
         final_percentiles = percentiles.iloc[wb_utils.Settings.fmt_percentiles_out].copy(deep=True)
         # melt to long format
-        percentiles_melted = pd.melt(final_percentiles, id_vars='percentile')
+        percentiles_melted = pd.melt(final_percentiles, id_vars='percentile').round(self.round_num)
         # convert to_json
         self.percentiles = formatting.FmtJson.to_json(dataframe=percentiles_melted,
                                                       vartype='Percentile',

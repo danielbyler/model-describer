@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import gc
 
 import numpy as np
 import pandas as pd
@@ -26,10 +27,24 @@ class WhiteBoxError(WhiteBoxBase):
     Error model analysis.
 
     In the continuous case with over 100 datapoints for a particular slice of data,
-    calculate percentiles of group of shrink data to 100 datapoints for scalability.
-    Calculate average errors within this region of the data for positive and negative errors.
+    calculate percentiles of group to shrink data to 100 datapoints for scalability.
+    Calculate average positive and negative errors within this region of the data.
 
-    In the categorical case, calculate average positive/negative error within region of data
+    In the categorical case, calculate average positive/negative error within specific
+    level of category
+
+    Example:
+    >>> WB = WhiteBoxError(modelobj=modelObjc,
+    ...                model_df=mod_df,
+    ...                ydepend=ydepend,
+    ...                cat_df=wine_sub,
+    ...                groupbyvars=['Type', 'alcohol'],
+    ...                keepfeaturelist=None,
+    ...                verbose=None,
+    ...                round_num=2,
+    ...                autoformat_types=True)
+    >>> # run MLReveal error calibration and save output to local html file
+    >>> WB.run(output_type='html', output_path='path/to/save.html')
 
     Parameters
 
@@ -86,6 +101,7 @@ class WhiteBoxError(WhiteBoxBase):
                     aggregate_func=np.nanmedian,
                     error_type='MSE',
                     autoformat_types=False,
+                    round_num=2,
                     verbose=None):
 
         """
@@ -98,6 +114,7 @@ class WhiteBoxError(WhiteBoxBase):
         :param aggregate_func: numpy aggregate function like np.mean
         :param dominate_class: in the case of binary classification, class of interest
             to measure probabilities from
+        :param round_num: round numeric values for output
         :param autoformat: experimental autoformatting of dataframe
         :param verbose: Logging level
         """
@@ -112,36 +129,10 @@ class WhiteBoxError(WhiteBoxBase):
                                             aggregate_func=aggregate_func,
                                             error_type=error_type,
                                             autoformat_types=autoformat_types,
+                                            round_num=round_num,
                                             verbose=verbose)
 
         self.debug_df = pd.DataFrame()
-
-    def _create_group_errors(self,
-                             group_copy):
-        """
-        split errors into positive and negative errors, concatenate poisitive and negative
-        errosr on index. Concatenate with original group columns for final dataset
-        :param group_copy: deep copy of region of data driven by groupby level
-        :return: errors dataframe
-        """
-        # split out positive vs negative errors
-        errors = group_copy['errors'].reset_index(drop=True).copy(deep=True)
-        # check if classification
-        if self.model_type == 'classification':
-            logging.info("""classification model detected - subtracting errors from 
-                        overall aggregate error value""")
-            # get user defined aggregate (central values) of the errors
-            agg_errors = self.aggregate_func(errors)
-            # subtract the aggregate value for the group from the errors
-            errors = errors.apply(lambda x: agg_errors - x)
-        # create separate columns for pos or neg errors - average in zeros to both
-        errors = pd.concat([errors[errors >= 0], errors[errors <= 0]], axis=1)
-        # rename error columns
-        errors.columns = ['errPos', 'errNeg']
-        # merge back with orignial data
-        toreturn = pd.concat([group_copy.loc[:, group_copy.columns != 'errors'], errors], axis=1)
-        # return
-        return toreturn
 
     def _transform_function(
                             self,
@@ -164,36 +155,34 @@ class WhiteBoxError(WhiteBoxBase):
                                                                                                             col,
                                                                                                             vartype,
                                                                                                             group.shape))
-        group_copy = group
-        # copy so we don't change the org. data
-        # group_copy = group.reset_index(drop=True).copy(deep=True)
-        # create group errors dataframe
-        toreturn = self._create_group_errors(group_copy)
-
-        # fmt and append to instance raw_df
-        self.fmt_raw_df(col=col,
-                        groupby_var=groupby_var,
-                        cur_group=toreturn)
+        # pull out errors
+        error_arr = group['errors'].values
+        # subtract errors from group median
+        if self.model_type == 'classification':
+            # get user defined aggregate (central values) of the errors
+            agg_errors = self.aggregate_func(error_arr)
+            # subtract the aggregate value for the group from the errors
+            error_arr = agg_errors - error_arr
 
         # create switch for aggregate types based on continuous or categorical values
         if vartype == 'Categorical':
-            col_val = toreturn[col].mode()
+            col_val = group[col].mode()
         else:
-            col_val = toreturn[col].max()
+            col_val = group[col].max()
 
         # aggregate errors
         agg_errors = pd.DataFrame({col: col_val,
-                                   'groupByValue': toreturn[groupby_var].mode(),
+                                   'groupByValue': group[groupby_var].mode(),
                                    'groupByVarName': groupby_var,
-                                   'predictedYSmooth': self.aggregate_func(toreturn['predictedYSmooth']),
-                                   'errPos': self.aggregate_func(toreturn['errPos']),
-                                   'errNeg': self.aggregate_func(toreturn['errNeg'])}, index=[0])
+                                   'predictedYSmooth': self.aggregate_func(group['predictedYSmooth']),
+                                   'errPos': self.aggregate_func(error_arr[error_arr >= 0]),
+                                   'errNeg': self.aggregate_func(error_arr[error_arr <= 0])}, index=[0])
 
         # fmt and append to instance agg_df attribute
-        self.fmt_agg_df(col=col,
-                        agg_errors=agg_errors)
+        self._fmt_agg_df(col=col,
+                         agg_errors=agg_errors)
 
-        return agg_errors
+        return agg_errors.round(self.round_num)
 
     def _var_check(
                     self,
@@ -208,7 +197,7 @@ class WhiteBoxError(WhiteBoxBase):
         # subset col indices
         col_indices = [col, 'errors', 'predictedYSmooth', groupby_var]
 
-        error_holder = pd.DataFrame()
+        error_list = []
 
         # iterate over groups
         for group_level in self._cat_df[groupby_var].unique():
@@ -239,14 +228,16 @@ class WhiteBoxError(WhiteBoxBase):
                 logger.error("""unsupported dtype detected: {}""".format(self._cat_df.loc[:, col].dtype))
                 raise ValueError("""unsupported dtype: {}""".format(self._cat_df.loc[:, col].dtype))
 
-            error_holder = error_holder.append(group_errors)
+            error_list.append(group_errors)
 
         # reset & drop index - replace NaN with 'null' for d3 out
-        error_holder.reset_index(drop=True, inplace=True)
-        error_holder.fillna('null', inplace=True)
+        error_df = pd.concat(error_list)
+        error_df = (error_df.reset_index(drop=True)
+                            .fillna('null')
+                            .round(self.round_num))
         # convert to json structure
         json_out = formatting.FmtJson.to_json(
-                                    error_holder,
+                                    error_df,
                                     vartype=vartype,
                                     html_type='error',
                                     incremental_val=None)
@@ -309,6 +300,18 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         Number of standard deviations to push data for syntehtic variable creation and senstivity analysis. Appropriate
         values include -3, -2, -1, 1, 2, 3
 
+    >>> WB = WhiteBoxSensitivity(modelobj=modelObjc,
+    ...               model_df=mod_df,
+    ...               ydepend=ydepend,
+    ...               cat_df=wine_sub,
+    ...               groupbyvars=['Type', 'alcohol'],
+    ...               keepfeaturelist=None,
+    ...               verbose=None,
+    ...               round_num=2,
+    ...               autoformat_types=True)
+    >>> # run MLReveal sensity calibration and save final output to html
+    >>> WB.run(output_type='html', output_path='path/to/save.html')
+
     See also
 
     ------------
@@ -329,6 +332,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                  error_type='MEAN',
                  std_num=0.5,
                  autoformat_types=False,
+                 round_num=2,
                  verbose=None,
                  ):
         """
@@ -340,6 +344,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
         :param groupbyvars: grouping variables
         :param aggregate_func: function to aggregate sensitivity results by group
         :param autoformat: experimental auto formatting of dataframe
+        :param round_num: round numeric values for output
         :param verbose: Logging level
         :param std_num: Standard deviation adjustment
         """
@@ -362,6 +367,7 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                                                     aggregate_func=aggregate_func,
                                                     error_type=error_type,
                                                     autoformat_types=autoformat_types,
+                                                    round_num=round_num,
                                                     verbose=verbose)
 
     def _transform_function(
@@ -386,9 +392,9 @@ class WhiteBoxSensitivity(WhiteBoxBase):
                                                                                                             group.shape))
 
         # append raw_df to instance attribute raw_df
-        self.fmt_raw_df(col=col,
-                        groupby_var=groupby_var,
-                        cur_group=group)
+        self._fmt_raw_df(col=col,
+                         groupby_var=groupby_var,
+                         cur_group=group)
 
         # create switch for aggregate types based on continuous or categorical values
         if vartype == 'Categorical':
@@ -404,93 +410,69 @@ class WhiteBoxSensitivity(WhiteBoxBase):
 
         # fmt and append agg_df to instance attribute
         # agg_df
-        self.fmt_agg_df(col=col,
-                        agg_errors=agg_errors)
+        self._fmt_agg_df(col=col,
+                         agg_errors=agg_errors)
 
         return agg_errors
 
-    def _handle_categorical_preds(self,
-                                  col,
-                                  groupby,
-                                  copydf,
-                                  col_indices):
-        """
-        To measure sensitivity in the categorical case, the mode value of the categorical
-        column is identified, and all other levels within the category are switch to the
-        mode value. New predictions are created with this synthetic dataset and the
-        difference between the original predictions with the real data vs the synthetic
-        predictions are calculated and returned.
-        :param col: current column being operated on
-        :param groupby: current groupby being operated on
-        :param copydf: deep copy of cat_df
-        :param col_indices: column indices to include
-        :return: incremental bump value, sensitivity dataframe
-        """
-        logger.info("""Column determined as categorical datatype, transforming data for categorical column
-                                                \nColumn: {}
-                                                \nGroup: {}""".format(col, groupby))
-
-        # switch modal column for predictions
-        modal_val, modaldf = pandas_switch_modal_dummy(col,
-                                                       self._cat_df,
-                                                       copydf)
-
-        # make predictions with the switches to the dataset
-        if self.model_type == 'classification':
-            copydf['new_predictions'] = self.predict_engine(modaldf.loc[:, ~copydf.columns.isin([self.ydepend,
-                                                                                                'predictedYSmooth'])])[:, 1]
-        elif self.model_type == 'regression':
-            copydf['new_predictions'] = self.predict_engine(modaldf.loc[:, ~copydf.columns.isin([self.ydepend,
-                                                                                                'predictedYSmooth'])])
-        # calculate difference between actual predictions and new_predictions
-        self._cat_df['diff'] = modaldf['new_predictions'] - modaldf['predictedYSmooth']
-        # create mask of data to select rows that are not equal to the mode of the category.
-        # This will prevent blank displays in HTML
-        mode_mask = self._cat_df[col] != modal_val
-        # slice over the groupby variable and the categories within the current column
-        sensitivity = self._cat_df[mode_mask][col_indices].groupby([groupby, col]).apply(self._transform_function,
-                                                                                         col=col,
-                                                                                         groupby_var=groupby,
-                                                                                         vartype='Categorical')
-        # return sensitivity
-        return modal_val, sensitivity
-
-    def _handle_continuous_preds(self,
-                                 col,
-                                 groupby,
-                                 copydf,
-                                 col_indices):
+    def _predict_synthetic(self,
+                           col,
+                           groupby,
+                           copydf,
+                           col_indices,
+                           vartype='Continuous'):
         """
         In the continuous case, the standard deviation is determined by the values of
         the continuous column. This is multipled by the user defined std_num and applied
         to the values in the continuous column. New predictions are generated on this synthetic
         dataset, and the difference between the original predictions and the new predictions are
         captured and assigned.
+
         :param col: current column being operated on
         :param groupby: current groupby being operated on
         :param copydf: deep copy of cat_df
         :param col_indices: column indices to include
         :return: incremental bump value, sensitivity dataframe
         """
-        logger.info("""Column determined as continuous datatype, transforming data for continuous column -- Column: {} -- Group: {}""".format(col, groupby))
-        incremental_val = copydf[col].std() * self.std_num
-        # tweak the currently column by the incremental_val
-        copydf[col] = copydf[col] + incremental_val
+        logger.info(
+            """Column determined as {} datatype, transforming data for continuous column -- Column: {} -- Group: {}""".format(
+                vartype, col, groupby))
+
+        # create copy of cat_df
+        cat_df = self._cat_df.copy(deep=True)
+
+        if vartype == 'Continuous':
+            incremental_val = copydf[col].std() * self.std_num
+            # tweak the currently column by the incremental_val
+            copydf[col] = copydf[col] + incremental_val
+
+        else:
+            # switch modal column for predictions and subset
+            # rows that are not already the mode value
+            incremental_val, copydf, cat_df = pandas_switch_modal_dummy(col,
+                                                                        cat_df,
+                                                                        copydf)
+
         # make predictions with the switches to the dataset
-        if self.model_type == 'classification':
-            # binary classification - pull prediction probabilities for the class designated as 1
-            copydf['new_predictions'] = self.predict_engine(copydf.loc[:, ~copydf.columns.isin([self.ydepend,
-                                                                                                'predictedYSmooth'])])[:,1]
-        elif self.model_type == 'regression':
-            copydf['new_predictions'] = self.predict_engine(copydf.loc[:, ~copydf.columns.isin([self.ydepend,
-                                                                                                'predictedYSmooth'])])
+        copydf['new_predictions'] = self._create_preds(copydf)
 
         # calculate difference between actual predictions and new_predictions
-        self._cat_df['diff'] = copydf['new_predictions'] - copydf['predictedYSmooth']
-        # groupby and apply
-        sensitivity = self._cat_df[col_indices].groupby(groupby).apply(self._continuous_slice,
-                                                                       col=col,
-                                                                       groupby_var=groupby)
+        cat_df['diff'] = copydf['new_predictions'] - cat_df['predictedYSmooth']
+
+        if vartype == 'Continuous':
+            # groupby and apply
+            sensitivity = cat_df[col_indices].groupby(groupby).apply(self._continuous_slice,
+                                                                     col=col,
+                                                                     groupby_var=groupby)
+        else:
+            sensitivity = cat_df[col_indices].groupby([col, groupby]).apply(self._transform_function,
+                                                                            col=col,
+                                                                            groupby_var=groupby,
+                                                                            vartype=vartype)
+
+        # cleanup
+        del cat_df
+        gc.collect()
 
         # return sensitivity
         return incremental_val, sensitivity
@@ -515,23 +497,25 @@ class WhiteBoxSensitivity(WhiteBoxBase):
             # set variable type
             vartype = 'Categorical'
             logger.info("""Categorical variable detected""")
-            incremental_val, sensitivity = self._handle_categorical_preds(col,
-                                                                          groupby_var,
-                                                                          copydf,
-                                                                          col_indices)
+
         elif is_numeric_dtype(self._cat_df.loc[:, col]):
             # set variable type
             vartype = 'Continuous'
             logger.info("""Continuous variable detected""")
-            incremental_val, sensitivity = self._handle_continuous_preds(col,
-                                                                         groupby_var,
-                                                                         copydf,
-                                                                         col_indices)
 
         else:
             raise ValueError("""Unsupported dtypes: {}""".format(self._cat_df.loc[:, col].dtype))
 
-        sensitivity = sensitivity.reset_index(drop=True).fillna('null')
+        incremental_val, sensitivity = self._predict_synthetic(col,
+                                                               groupby_var,
+                                                               copydf,
+                                                               col_indices,
+                                                               vartype=vartype)
+
+        sensitivity = (sensitivity.reset_index(drop=True)
+                                                .fillna('null'))
+                                                #.round(self.round_num)) # TODO discuss rounding issue
+
         logging.info("""Converting output to json type using to_json utility function""")
         # convert to json structure
         json_out = formatting.FmtJson.to_json(sensitivity,

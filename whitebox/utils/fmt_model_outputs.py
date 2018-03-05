@@ -28,10 +28,8 @@ def fmt_sklearn_preds(predict_engine,
     logging.info("""Creating predictions using modelobj.
                     \nModelobj class name: {}""".format(modelobj.__class__.__name__))
 
-    unwanted_pred_cols = [ydepend, 'predictedYSmooth']
     # create predictions, filter out extraneous columns
-    preds = predict_engine(
-        model_df.loc[:, list(set(model_df.columns).difference(set(unwanted_pred_cols)))])
+    preds = predict_engine(model_df)
 
     if model_type == 'regression':
         # calculate error
@@ -54,9 +52,8 @@ def fmt_sklearn_preds(predict_engine,
     # assign predictions
     logging.info('Assigning predictions to instance dataframe')
     cat_df['predictedYSmooth'] = preds
-    model_df['predictedYSmooth'] = preds
     # return
-    return cat_df, model_df
+    return cat_df
 
 
 def fmt_tf_preds():

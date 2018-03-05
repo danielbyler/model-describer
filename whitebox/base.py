@@ -39,6 +39,7 @@ class WhiteBoxBase(object):
                     aggregate_func=np.nanmedian,
                     error_type='RMSE',
                     autoformat_types=False,
+                    round_num=2,
                     verbose=None):
         """
         WhiteBox base class instantiation and parameter checking
@@ -57,6 +58,7 @@ class WhiteBoxBase(object):
                 MED - Median Error
                 MEAN - Mean Error
         :param autoformat_types: boolean to auto format categorical columns to objects
+        :param round_num: round numeric columns to specified level for output
         :param verbose: set verbose level -- 0 = debug, 1 = warning, 2 = error
         """
         logger.setLevel(wb_utils.Settings.verbose2log[verbose])
@@ -103,17 +105,17 @@ class WhiteBoxBase(object):
         self.called_class = self.__class__.__name__
         # create percentiles
         self.Percentiles = percentiles.Percentiles(self._cat_df,
-                                                   self.groupbyvars)
+                                                   self.groupbyvars,
+                                                   round_num=round_num)
         # get population percentiles
         self.Percentiles.population_percentiles()
 
         if autoformat_types is True:
             self._cat_df = formatting.autoformat_types(self._cat_df)
 
-        # store results
         self.agg_df = pd.DataFrame()
-        # raw results
         self.raw_df = pd.DataFrame()
+        self.round_num = round_num
 
     @property
     def modelobj(self):
@@ -194,7 +196,7 @@ class WhiteBoxBase(object):
                                                          group_percentiles, 
                                                          right=True)
         else:
-            logger.warning("""Slice of data less than 100 continuous observations, 
+            logger.info("""Slice of data less than 100 continuous observations, 
                                 using raw data as opposed to percentile groups - Group size: {}""".format(group.shape))
             continuous_group['fixed_bins'] = group_col_vals
 
@@ -206,10 +208,27 @@ class WhiteBoxBase(object):
                                                                   vartype='Continuous')
         return errors_out
 
-    def fmt_raw_df(self,
-                   col,
-                   groupby_var,
-                   cur_group):
+    def _create_preds(self,
+                      df):
+        """
+        create predictions based on model type. If classification, take corresponding
+        probabilities related to the 1st class. If regression, take predictions as is.
+
+        :param df: input dataframe
+        :return: predictions
+        :rtype: list
+        """
+        if self.model_type == 'classification':
+            preds = self.predict_engine(df)[:, 1]
+        else:
+            preds = self.predict_engine(df)
+
+        return preds
+
+    def _fmt_raw_df(self,
+                    col,
+                    groupby_var,
+                    cur_group):
         """
         format raw_df by renaming various columns and appending to instance
         raw_df
@@ -233,11 +252,12 @@ class WhiteBoxBase(object):
         if 'fixed_bins' in raw_df.columns:
             del raw_df['fixed_bins']
 
-        self.raw_df = self.raw_df.append(raw_df)
+        # self.raw_df = self.raw_df.append(raw_df)
+        self.raw_df = pd.concat([self.raw_df, raw_df])
 
-    def fmt_agg_df(self,
-                   col,
-                   agg_errors):
+    def _fmt_agg_df(self,
+                    col,
+                    agg_errors):
         """
         format agg_df by renaming various columns and appending to
         instance agg_df
@@ -253,7 +273,8 @@ class WhiteBoxBase(object):
         group_copy = agg_errors.copy(deep=True)
         debug_df = group_copy.rename(columns={col: 'col_value'})
         debug_df['col_name'] = col
-        self.agg_df = self.agg_df.append(debug_df)
+        # self.agg_df = self.agg_df.append(debug_df)
+        self.agg_df = pd.concat([self.agg_df, debug_df])
 
     def run(self,
             output_type='html',
@@ -280,16 +301,16 @@ class WhiteBoxBase(object):
             raise ValueError(error_out)
 
         # run the prediction function first to assign the errors to the dataframe
-        self._cat_df, self._model_df = fmt_sklearn_preds(self.predict_engine,
-                                                         self.modelobj,
-                                                         self._model_df,
-                                                         self._cat_df,
-                                                         self.ydepend,
-                                                         self.model_type)
+        self._cat_df = fmt_sklearn_preds(self.predict_engine,
+                                         self.modelobj,
+                                         self._model_df,
+                                         self._cat_df,
+                                         self.ydepend,
+                                         self.model_type)
         # create placeholder for outputs
         placeholder = []
         # create placeholder for all insights
-        insights_df = pd.DataFrame()
+        insights_list = []
         logging.info("""Running main program. Iterating over 
                     columns and applying functions depednent on datatype""")
 
@@ -323,7 +344,7 @@ class WhiteBoxBase(object):
                                                    self.error_type,
                                                    groupby=groupby_var)
                     # append to insights dataframe placeholder
-                    insights_df = insights_df.append(acc)
+                    insights_list.append(acc)
 
                 logger.info("""Run processed - Col: {} - groupby_var: {}""".format(col, groupby_var))
 
@@ -335,10 +356,13 @@ class WhiteBoxBase(object):
             # TODO redirect stdout so progress bar can output to single line
             sys.stdout.write('\rPercent Complete: {per:2.0f}%'.format(per=(idx/len(to_iter_cols))*100))
             sys.stdout.flush()
-
+        sys.stdout.write('\rPercent Complete: 100%')
+        sys.stdout.flush()
         logging.info('Converting accuracy outputs to json format')
         # finally convert insights_df into json object
-        insights_json = formatting.FmtJson.to_json(insights_df,
+        # convert insights list to dataframe
+        insights_df = pd.concat(insights_list)
+        insights_json = formatting.FmtJson.to_json(insights_df.round(self.round_num),
                                                    html_type='accuracy',
                                                    vartype='Accuracy',
                                                    err_type=self.error_type)

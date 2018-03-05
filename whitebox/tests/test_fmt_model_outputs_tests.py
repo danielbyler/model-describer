@@ -48,12 +48,14 @@ class TestWhiteBoxError(unittest.TestCase):
 
         modelobj_regr = RandomForestRegressor()
 
-        modelobj_regr.fit(self.df.loc[:, self.df.columns != 'target'],
+        model_df =self.df.loc[:, self.df.columns != 'target']
+
+        modelobj_regr.fit(model_df,
                           self.df.loc[:, 'target'])
 
-        fmtd_outputs, _ = fmt_model_outputs.fmt_sklearn_preds(getattr(modelobj_regr, 'predict'),
+        fmtd_outputs = fmt_model_outputs.fmt_sklearn_preds(getattr(modelobj_regr, 'predict'),
                                             modelobj_regr,
-                                            self.df,
+                                            model_df,
                                             self.df,
                                             'target',
                                             'regression')
@@ -67,12 +69,14 @@ class TestWhiteBoxError(unittest.TestCase):
 
         modelobj_class = RandomForestClassifier()
 
-        modelobj_class.fit(self.df_class.loc[:, self.df_class.columns != 'target'],
+        model_df = self.df.loc[:, self.df.columns != 'target']
+
+        modelobj_class.fit(model_df,
                            self.df_class.loc[:, 'target'])
 
-        fmtd_outputs, _ = fmt_model_outputs.fmt_sklearn_preds(getattr(modelobj_class, 'predict_proba'),
+        fmtd_outputs = fmt_model_outputs.fmt_sklearn_preds(getattr(modelobj_class, 'predict_proba'),
                                             modelobj_class,
-                                            self.df_class,
+                                            model_df,
                                             self.df_class,
                                             'target',
                                             'classification')

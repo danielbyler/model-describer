@@ -29,7 +29,7 @@ class TestWhiteBoxError(unittest.TestCase):
     def test_cat_conversion_pandas_switch_modal_dummy_df_output(self):
         """test pandas_switch_modal_dummy output values in non modal columns"""
 
-        modal_val, res = categorical_conversions.pandas_switch_modal_dummy('col3',
+        modal_val, res, _ = categorical_conversions.pandas_switch_modal_dummy('col3',
                                                                            self.df,
                                                                            self.df_dummies)
 
@@ -39,7 +39,7 @@ class TestWhiteBoxError(unittest.TestCase):
     def test_cat_conversion_pandas_switch_modal_dummy_df_modal_val(self):
         """test pandas_switch_modal_dummy output modal values"""
 
-        modal_val, res = categorical_conversions.pandas_switch_modal_dummy('col3',
+        modal_val, res, _ = categorical_conversions.pandas_switch_modal_dummy('col3',
                                                                            self.df,
                                                                            self.df_dummies)
 

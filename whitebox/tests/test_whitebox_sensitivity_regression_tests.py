@@ -34,10 +34,9 @@ class TestWBBaseMethods(unittest.TestCase):
         wine_sub = wine.copy(deep=True)
 
         mod_df = pd.get_dummies(wine_sub.loc[:, wine_sub.columns != ydepend])
-        mod_df[ydepend] = wine.loc[:, ydepend]
 
-        modelObjc.fit(mod_df.loc[:, mod_df.columns != ydepend],
-                      mod_df.loc[:, ydepend])
+        modelObjc.fit(mod_df,
+                      wine_sub.loc[:, ydepend])
 
         keepfeaturelist = ['fixed acidity',
                            'Type',
@@ -197,7 +196,6 @@ class TestWBBaseMethods(unittest.TestCase):
 
         self.WB._cat_df['errors'] = np.random.uniform(-1, 1, self.WB._cat_df.shape[0])
         self.WB._cat_df['predictedYSmooth'] = np.random.uniform(-1, 1, self.WB._cat_df.shape[0])
-        self.WB._model_df['predictedYSmooth'] = np.random.uniform(-1, 1, self.WB._cat_df.shape[0])
 
         out = self.WB._var_check('fixed acidity',
                       'Type')
