@@ -79,7 +79,8 @@ class FmtJson(object):
             vartype='Continuous',
             html_type='error',
             incremental_val=None,
-            err_type=None):
+            err_type=None,
+            ydepend=None):
         """
         convert input dataframe to json
 
@@ -89,6 +90,7 @@ class FmtJson(object):
         :param incremental_val: If sensitivity used, include incremental value
             used to construct synthetic data
         :param err_type: User defined error type
+        :param ydepend: str dependent variable
         :return: formatted json output
         :rtype: dict
         """
@@ -103,7 +105,8 @@ class FmtJson(object):
         json_dict = dict(percentile={'Type': vartype},
                          error={'Type': vartype},
                          accuracy={'Type': vartype,
-                                   'ErrType': err_type},
+                                   'ErrType': err_type,
+                                   'Yvar': ydepend},
                          sensitivity={'Type': vartype,
                                       'Change': str(incremental_val)})
 

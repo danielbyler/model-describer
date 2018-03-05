@@ -2,12 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import requests
-import pandas as pd
+import logging
+import sys
+import random
 import numpy as np
 import io
+
 from sklearn.datasets import make_blobs, make_regression
-import random
-import logging
+import pandas as pd
 
 
 class Settings(object):
@@ -272,3 +274,14 @@ def util_logger(name):
     logger.addHandler(handler)
     logger.setLevel(logging.DEBUG)
     return logger
+
+def sysprint(message):
+    """
+    print message to console
+
+    :param message: str - message to print
+    :return: sys.stdout
+    :rtype: sys.stdout.write()
+    """
+    sys.stdout.write('\r{}').format(message)
+    sys.stdout.flush()

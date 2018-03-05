@@ -25,7 +25,10 @@ class TestWBBaseMethods(unittest.TestCase):
 
     def setUp(self):
         # create wine dataset
-        wine = pd.read_csv('testdata/wine.csv')
+        try:
+            wine = pd.read_csv('testdata/wine.csv')
+        except FileNotFoundError:
+            wine = pd.read_csv('whitebox/tests/testdata/wine.csv')
 
         # init randomforestregressor
         modelObjc = RandomForestRegressor()

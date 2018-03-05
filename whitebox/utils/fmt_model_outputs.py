@@ -56,9 +56,5 @@ def fmt_sklearn_preds(predict_engine,
     return cat_df
 
 
-def fmt_tf_preds():
-    pass
-
-
 
 

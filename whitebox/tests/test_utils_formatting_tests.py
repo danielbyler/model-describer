@@ -125,7 +125,7 @@ class TestWhiteBoxError(unittest.TestCase):
                                               html_type='accuracy')
 
         self.assertEqual(list(json_out.keys()),
-                         ['Type', 'ErrType', 'Data'],
+                         ['Type', 'ErrType', 'Yvar', 'Data'],
                          """json_out keys not expected for html_type accuracy""")
 
     def test_format_FmtJson_to_json_html_type_sensitivity(self):

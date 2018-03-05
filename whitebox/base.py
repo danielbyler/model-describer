@@ -354,10 +354,9 @@ class WhiteBoxBase(object):
             if len(colhold) > 0:
                 placeholder.append(formatting.FmtJson.flatten_json(colhold))
             # TODO redirect stdout so progress bar can output to single line
-            sys.stdout.write('\rPercent Complete: {per:2.0f}%'.format(per=(idx/len(to_iter_cols))*100))
-            sys.stdout.flush()
-        sys.stdout.write('\rPercent Complete: 100%')
-        sys.stdout.flush()
+            wb_utils.sysprint('Percent Complete: {per:2.0f}%'.format(per=(idx/len(to_iter_cols))*100))
+
+        wb_utils.sysprint('Percent Complete: 100%')
         logging.info('Converting accuracy outputs to json format')
         # finally convert insights_df into json object
         # convert insights list to dataframe
@@ -365,7 +364,8 @@ class WhiteBoxBase(object):
         insights_json = formatting.FmtJson.to_json(insights_df.round(self.round_num),
                                                    html_type='accuracy',
                                                    vartype='Accuracy',
-                                                   err_type=self.error_type)
+                                                   err_type=self.error_type,
+                                                   ydepend=self.ydepend)
         # append to outputs
         placeholder.append(insights_json)
         # append percentiles
