@@ -127,7 +127,7 @@ html,body{
     outline: none;
 }
 .heatMapContainer{
-    height: 150px;
+    height: 120px;
     width: 74%;
     margin-left: 1%;
     padding-top: 5px;
@@ -183,6 +183,7 @@ svg text {
 .app{ 
     width: 74%;
     float:left;
+    overflow: auto;
 }
 .Chartcontainer{
     margin-top: 150px;

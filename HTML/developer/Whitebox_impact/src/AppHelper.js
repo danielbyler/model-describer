@@ -61,4 +61,11 @@ export default class AppHelper {
             return aA > bA ? 1 : -1;
         }
     }
+    
+    shortenString(s){
+        if (s.length >= 20){
+            return s.slice(0,20)+"..."
+        }
+        else return s
+    }
 }

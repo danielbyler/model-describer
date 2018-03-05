@@ -1,7 +1,9 @@
 //Importing helper functions
 import AppHelper from './AppHelper.js';
 //Importing Data
-import { AppData } from './AppData.js';
+import {
+    AppData
+} from './AppData.js';
 //SASS Import to DOM at runtime
 require('./styles/index.scss');
 //Creatign helper functions object
@@ -35,18 +37,18 @@ d3.select('body').on('click', function () {
 
 
 //Intializing global variables
-var colorList =["#86BC25", "#00A3E0", "#00ABAB", "#C4D600",  "#2C5234", "#9DD4CF", "#004F59", "#62B5E5", "#43B02A", "#0076A8","#9DD4CF", "#012169"]
+var colorList = ["#86BC25", "#00A3E0", "#00ABAB", "#C4D600", "#2C5234", "#9DD4CF", "#004F59", "#62B5E5", "#43B02A", "#0076A8", "#9DD4CF", "#012169"]
 var margin = {
     top: 20,
     right: 15,
     bottom: 60,
     left: 60
 }
-var permKeys = ['predictedYSmooth','groupByVarName','groupByValue','highlight','errNeg','errPos']
+var permKeys = ['predictedYSmooth', 'groupByVarName', 'groupByValue', 'highlight', 'errNeg', 'errPos']
 var percFlag = true;
 var yVar = 'Quality'
 var showingTooltip = false;
-var percList = [10,50,90]
+var percList = [10, 50, 90]
 var heatMapData = {}
 var colorDict = {}
 var width, svg, svgHeat, globalHeightOffset, percentScale, responses;
@@ -78,7 +80,7 @@ function heatMapClick(d, i) {
 }
 
 //Toggle percentile lines function
-function togglePercentile(){
+function togglePercentile() {
     percFlag = document.getElementById("percentileCheck").checked
     d3.select(".Chartcontainer").selectAll("*").remove()
     width = appHelper.getWidth();
@@ -92,9 +94,11 @@ function intializeFilterDropdown() {
     var filterList = prepareFilterData()
     var typeEl = filterContainer.append("div")
         .attr("class", "dropdown")
+    
+    console.log(groupBy)
     typeEl.append("button")
         .attr("class", "dropbtn")
-        .html("<b>Group By:</b> " + groupBy)
+        .html("<b>Group By:</b> " + appHelper.shortenString(groupBy))
         .append("span")
         .style("float", "right")
         .html(" ▼")
@@ -111,10 +115,10 @@ function intializeFilterDropdown() {
         .attr("onclick", function (d) {
             return "intializeTreeMap('" + d + "')"
         })
-    
+
     var percCheck = filterContainer.append("div")
-                                    .attr("class","perc-check")
-                                    .html("<input id='percentileCheck' class='perc-checkinput' checked='true' onchange='togglePercentile()' type='checkbox'><label for='percentileCheck'>Percentiles</label>")
+        .attr("class", "perc-check")
+        .html("<input id='percentileCheck' class='perc-checkinput' checked='true' onchange='togglePercentile()' type='checkbox'><label for='percentileCheck'>Percentiles</label>")
 
 }
 
@@ -165,7 +169,7 @@ function intializeTreeMap(type) {
 
     groupBy = type
     createColorDict()
-    d3.select(".dropbtn").html("<b>Group By:</b> " + groupBy).append("span")
+    d3.select(".dropbtn").html("<b>Group By:</b> " + appHelper.shortenString(groupBy)).append("span")
         .style("float", "right")
         .html(" ▼")
     var data = getTreeMapData(groupBy)
@@ -273,8 +277,6 @@ function intializeTreeMap(type) {
 
 
 
-    console.log(metaData['ErrType'])
-
     cell.append("text")
         .attr("clip-path", function (d) {
             return "url(#clip-" + d.data.id + ")";
@@ -313,7 +315,7 @@ function intializeTreeMap(type) {
             }
         })
         .style("fill", "#fff");
-    
+
     cell.append("text")
         .attr("clip-path", function (d) {
             return "url(#clip-" + d.data.id + ")";
@@ -363,8 +365,7 @@ function getTreeMapData(type) {
     var statDataF = metaData['statData'].filter(function (d) {
         return d['groupByVarName'] == type
     })
-    
-    console.log(statDataF,metaData['statData'],type)
+    console.log(filteredSample)
     var nestedSample = d3.nest()
         .key(function (d) {
             return d['groupByValue']
@@ -372,7 +373,7 @@ function getTreeMapData(type) {
         .rollup(function (ids) {
             return ids.length
         })
-        .entries(filteredSample)
+        .entries(statDataF)
     nestedSample.forEach(function (d) {
         var temp = {}
         temp['name'] = d.key
@@ -405,17 +406,17 @@ function prepareFilterData() {
 //Function to get the xth percentile of the data given
 //Function to get the xth percentile of the data given
 function getXthPercentaile(dataList, x, cat, varX) {
-    
-    var varDict = metaData['percData'].filter(function(d){
+
+    var varDict = metaData['percData'].filter(function (d) {
         return d.variable == varX
     })[0]
-    
-    var typeDict = varDict['percentileList'].filter(function(d){
+
+    var typeDict = varDict['percentileList'].filter(function (d) {
         return d.groupByVar == cat
     })[0]
-    
-    var percDict = typeDict['percentileValues'].filter(function(d){
-        return d.percentiles == x+"%"
+
+    var percDict = typeDict['percentileValues'].filter(function (d) {
+        return d.percentiles == x + "%"
     })[0]
     return percDict.value
     /*var filteredData = dataList.filter(function (d) {
@@ -435,11 +436,12 @@ function getXthPercentaile(dataList, x, cat, varX) {
         }
         return appHelper.formatLabel(percentileValue)
     }*/
-    
+
 }
+
 function getXthPercentaileGlobal(dataList, x, cat, varX) {
     var varDict = metaData['percGData'].filter(function (d) {
-        return d.variable == varX & d.percentile == x+"%"
+        return d.variable == varX & d.percentile == x + "%"
     })[0]
 
     return varDict.value
@@ -464,7 +466,7 @@ function getXthPercentaileGlobal(dataList, x, cat, varX) {
 }
 //function to return the quartile data from the data provided for continous variables
 function createQuartileData(dataList, varX, cats) {
-    if(cats.length==0) return 0;
+    if (cats.length == 0) return 0;
     var varRange = d3.extent(dataList.map(function (d) {
         return d[varX]
     }))
@@ -474,7 +476,7 @@ function createQuartileData(dataList, varX, cats) {
     returnDict['underEst'] = ''
     statData['quartiles'] = []
     var diff = d3.quantile(varRange, 0.25) - d3.min(varRange)
-    
+
     for (var i = 1; i <= 4; i++) {
         for (var c in cats) {
 
@@ -482,9 +484,9 @@ function createQuartileData(dataList, varX, cats) {
             var quartile = {}
             quartile['quarter'] = i
             quartile['group'] = cat
-            var low = getXthPercentaile(dataList,(i-1)*25,cat,varX)
-            var high = getXthPercentaile(dataList,(i)*25,cat,varX)
-            quartile['range'] = [low,high]
+            var low = getXthPercentaile(dataList, (i - 1) * 25, cat, varX)
+            var high = getXthPercentaile(dataList, (i) * 25, cat, varX)
+            quartile['range'] = [low, high]
             var filtData = dataList.filter(function (d) {
                 return d[varX] >= low && d[varX] <= high && d['groupByValue'] == cat
             })
@@ -630,7 +632,9 @@ function createColorDict() {
         })
         if (chartRawData.length > 0) {
             var varArray = chartRawData[0]
-            var varX = Object.keys(varArray).filter(function(d){return permKeys.indexOf(d) < 0})[0]
+            var varX = Object.keys(varArray).filter(function (d) {
+                return permKeys.indexOf(d) < 0
+            })[0]
             colorDict[varX] = {}
             colorDict["heat"] = {}
             chartRawData.forEach(function (d) {
@@ -654,7 +658,6 @@ function createColorDict() {
 function prepareAppData() {
     AppData.filter(function (d, i) {
         if (d.Type == "Accuracy") {
-            console.log(d)
             metaData['statData'] = d.Data
             metaData['ErrType'] = d['ErrType']
             AppData.splice(i, 1)
@@ -695,11 +698,13 @@ function loopVariables(varInd) {
     if (filterChartRawData.length == 0) {
         return null;
     }
-    var varX = Object.keys(AppData[varInd]['Data'][0]).filter(function(d){return permKeys.indexOf(d) < 0})[0]
+    var varX = Object.keys(AppData[varInd]['Data'][0]).filter(function (d) {
+        return permKeys.indexOf(d) < 0
+    })[0]
     var width = appHelper.getWidth() * 0.74 - margin.left - margin.right;
     var height = 300 - margin.top - margin.bottom;
-    var chartLevel = mainApp.append("div").attr("class", "chart-lev").attr("id", "topchlvl-" + varX.replace(/[^a-zA-Z]/g, "")).style("height", "430px")
-    var main = chartLevel.append("div").attr("class", "app").attr("id", "chlvl-" + varX.replace(/[^a-zA-Z]/g, ""))
+    var chartLevel = mainApp.append("div").attr("class", "chart-lev").attr("id", "topchlvl-" + varX.replace(/[^a-zA-Z]/g, ""))
+    var main = chartLevel.append("div").attr("class", "app").attr("id", "chlvl-" + varX.replace(/[^a-zA-Z]/g, "")).style("height", "450px")
     var title = main.append('div').attr('class', 'Title')
     var legendGroup = main.append("div").attr("class", "legend").attr("width", width - 100).attr("height", height - 100)
 
@@ -719,8 +724,8 @@ function loopVariables(varInd) {
             filterCategories[varX].push(d['groupByValue'])
         }
     })
-    
-   //creating the nested data in the format required for d3.stack() function
+
+    //creating the nested data in the format required for d3.stack() function
     var chartRawData = []
     var nestedData = d3.nest().key(function (d) {
         return d[varX]
@@ -740,24 +745,527 @@ function loopVariables(varInd) {
         })
         chartRawData.push(data)
     })
-    
+
     //checking for categorical/continous variables
     var varArray = chartRawData[0]
     if (AppData[varInd]['Type'] == "Continuous") {
         changePar = appHelper.formatLabel(AppData[varInd]['Change'].indexOf("Default") >= 0 ? (AppData[varInd]['Change'].split(":")[1]) : AppData[varInd]['Change'])
-        initializeAreaChart()
+        initializeLineChart()
     } else if (AppData[varInd]['Type'] == "Categorical") {
         changePar = AppData[varInd]['Change'].indexOf("Default") >= 0 ? (AppData[varInd]['Change'].split(":")[1]) : AppData[varInd]['Change']
         initializeBarChart()
     }
+    //function to intialize line charts
+
+    function initializeLineChart() {
+        //getting the list of the type variables present in the filtered data and sorting them
+        var categories = []
+        var unfiltCats = []
+        filterChartRawData.forEach(function (d) {
+            if (categories.indexOf(d['groupByValue']) < 0) {
+                categories.push(d['groupByValue'])
+            }
+        })
+        AppData[varInd]['Data'].forEach(function (d) {
+            if (unfiltCats.indexOf(d['groupByValue']) < 0 & d['groupByVarName'] == groupBy) {
+                unfiltCats.push(d['groupByValue'])
+            }
+        })
+        
+        var lineChartRawData = []
+        //prepearing data for line chart
+        var nestedLineData = d3.nest().key(function (d) {
+            return d[varX]
+        }).entries(AppData[varInd]['Data'])
+        
+        nestedLineData.forEach(function (d) {
+            var data = {}
+            data[varX] = AppData[varInd]['Type'] == "Continuous" ? parseFloat(d.key) : d.key
+            
+                
+            unfiltCats.forEach(function (p) {
+                var reDatum = d.values.filter(function (k) {
+                    return k['groupByValue'] == p
+                })
+                if (reDatum.length == 1) {
+                    data[p] = reDatum[0]['predictedYSmooth']
+                } else {
+                    data[p] = null
+                }
+            })
+            lineChartRawData.push(data)
+        })
+
+        //creating the svg for the area chart
+        svg = appHelper.createChart(chartContainer, width);
+        appHelper.setTitle(title, "Impact of " + (changePar >= 0 ? "increasing" : "decreasing") + " " + varX + " by " + changePar + (AppData[varInd]['Change'].indexOf("Default") >= 0 ? " (1 standard deviation) " : "") + " on " + yVar);
+        svg.selectAll('*').remove();
+        svg.attr('width', width);
+
+
+
+        categories = categories.sort(appHelper.sortAlphaNum)
+        //intializing few local variables
+        var widthOffset = 140
+        var legendPerRow = parseInt(width / widthOffset)
+        var numOfRows = Math.ceil(categories.length / legendPerRow)
+
+        var overLay = svg.append("rect")
+                .attr("class", "overlay")
+                .attr("width", width - margin.left)
+                .attr("height", height)
+                .attr("x", margin.left)
+                .attr("y", margin.top + numOfRows * 30)
+                .style("fill", "none")
+                .style("cursor","pointer")
+                .style("pointer-events","all")
+
+        //adding the legend for the percentile lines
+        var percLegend = svg.append("g")
+            .attr("transform", "translate(" + (100) + "," + (height + numOfRows * 30 + 55) + ")")
+        var percLine = percLegend.append("line")
+            .attr("x1", 0)
+            .attr("y1", 0)
+            .attr("x2", 20)
+            .attr("y2", 0)
+            .attr("stroke", "#75787B")
+            .attr("stroke-width", "3px")
+        var percLine = percLegend.append("text")
+            .text("Percentile")
+            .attr("x", 30)
+            .attr("y", 5)
+        
+        /*var percLine = percLegend.append("line")
+            .attr("x1", 120)
+            .attr("y1", 0)
+            .attr("x2", 140)
+            .attr("y2", 0)
+            .attr("stroke", "#75787B")
+            .attr("stroke-width", "3px")
+            .attr("stroke-dasharray","3,3")*/
+        /*var percLine = percLegend.append("text")
+            .text("Total Impact")
+            .attr("x", 150)
+            .attr("y", 5)*/
+
+        //setting up the height based on the legend height
+        svg.attr('height', 300 + numOfRows * 30);
+
+        //intializing the scale for the axes 
+        var x = d3.scaleLinear().range([margin.left, width])
+        var y = d3.scaleLinear().range([height - 30, 0])
+
+        //Adding the line functions
+        var line = d3.line()
+            .x(function (d) {
+                return x(d[varX])
+            })
+            .y(function (d) {
+                return y(d['predictedYSmooth'])
+            })
+            .curve(d3.curveBasis)
+
+        //creating elements for percentiles and percentile text
+        var refLines = svg.append("g").attr("class", "percRefLines").attr("transform", "translate(10,0)")
+        var refLinesText = svg.append("g").attr("class", "textRefLines").attr("transform", "translate(10,0)")
+
+        //adding x axis element
+        var xAxisElement = svg.append("g").attr("class", "xAxis").attr("transform", "translate(10," + (height + numOfRows * 30 + 20) + ")")
+
+        //adding yaxis element
+        var yAxisElement = svg.append("g").attr("class", "yAxis").attr("transform", "translate(60,70)")
+
+        //adding group element for area paths
+        var lineGroup = svg.append("g").attr("class", "lineG").attr("transform", "translate(10," + (numOfRows * 30 + 40) + ")")
+
+        var lineTGroup = svg.append("g").attr("class", "lineGT").attr("transform", "translate(10," + (numOfRows * 30 + 40) + ")")
+
+        //adding and formatting x labels
+        var xLabel = svg.append("text").attr("class", "label").attr("transform", "translate(" + width / 2 + "," + (height + numOfRows * 30 + 60) + ")").style("text-anchor", "middle").text(varX)
+
+        //adding an dformatting y-label
+        var yLabel = svg.append("text").attr("class", "label").attr("transform", "translate(15," + (height - 50) + ")rotate(-90)").style("text-anchor", "middle").text("Impact on " + yVar)
+
+        //adding element for on hover reference line
+        var refLine = svg.append("line")
+            .style("opacity", 0)
+            .attr("x1", 0)
+            .attr("y1", numOfRows * 30+30)
+            .attr("x2", 0)
+            .attr("y2", height + numOfRows * 30 + 20)
+            .attr("stroke", "#75787B")
+
+        //setting up a dummy inital domain for y-axis
+        y.domain([-1, 1])
+
+        //positioning and calling the y-axix
+        var yAxis = d3.axisLeft().scale(y).tickSizeInner(-width + margin.left-10)
+        yAxisElement.call(yAxis)
+
+        function drawChart(onlyResizeFlag) {
+            var minVal = 0
+            var maxVal = 0
+            var chartData = []
+            var filtCategories = filterCategories[varX]
+            var chartData = filterChartRawData.filter(function (d) {
+                return filtCategories.indexOf(d['groupByValue']) >= 0
+            })
+            //extarcting the y-values in to new variable
+            lineChartRawData.filter(function (d, i) {
+                var data = {}
+                data[varX] = d[varX]
+                var propSum = 0
+                unfiltCats.forEach(function (c) {
+                    var prop = metaData['proportion'].filter(function (t) {
+                        return t.name == c
+                    })[0].perc / 100
+                    propSum += d[c] * prop
+                })
+                data['predictedYSmooth'] = propSum
+                data['groupByValue'] = 'Total'
+                chartData.push(data)
+            })
+
+
+
+
+
+            //creating the quartile data
+            var indata = createQuartileData(filterChartRawData, varX, filterCategories[varX])
+            //updating the narrative text element based on the quartile data
+            narrativeText.html("<ul style='list-style-type:disc' > <li>Across all categories, the impact of <b>" + varX + " </b> on <b>" + yVar + "</b> is lowest from <b> [" + indata['lowestRange'] + "] </b> " + indata['lowestGroup'] + " and highest from <b> [" + indata['highestRange'] + "] </b> " + indata['highestGroup'] + "</li> <li> The impact of <b>" + varX + " </b>  on <b>" + yVar + "</b> from <b> [" + indata['highestRange'] + "]  </b>" + indata['highestGroup'] + " is  " + appHelper.formatLabel(indata['diffMaxOverall']) + " higher than the overall median imapct and " + appHelper.formatLabel(indata['diffMaxMin']) + " higher than the average impact from <b> [" + indata['lowestRange'] + "] </b>" + indata['lowestGroup'] + "</li> </ul>")
+            var percDataList = []
+            //extracting the percentile data for each group by value
+            for (var p in percList) {
+                var sum = 0
+                var sumProp = 0
+                for (var c in filterCategories[varX]) {
+                    var cat = filterCategories[varX][c]
+
+                    var perc = filterCategories[varX].length == unfiltCats.length ? getXthPercentaileGlobal(chartRawData, percList[p], cat, varX) : getXthPercentaile(chartRawData, percList[p], cat, varX)
+                    var prop = metaData['proportion'].filter(function (d) {
+                        return d.name == cat
+                    })[0]['perc'] / 100
+                    sum += perc * prop
+                    sumProp += prop
+                }
+                percDataList.push({
+                    "percentile": percList[p],
+                    "value": appHelper.formatLabel(sum / sumProp)
+                })
+            }
+
+            //sorting the data from maximum to minimum
+            chartData = chartData.sort(function (a, b) {
+                return a[varX] - b[varX]
+            })
+
+            //setting up the domain for x axis
+            x.domain(d3.extent(chartData, function (d) {
+                return d[varX]
+            }))
+            chartData.forEach(function (d) {
+                minVal = d3.min([minVal, d['predictedYSmooth']])
+                maxVal = d3.max([maxVal, d['predictedYSmooth']])
+            })
+            //setting up the domain for y-axis based on the stacked values
+            y.domain([minVal, maxVal])
+            var xAxis = d3.axisBottom().scale(x)
+            yAxisElement.transition().duration(1000).call(yAxis)
+
+            //updating the percentile line positions based on the data check box option
+            if (percFlag & filterCategories[varX].length != 0) {
+                var refs = refLines.selectAll("line")
+                    .data(percDataList).style("opacity", 1)
+                refs.exit().remove()
+                refs.enter().append("line")
+                    .style("opacity", 1)
+                    .attr("x1", function (d) {
+                        return x(d['value'])
+                    })
+                    .attr("y1", numOfRows * 30 + 40)
+                    .attr("x2", function (d) {
+                        return x(d['value'])
+                    })
+                    .attr("y2", height + numOfRows * 30 + 20)
+                    .attr("stroke", "#75787B")
+                    .attr("stroke-width", "2px")
+
+                refs.transition().attr("x1", function (d) {
+                        return x(d['value'])
+                    })
+                    .attr("y1", numOfRows * 30 + 40)
+                    .attr("x2", function (d) {
+                        return x(d['value'])
+                    })
+                    .attr("y2", height + numOfRows * 30 + 20)
+                    .attr("stroke", "#75787B")
+                    .attr("stroke-width", "2px")
+                var refsText = refLinesText.selectAll("text")
+                    .data(percDataList).style("opacity", 1)
+                refsText.exit().remove()
+                refsText.enter().append("text")
+                    .text(function (d) {
+                        return d['percentile']
+                    })
+                    .attr('transform', function (d) {
+                        return "translate(" + (x(d['value']) - 5) + ",65)"
+                    })
+
+                refsText.transition()
+                    .text(function (d) {
+                        return d['percentile']
+                    })
+                    .attr('transform', function (d) {
+                        return "translate(" + (x(d['value']) - 5) + ",65)"
+                    })
+
+            }
+            if (filterCategories[varX].length == 0) {
+                refLines.selectAll("line").style("opacity", 0)
+                refLinesText.selectAll("text").style("opacity", 0)
+            }
+
+            //adding the grid lines for y-axis
+            yAxisElement.selectAll("line").attr("opacity", 0.05).style("stroke-dasharray", ("5, 5"))
+            xAxisElement.call(xAxis)
+
+            lineGroup.selectAll(".path").remove()
+            var linePaths = lineGroup.selectAll(".path")
+                .data(filtCategories)
+
+
+            linePaths.exit().transition().duration(500).remove()
+
+            linePaths.enter().append("path")
+                .attr("fill", "none")
+                .attr("class", function (d) {
+                    return "path layer" + d + " path" + d + varInd + " layer" + varInd
+                })
+                .attr("stroke", function (d) {
+                    return colorDict[varX][d]
+                })
+                .attr("stroke-width", "2px")
+                .datum(function (d) {
+
+                    var filteredData = []
+                    chartData.map(function (k) {
+                        if (k['groupByValue'] == d) {
+                            filteredData.push(k)
+                        }
+                    });
+                    return filteredData
+                })
+                .style("cursor","pointer")
+                .attr("d", line)
+                .on("mouseenter", mouseenter)
+                .on("mousemove", mousemove)
+                .on("mouseout", mouseout)
+
+
+            /*var linePaths = lineTGroup.selectAll("path")
+                .data(['Total'])
+                .enter().append("path")
+                .attr("fill", "none")
+                .attr("class", function (d) {
+                    return "path layer" + d + " path" + d + varInd + " layer" + varInd
+                })
+                .attr("stroke", function (d) {
+                    return "#63666A"
+                })
+                .attr("stroke-width", "2px")
+                .style("stroke-dasharray", ("5, 5"))
+                .datum(function (d) {
+
+                    var filteredData = []
+                    chartData.map(function (k) {
+                        if (k['groupByValue'] == d) {
+                            filteredData.push(k)
+                        }
+                    });
+                    return filteredData
+                })
+                .attr("d", line)*/
+            //adding legend buttons in the top
+            var legend = legendGroup.selectAll("button")
+                .data(categories.sort(appHelper.sortAlphaNum))
+                .enter().append("button")
+                .attr("class", "legend-btn")
+                .style("background-color", function (d) {
+
+                    return colorDict[varX][d]
+                })
+                .style("cursor", "pointer")
+                .on("click", legendClick)
+                .on("mouseover", legendMouseOver)
+                .on("mouseout", legendMouseOut)
+                .html(function (d) {
+                    return d
+                })
+            //adding overlay for hover functionality
+            
+            overLay.on("mouseenter", mouseenter)
+                .on("mousemove", mousemove)
+                .on("mouseout", mouseout)
+
+            //event listeners for the legend buttons
+            function legendMouseOver(d, i) {
+                d3.selectAll(".layer" + varInd).style("opacity", 0.25)
+                d3.selectAll(".path" + d + varInd).style("opacity", 1).attr("stroke-width", "3px")
+            }
+
+            function legendMouseOut(d, i) {
+                d3.selectAll(".layer" + varInd).style("opacity", 1).attr("stroke-width", "2px")
+            }
+
+            function legendClick(d, i) {
+                if (filterCategories[varX].indexOf(d) >= 0) {
+                    filterCategories[varX].splice(filterCategories[varX].indexOf(d), 1)
+                    drawChart(false)
+                    d3.select(this).style("opacity", 0.5).style("background-color", "#A7A8AA")
+
+                } else {
+                    filterCategories[varX].push(d)
+                    drawChart(false)
+                    d3.select(this).style("opacity", 1).style("background-color", colorDict[varX][d])
+                }
+            }
+            //functions to show mosue over values for the area charts
+            function mousemove(d) {
+                var closestXValue = getClosestxValue()
+                tooltip.style("left", function () {
+                    var tooltipWidth = this.getBoundingClientRect().width;
+                    var currentMouseX = d3.event.pageX;
+                    if (width > tooltipWidth + currentMouseX + 25) {
+                        return (d3.event.pageX + 5) + "px";
+                    } else {
+                        if (d3.event.pageX - tooltipWidth - 5 < 10) {
+                            return "10px";
+                        }
+                        return (d3.event.pageX - tooltipWidth - 5) + "px";
+                    }
+                }).style("top", (d3.event.pageY - 28) + "px").style('opacity', 1);
+                refLine.transition().style("opacity", 1).attr("x1", x(closestXValue) + 10).attr("x2", x(closestXValue) + 10).style("color","#63666A")
+                
+                var filtTotal = chartData.filter(function (d) {
+                    return d[varX] == closestXValue & d['groupByValue'] == 'Total'
+                })[0]
+                
+                var tooltipHtml = "The model believes that " + (changePar >= 0 ? "increasing" : "decreasing") + " <span>" + varX + "</span> from <span> " + appHelper.formatLabel(filtTotal[varX]) + " </span> to <span>" + (appHelper.formatLabel(parseFloat(filtTotal[varX]) + parseFloat(changePar))) + "</span> leads to, on average, changes "+yVar+" by"
+                categories.forEach(function(q){
+                    var filt = chartData.filter(function (p) {
+                        
+                    return (p[varX] == closestXValue) & (p['groupByValue'] == q)
+                })
+                    if(filt.length > 0){
+                    tooltipHtml += " a <span style='color:"+colorDict[varX][q]+"'>"+appHelper.formatLabel(filt[0]['predictedYSmooth'])+(appHelper.formatLabel(filt[0]['predictedYSmooth']) >= 0 ? " increase" : " decrease")+"</span> for " +q+","
+                    }
+                })
+                tooltipHtml = tooltipHtml.slice(0,tooltipHtml.length-1)
+                
+                +appHelper.formatLabel(filtTotal['predictedYSmooth'])+  "</span>."
+
+                tooltip.html(tooltipHtml).style("color","#63666A")
+
+            }
+
+            function mouseout(d) {
+                d3.selectAll(".layer" + varInd).style("opacity", 1).attr("stroke-width", "2px")
+                tooltip.transition().style("opacity", 0);
+                showingTooltip = false;
+                refLine.transition().style("opacity", 0)
+            }
+
+            function mouseenter(d, i) {
+
+                var closestXValue = getClosestxValue()
+                setTimeout(function () {
+                    showingTooltip = true;
+                }, 300)
+                
+                var filtTotal = chartData.filter(function (p) {
+                    return p[varX] == closestXValue & d['groupByValue'] == 'Total'
+                })[0]
+                tooltip.attr('class', "" + varInd + i);
+                var filtTotal = chartData.filter(function (d) {
+                    return d[varX] == closestXValue & d['groupByValue'] == 'Total'
+                })[0]
+                tooltipHtml = ""
+                
+                var tooltipHtml = "The model believes that " + (changePar >= 0 ? "increasing" : "decreasing") + " <span>" + varX + "</span> from <span> " + appHelper.formatLabel(filtTotal[varX]) + " </span> to <span>" + (appHelper.formatLabel(parseFloat(filtTotal[varX]) + parseFloat(changePar))) + "</span> leads to, on average, changes "+yVar+" by "
+                
+                categories.forEach(function(q){
+                    var filt = chartData.filter(function (p) {
+                    return p[varX] == closestXValue & p['groupByValue'] == q
+                    })
+                    if(filt.length >= 0){
+                    tooltipHtml += "a <span>"+filt[0]['predictedYSmooth']+(appHelper.formatLabel(filt[0]['predictedYSmooth']) >= 0 ? " increase" : " decrease")+"</span> for " +q+","
+                    }
+                })
+                
+                tooltipHtml += " and an <span> overall average of " +appHelper.formatLabel(filtTotal['predictedYSmooth'])+  "</span>."
+
+                tooltip.html(tooltipHtml).style("color","#63666A")
+                    .style("left", function () {
+                        var tooltipWidth = this.getBoundingClientRect().width;
+                        var currentMouseX = d3.event.pageX;
+                        if (width > tooltipWidth + currentMouseX + 25) {
+                            return (d3.event.pageX + 5) + "px";
+                        } else {
+                            if (d3.event.pageX - tooltipWidth - 5 < 10) {
+                                return "10px";
+                            }
+                            return (d3.event.pageX - tooltipWidth - 5) + "px";
+                        }
+                    })
+                    .style("top", (d3.event.pageY - 28) + "px")
+                
+
+                d3.select(this).style("opacity", 1).attr("stroke-width", "3px")
+            }
+
+
+
+
+        }
+        //helper function to set the reference value at the mouse over position
+        function getClosestxValue() {
+            var xPos = x.invert(d3.event.pageX - appHelper.getWidth() * 0.02)
+            var xValues = chartRawData.map(function (d) {
+                return d[varX]
+            })
+            var xClosest = getClosest(xPos, xValues)
+            return xClosest
+        }
+        //getting the closest value from the list 
+        function getClosest(num, arr) {
+            var curr = arr[0];
+            var diff = Math.abs(num - curr);
+            for (var val = 0; val < arr.length; val++) {
+                var newdiff = Math.abs(num - arr[val]);
+                if (newdiff < diff) {
+                    diff = newdiff;
+                    curr = arr[val];
+                }
+            }
+            return curr;
+        }
+
+
+
+        drawChart(false)
+
+    }
+
+
     //function to initialize the area chart
     function initializeAreaChart() {
         //creating the svg for the area chart
         svg = appHelper.createChart(chartContainer, width);
-        appHelper.setTitle(title, "Impact of "+(changePar>=0?"increasing":"decreasing")+" " + varX + " by " + changePar + (AppData[varInd]['Change'].indexOf("Default") >= 0 ? " (1 standard deviation) " : "") + " on " + yVar);
+        appHelper.setTitle(title, "Impact of " + (changePar >= 0 ? "increasing" : "decreasing") + " " + varX + " by " + changePar + (AppData[varInd]['Change'].indexOf("Default") >= 0 ? " (1 standard deviation) " : "") + " on " + yVar);
         svg.selectAll('*').remove();
         svg.attr('width', width);
-        
+
         //getting the list of the type variables present in the filtered data and sorting them
         var categories = []
         filterChartRawData.forEach(function (d) {
@@ -770,30 +1278,30 @@ function loopVariables(varInd) {
         var widthOffset = 140
         var legendPerRow = parseInt(width / widthOffset)
         var numOfRows = Math.ceil(categories.length / legendPerRow)
-        
+
         //adding the legend for the percentile lines
         var percLegend = svg.append("g")
-                            .attr("transform","translate("+(100)+","+(height+numOfRows * 30+55)+")")
+            .attr("transform", "translate(" + (100) + "," + (height + numOfRows * 30 + 55) + ")")
         var percLine = percLegend.append("line")
-                            .attr("x1", 0)
-                            .attr("y1", 0)
-                            .attr("x2", 20)
-                            .attr("y2",  0)
-                            .attr("stroke", "#75787B")
-                            .attr("stroke-width","3px")
-       var percLine     =  percLegend.append("text")
-                                    .text("Percentile")
-                                    .attr("x",30)
-                                    .attr("y",5)
-       
-       
-       //setting up the height based on the legend height
+            .attr("x1", 0)
+            .attr("y1", 0)
+            .attr("x2", 20)
+            .attr("y2", 0)
+            .attr("stroke", "#75787B")
+            .attr("stroke-width", "3px")
+        var percLine = percLegend.append("text")
+            .text("Percentile")
+            .attr("x", 30)
+            .attr("y", 5)
+
+
+        //setting up the height based on the legend height
         svg.attr('height', 300 + numOfRows * 30);
-       
-       //intializing the scale for the axes 
+
+        //intializing the scale for the axes 
         var x = d3.scaleLinear().range([margin.left, width])
         var y = d3.scaleLinear().range([height - 30, 0])
-        
+
         //Adding the area functions
         var area = d3.area()
             .x(function (d) {
@@ -817,107 +1325,113 @@ function loopVariables(varInd) {
                 return y(0)
             })
             .curve(d3.curveBasis)
-        
+
         //creating elements for percentiles and percentile text
-        var refLines = svg.append("g").attr("class","percRefLines").attr("transform","translate(10,0)")
-        var refLinesText = svg.append("g").attr("class","textRefLines").attr("transform","translate(10,0)")
-        
+        var refLines = svg.append("g").attr("class", "percRefLines").attr("transform", "translate(10,0)")
+        var refLinesText = svg.append("g").attr("class", "textRefLines").attr("transform", "translate(10,0)")
+
         //adding x axis element
         var xAxisElement = svg.append("g").attr("class", "xAxis").attr("transform", "translate(10," + (height + numOfRows * 30 + 20) + ")")
-        
+
         //adding yaxis element
         var yAxisElement = svg.append("g").attr("class", "yAxis").attr("transform", "translate(60,70)")
-        
+
         //adding group element for area paths
         var pathGroup = svg.append("g")
-        
+
         //adding and formatting x labels
         var xLabel = svg.append("text").attr("class", "label").attr("transform", "translate(" + width / 2 + "," + (height + numOfRows * 30 + 60) + ")").style("text-anchor", "middle").text(varX)
-        
+
         //adding an dformatting y-label
         var yLabel = svg.append("text").attr("class", "label").attr("transform", "translate(15," + (height - 50) + ")rotate(-90)").style("text-anchor", "middle").text("Impact on " + yVar)
-        
+
         //adding element for on hover reference line
         var refLine = svg.append("line")
             .style("opacity", 0)
             .attr("x1", 0)
-            .attr("y1", numOfRows * 30)
+            .attr("y1", numOfRows * 30 + 20)
             .attr("x2", 0)
             .attr("y2", height + numOfRows * 30 + 20)
             .attr("stroke", "#75787B")
-        
+
         //setting up a dummy inital domain for y-axis
         y.domain([-1, 1])
-        
+
         //positioning and calling the y-axix
         var yAxis = d3.axisLeft().scale(y).tickSizeInner(-width + margin.left)
         yAxisElement.call(yAxis)
-        
+
         //function to update the elements, this will help in updating in existing dom elements without creating new
         function drawChart(onlyResizeFlag) {
             //variables to get the range of the y-axis
             var minVal = 0
             var maxVal = 0
             var chartData = []
-            
+
             //extarcting the y-values in to new variable
-             chartRawData.filter(function (d,i) {
+            chartRawData.filter(function (d, i) {
                 var data = {}
                 data[varX] = d[varX]
                 filterCategories[varX].forEach(function (c) {
-                    var prop = metaData['proportion'].filter(function(t){return t.name==c})[0].perc/100
-                    data[c] = categories.length==filterCategories[varX].length? d[c]*prop:d[c]
+                    var prop = metaData['proportion'].filter(function (t) {
+                        return t.name == c
+                    })[0].perc / 100
+                    data[c] = categories.length == filterCategories[varX].length ? d[c] * prop : d[c]
                 })
                 chartData.push(data)
             })
-            
+
             //creating the quartile data
             var indata = createQuartileData(filterChartRawData, varX, filterCategories[varX])
             //updating the narrative text element based on the quartile data
             narrativeText.html("<ul style='list-style-type:disc' > <li>Across all categories, the impact of <b>" + varX + " </b> on <b>" + yVar + "</b> is lowest from <b> [" + indata['lowestRange'] + "] </b> " + indata['lowestGroup'] + " and highest from <b> [" + indata['highestRange'] + "] </b> " + indata['highestGroup'] + "</li> <li> The impact of <b>" + varX + " </b>  on <b>" + yVar + "</b> from <b> [" + indata['highestRange'] + "]  </b>" + indata['highestGroup'] + " is  " + appHelper.formatLabel(indata['diffMaxOverall']) + " higher than the overall median imapct and " + appHelper.formatLabel(indata['diffMaxMin']) + " higher than the average impact from <b> [" + indata['lowestRange'] + "] </b>" + indata['lowestGroup'] + "</li> </ul>")
             var percDataList = []
             //extracting the percentile data for each group by value
-            for (var p in percList){
-            var sum = 0
-            var sumProp = 0
-            for (var c in filterCategories[varX]){
-                var cat = filterCategories[varX][c]
-                
-                var perc =  filterCategories[varX].length== categories.length?getXthPercentaileGlobal(chartRawData, percList[p], cat, varX):getXthPercentaile(chartRawData, percList[p], cat, varX)
-                var prop = metaData['proportion'].filter(function(d){
-                    return d.name==cat
-                })[0]['perc']/100
-                sum += perc*prop
-            sumProp += prop
+            for (var p in percList) {
+                var sum = 0
+                var sumProp = 0
+                for (var c in filterCategories[varX]) {
+                    var cat = filterCategories[varX][c]
+
+                    var perc = filterCategories[varX].length == categories.length ? getXthPercentaileGlobal(chartRawData, percList[p], cat, varX) : getXthPercentaile(chartRawData, percList[p], cat, varX)
+                    var prop = metaData['proportion'].filter(function (d) {
+                        return d.name == cat
+                    })[0]['perc'] / 100
+                    sum += perc * prop
+                    sumProp += prop
+                }
+                percDataList.push({
+                    "percentile": percList[p],
+                    "value": appHelper.formatLabel(sum / sumProp)
+                })
             }
-            percDataList.push({"percentile":percList[p],"value":appHelper.formatLabel(sum/sumProp)})}
-            
+
             //sorting the data from maximum to minimum
             chartData = chartData.sort(function (a, b) {
                 return a[varX] - b[varX]
             })
-            
+
             //setting up the domain for x axis
             x.domain(d3.extent(chartData, function (d) {
                 return d[varX]
             }))
-            
+
             //creating stacked values for the area charts
             var stack = d3.stack()
                 .keys(filterCategories[varX].sort(appHelper.sortAlphaNum))
                 .order(d3.stackOrderAscending)
                 .offset(d3.stackOffsetNone)
-            
-            
+
+
             stack(chartData).forEach(function (d) {
-                
-                
+
+
                 var sum = 0
                 d.forEach(function (c) {
                     sum += c[1]
-                    
+
                     if (d3.min([c[0], c[1]]) < minVal) {
-                        
+
                         minVal = d3.min([c[0], c[1]])
                     }
                     if (d3.max([c[0], c[1]]) > maxVal) {
@@ -925,23 +1439,23 @@ function loopVariables(varInd) {
                     }
                 })
             })
-            
+
             //setting up the domain for y-axis based on the stacked values
             y.domain([minVal, maxVal])
             var xAxis = d3.axisBottom().scale(x)
             yAxisElement.transition().duration(1000).call(yAxis)
-            
+
             //updating the percentile line positions based on the data check box option
             if (percFlag & filterCategories[varX].length != 0) {
                 var refs = refLines.selectAll("line")
-                    .data(percDataList).style("opacity",1)
+                    .data(percDataList).style("opacity", 1)
                 refs.exit().remove()
                 refs.enter().append("line")
                     .style("opacity", 1)
                     .attr("x1", function (d) {
                         return x(d['value'])
                     })
-                    .attr("y1", numOfRows * 30+40)
+                    .attr("y1", numOfRows * 30 + 40)
                     .attr("x2", function (d) {
                         return x(d['value'])
                     })
@@ -952,7 +1466,7 @@ function loopVariables(varInd) {
                 refs.transition().attr("x1", function (d) {
                         return x(d['value'])
                     })
-                    .attr("y1", numOfRows * 30+40)
+                    .attr("y1", numOfRows * 30 + 40)
                     .attr("x2", function (d) {
                         return x(d['value'])
                     })
@@ -960,7 +1474,7 @@ function loopVariables(varInd) {
                     .attr("stroke", "#75787B")
                     .attr("stroke-width", "2px")
                 var refsText = refLinesText.selectAll("text")
-                    .data(percDataList).style("opacity",1)
+                    .data(percDataList).style("opacity", 1)
                 refsText.exit().remove()
                 refsText.enter().append("text")
                     .text(function (d) {
@@ -979,11 +1493,11 @@ function loopVariables(varInd) {
                     })
 
             }
-            if(filterCategories[varX].length == 0){
-                refLines.selectAll("line").style("opacity",0)
-                refLinesText.selectAll("text").style("opacity",0)
+            if (filterCategories[varX].length == 0) {
+                refLines.selectAll("line").style("opacity", 0)
+                refLinesText.selectAll("text").style("opacity", 0)
             }
-            
+
             //removing all the paths before updating
             pathGroup.selectAll(".path").remove()
             //adding the path lines
@@ -1004,8 +1518,8 @@ function loopVariables(varInd) {
                 .attr("fill", function (d, i) {
                     return colorDict[varX][d.key];
                 })
-                .attr("stroke","black")
-                .attr("stroke-width", "0.5px" )
+                .attr("stroke", "black")
+                .attr("stroke-width", "0.5px")
                 .attr("cursor", "pointer")
             paths.attr("class", function (d, i) {
                     return "layer" + d.key + " path" + d.key + varInd + " layer" + varInd
@@ -1018,15 +1532,15 @@ function loopVariables(varInd) {
                 .attr("fill", function (d, i) {
                     return colorDict[varX][d.key];
                 })
-                .attr("stroke","black")
-                .attr("stroke-width", "0.5px" )
+                .attr("stroke", "black")
+                .attr("stroke-width", "0.5px")
                 .attr("transform", "translate(10," + (numOfRows * 30 + 40) + ")")
                 .attr("cursor", "pointer");
-            
+
             //adding the grid lines for y-axis
             yAxisElement.selectAll("line").attr("opacity", 0.05).style("stroke-dasharray", ("5, 5"))
             xAxisElement.call(xAxis)
-            
+
             //adding legend buttons in the top
             var legend = legendGroup.selectAll("button")
                 .data(categories.sort(appHelper.sortAlphaNum))
@@ -1043,7 +1557,7 @@ function loopVariables(varInd) {
                 .html(function (d) {
                     return d
                 })
-            
+
             //event listeners for the legend buttons
             function legendMouseOver(d, i) {
                 d3.selectAll(".layer" + varInd).style("opacity", 0.25)
@@ -1053,7 +1567,7 @@ function loopVariables(varInd) {
             function legendMouseOut(d, i) {
                 d3.selectAll(".layer" + varInd).style("opacity", 1).attr("stroke-width", "0.5px")
             }
-            
+
             function legendClick(d, i) {
                 if (filterCategories[varX].indexOf(d) >= 0) {
                     filterCategories[varX].splice(filterCategories[varX].indexOf(d), 1)
@@ -1085,9 +1599,11 @@ function loopVariables(varInd) {
                 var filt = chartRawData.filter(function (d) {
                     return d[varX] == closestXValue
                 })
-                
-                var prop = filterCategories[varX].length==categories.length? metaData['proportion'].filter(function(t){return t.name==d.key})[0].perc/100:1
-                tooltip.html("Within the <span>" + d.key + " </span> group, the model believes that "+(changePar>=0?"increasing":"decreasing")+" <span>" + varX + "</span> from <span> " + appHelper.formatLabel(filt[0][varX]) + " </span> to <span>" + (appHelper.formatLabel(parseFloat(filt[0][varX]) + parseFloat(changePar))) + "</span> leads to, on average, a <span>" + Math.abs(appHelper.formatLabel(filt[0][d.key]*prop)) + (appHelper.formatLabel(filt[0][d.key]*prop) >= 0 ? " increase" : " decrease") + "</span> in " + yVar)
+
+                var prop = filterCategories[varX].length == categories.length ? metaData['proportion'].filter(function (t) {
+                    return t.name == d.key
+                })[0].perc / 100 : 1
+                tooltip.html("Within the <span>" + d.key + " </span> group, the model believes that " + (changePar >= 0 ? "increasing" : "decreasing") + " <span>" + varX + "</span> from <span> " + appHelper.formatLabel(filt[0][varX]) + " </span> to <span>" + (appHelper.formatLabel(parseFloat(filt[0][varX]) + parseFloat(changePar))) + "</span> leads to, on average, a <span>" + Math.abs(appHelper.formatLabel(filt[0][d.key] * prop)) + (appHelper.formatLabel(filt[0][d.key] * prop) >= 0 ? " increase" : " decrease") + "</span> in " + yVar)
 
             }
 
@@ -1109,7 +1625,7 @@ function loopVariables(varInd) {
                 })
                 tooltip.attr('class', "colorClass" + varInd + i);
                 tooltip.transition().duration(200).delay(100).style("opacity", 1);
-                tooltip.html("Within the <span>" + d.key + " </span> group, the model believes that "+(changePar>=0?"increasing":"decreasing")+" <span>" + varX + "</span> from <span> " + appHelper.formatLabel(filt[0][varX]) + " </span> to <span>" + (appHelper.formatLabel(parseFloat(filt[0][varX]) + parseFloat(changePar))) + "</span> leads to, on average, a <span>" + Math.abs(appHelper.formatLabel(filt[0][d.key])) + (appHelper.formatLabel(filt[0][d.key]) >= 0 ? " increase" : " decrease") + "</span> in " + yVar)
+                tooltip.html("Within the <span>" + d.key + " </span> group, the model believes that " + (changePar >= 0 ? "increasing" : "decreasing") + " <span>" + varX + "</span> from <span> " + appHelper.formatLabel(filt[0][varX]) + " </span> to <span>" + (appHelper.formatLabel(parseFloat(filt[0][varX]) + parseFloat(changePar))) + "</span> leads to, on average, a <span>" + Math.abs(appHelper.formatLabel(filt[0][d.key])) + (appHelper.formatLabel(filt[0][d.key]) >= 0 ? " increase" : " decrease") + "</span> in " + yVar)
                     .style("left", function () {
                         var tooltipWidth = this.getBoundingClientRect().width;
                         var currentMouseX = d3.event.pageX;
@@ -1128,9 +1644,9 @@ function loopVariables(varInd) {
                 d3.selectAll(".layer" + varInd).style("opacity", "0.4")
                 d3.select(this).style("opacity", 1).style('stroke', 'black').attr("stroke-width", "0.5px")
             }
-            
-            
-            
+
+
+
 
         }
         //helper function to set the reference value at the mouse over position
@@ -1159,12 +1675,12 @@ function loopVariables(varInd) {
 
         //Initial setup
         drawChart(false);
-        
+
 
     }
 
     function initializeBarChart() {
-        
+
         //initializing local varaibles required for the bar plot
         var barData = varArray
         var maxHeight = 0
@@ -1191,18 +1707,22 @@ function loopVariables(varInd) {
             }
         })
         //settign up title for the chart
-        appHelper.setTitle(title, "Sensitivity Plot: Impact of Changing " + varX );
-        
+        appHelper.setTitle(title, "Sensitivity Plot: Impact of Changing " + varX);
+
         //sorting the group by variables
         categories = categories.sort(appHelper.sortAlphaNum)
         //setting up the layout for the chart
         svg.selectAll('*').remove();
+        if(width/(categoryData.length*categories.length) <= 20){
+            width = categoryData.length*categories.length*20
+        }
+        
         svg.attr('width', width)
         var widthOffset = 140
         var legendPerRow = parseInt(width / widthOffset)
         var numOfRows = Math.ceil(categories.length / legendPerRow)
         svg.attr('height', 300 + numOfRows * 30);
-        
+
         
         //intializing the axes
         var x = d3.scaleBand().range([margin.left, width]).paddingInner(0.25)
@@ -1212,15 +1732,15 @@ function loopVariables(varInd) {
         //creating the axes elements
         svg.append("g").attr("class", "xAxis").attr("transform", "translate(10," + (height + numOfRows * 30 + 20) + ")")
         var yAxisElement = svg.append("g").attr("class", "yAxis").attr("transform", "translate(60,70)")
-        
+
         //creating the group element for the bars
         var barGroup = svg.append("g").attr("transform", "translate(0,70)")
-        
+
         //creating elements for axes labels
         var xLabel = svg.append("text").attr("class", "label").attr("transform", "translate(" + width / 2 + "," + (numOfRows * 30) + ")").style("text-anchor", "middle").text(varX)
         var yLabel = svg.append("text").attr("class", "label").attr("transform", "translate(15," + (height - 50) + ")rotate(-90)").style("text-anchor", "middle").text("Impact on " + yVar)
-        
-        
+
+
         var refLine = svg.append("line")
             .style("opacity", 0)
             .attr("x1", 0)
@@ -1228,23 +1748,23 @@ function loopVariables(varInd) {
             .attr("x2", 0)
             .attr("y2", height + numOfRows * 30 + 10)
             .attr("stroke", "#75787B")
-        
+
         //setting up dummy domain value for y-axis and calling the y-axiss
         y.domain([-1, 1])
         var yAxis = d3.axisLeft().scale(y).tickSizeInner(-width + margin.left)
         yAxisElement.call(yAxis)
-         
+
         //function to update the elements, this will help in updating in existing dom elements without creating new
         function drawChart() {
-            
-            
+
+
             svg = d3.select("#chlvl-" + varX.replace(/[^a-zA-Z]/g, "")).select("svg")
-            
+
             //filtering the categories available for this variable
             var newCategories = categories.filter(function (k) {
                 return filterCategories[varX].indexOf(k) >= 0
             })
-            
+
             //intializaing the variables to calculate the range of y-values and updating the y-domain
             var minVal = 0
             var maxVal = 0
@@ -1268,9 +1788,11 @@ function loopVariables(varInd) {
             var chartRange = [minVal > 0 ? 0 : minVal, maxVal < 0 ? 0 - (minVal * 0.1) : maxVal]
             y.domain(chartRange)
             //setting up x-domain
+            
             x.domain(categoryData)
             x1.domain(newCategories).rangeRound([0, x.bandwidth()])
             
+       
             //creatin quartile data  
             var indata = createQuartileDataCategory(filterChartRawData, varX, filterCategories[varX], categoryData)
             //updating the narrative text based on the quartile values
@@ -1279,7 +1801,7 @@ function loopVariables(varInd) {
             //calling and updating the axes elements
             var xAxis = d3.axisBottom().scale(x)
             yAxisElement.transition().duration(1000).call(yAxis)
-            
+
             //removing and updating the bar elements on filtering
             barGroup.selectAll("g").remove()
             barGroup.selectAll("g")
@@ -1328,8 +1850,8 @@ function loopVariables(varInd) {
                 .on("mousemove", mousemove)
                 .on("mouseout", mouseout)
                 .style("cursor", "pointer")
-                .style("stroke","#000")
-                .style("stroke-width","1px")
+                .style("stroke", "#000")
+                .style("stroke-width", "1px")
 
             //adding grid lines and positioning axes
             yAxisElement.selectAll("line").attr("opacity", 0.15).style("stroke-dasharray", ("4, 4"))
@@ -1341,8 +1863,8 @@ function loopVariables(varInd) {
                     return 0;
                 })
                 .attr("transform", "translate(0," + (y(chartRange[0]) - y(0)) + ")")
-                .call(wrap, x.bandwidth()*0.9)
-            
+                .call(wrap, x.bandwidth() * 0.9)
+
             //function to display tooltip on hover of bar elements
             function mouseover(d, i) {
                 tooltip.attr('class', "colorClass" + varInd + i);
@@ -1398,7 +1920,7 @@ function loopVariables(varInd) {
 
                 d3.select(this).attr("stroke-width", "0px")
             }
-            
+
             //creating legend buttons in the top
             var legend = legendGroup.selectAll("button")
                 .data(categories)
@@ -1414,8 +1936,8 @@ function loopVariables(varInd) {
                 .html(function (d) {
                     return d
                 })
-            
-            
+
+
             //event listeners for the legend buttons
             function legendMouseOver(d, i) {
                 d3.selectAll(".rect" + d.replace(/[^a-zA-Z]/g, "")).style('stroke', 'black').attr("stroke-width", "1px")
@@ -1437,12 +1959,13 @@ function loopVariables(varInd) {
                     d3.select(this).style("opacity", 1).style("background-color", colorDict[varX][d])
                 }
             }
-            
+
             //function to wrap the x-label text to the width
             function wrap(text, width) {
+                
                 text.each(function () {
                     var text = d3.select(this),
-                        words = text.text().split(/\s+/).reverse(),
+                        words = (text.text()+" → "+changePar).split(/\s+/).reverse(),
                         word,
                         line = [],
                         lineNumber = 0,
@@ -1460,11 +1983,13 @@ function loopVariables(varInd) {
                             tspan = text.append("tspan").attr("x", 0).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
                         }
                     }
-                    
+
                     //seeting up te height of the chart based on the number of lines in the wrap text
-                    maxHeight = d3.max([430+lineNumber*20,maxHeight])
+                    maxHeight = d3.max([450 + lineNumber * 20, maxHeight])
+
+                    d3.select("#topchlvl-" + varX.replace(/[^a-zA-Z]/g, "")).style("height", (maxHeight+10) + "px")
                     
-                    d3.select("#topchlvl-"+varX.replace(/[^a-zA-Z]/g, "")).style("height",maxHeight+"px")
+                    d3.select("#chlvl-" + varX.replace(/[^a-zA-Z]/g, "")).style("height", (maxHeight) + "px")
                 });
             }
         }

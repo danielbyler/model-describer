@@ -224,7 +224,6 @@ function intializeTreeMap(type) {
         .sort(function (a, b) {
             return b.data.name - a.data.name;
         });
-
     treemap(root);
     metaData['proportion'] = root.data.children
     var sumProportion = 0
@@ -243,6 +242,7 @@ function intializeTreeMap(type) {
             return d
         })
         .style("font-size", "16px")*/
+    
     var cellGroup = svgHeat.append("g").attr("class", "cell-group").attr("transform", "translate(0,0)")
     var cell = cellGroup.selectAll("g")
         .data(root.leaves())
@@ -289,9 +289,6 @@ function intializeTreeMap(type) {
         .style("cursor", "pointer");
 
 
-
-
-
     cell.append("text")
         .attr("clip-path", function (d) {
             return "url(#clip-" + d.data.id + ")";
@@ -303,6 +300,7 @@ function intializeTreeMap(type) {
                 var statEach = metaData['statData'].filter(function (s) {
                     return s['groupByVarName'] == groupBy && s['groupByValue'] == d.data.name
                 })[0]
+                
                 var percEach = metaData['proportion'].filter(function (s) {
                     return s['name'] == d.data.name
                 })[0]
@@ -347,7 +345,6 @@ function intializeTreeMap(type) {
 
 }
 
-
 //Function to extract the data for Treemap and format it to form required
 function getTreeMapData(type) {
     var heatMapData = {
@@ -355,6 +352,7 @@ function getTreeMapData(type) {
         children: []
     }
     var sample = AppData[0]['Data']
+    //console.log(AppData,metaData)
     var filteredSample = sample.filter(function (d) {
         return d['groupByVarName'] == type
     })
@@ -368,8 +366,7 @@ function getTreeMapData(type) {
         .rollup(function (ids) {
             return ids.length
         })
-        .entries(filteredSample)
-    
+        .entries(statDataF)
     nestedSample.forEach(function (d) {
         var temp = {}
         temp['name'] = d.key
@@ -472,7 +469,7 @@ function createQuartileData(dataList, varX, cats) {
     returnDict['underEst'] = {}
     statData['quartiles'] = []
     var diff = d3.quantile(varRange, 0.25) - d3.min(varRange)
-    console.log(cats)
+    //console.log(cats)
 
     for (var c in cats) {
         var cat = cats[c]
@@ -483,7 +480,7 @@ function createQuartileData(dataList, varX, cats) {
             var quartile = {}
             quartile['quarter'] = i
             quartile['group'] = cat
-            console.log(varX,AppData)
+            //console.log(varX,AppData)
             var low = getXthPercentaile(dataList, (i - 1) * 25, cat, varX)
             var high = getXthPercentaile(dataList, (i) * 25, cat, varX)
             quartile['range'] = [low, high]
