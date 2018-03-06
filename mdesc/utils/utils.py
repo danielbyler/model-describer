@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import requests
 import logging
 import sys
 import random
@@ -102,42 +101,6 @@ def prob_acc(true_class=0, pred_prob=0.2):
     :rtype float
     """
     return (true_class * (1-pred_prob)) + ((1-true_class)*pred_prob)
-
-
-def create_wine_data(cat_cols):
-    """
-    create UCI wine machine learning dataset
-    https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality
-
-    :param cat_cols: columns to convert to categories
-    :return UCI wine machine learning dataset
-    :rtype pd.DataFrame
-    """
-
-    if not cat_cols:
-        cat_cols = ['alcohol', 'fixed acidity']
-
-    red_raw = requests.get(
-        'https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv').content
-    red = pd.read_csv(io.StringIO(red_raw.decode('utf-8-sig')),
-                      sep=';')
-    red['Type'] = 'Red'
-
-    white_raw = requests.get(
-        'https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-white.csv').content
-    white = pd.read_csv(io.StringIO(white_raw.decode('utf-8-sig')),
-                        sep=';')
-    white['Type'] = 'White'
-
-    # read in wine quality dataset
-    wine = pd.concat([white, red])
-
-    # create category columns
-    # create categories
-    for cat in cat_cols:
-        wine.loc[:, cat] = pd.cut(wine.loc[:, cat], bins=3, labels=['low', 'medium', 'high'])
-
-    return wine
 
 
 def create_synthetic(nrows=100,

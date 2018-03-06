@@ -10,7 +10,7 @@ import numpy as np
 try:
     import utils.utils as wb_utils
 except ImportError:
-    import mdesc.utils.utils as wb_utils
+    import utils as wb_utils
 
 
 def autoformat_types(inputdf):
