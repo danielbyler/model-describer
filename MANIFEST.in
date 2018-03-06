@@ -1,0 +1,3 @@
+include README.rst
+include whitebox/tests/testdata*
+include tests/testdata*

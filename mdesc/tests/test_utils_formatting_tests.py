@@ -8,8 +8,8 @@ import numpy as np
 try:
     import sys
     sys.path.insert(0, "/home/travis/build/Data4Gov/WhiteBox_Production")
-    from whitebox.utils import formatting
-    from whitebox.utils import utils as wb_utils
+    from mdesc.utils import formatting
+    from mdesc.utils import utils as wb_utils
 except ImportError:
     from utils import formatting
     from utils import utils as wb_utils
@@ -125,7 +125,7 @@ class TestWhiteBoxError(unittest.TestCase):
                                               html_type='accuracy')
 
         self.assertEqual(list(json_out.keys()),
-                         ['Type', 'ErrType', 'Data'],
+                         ['Type', 'ErrType', 'Yvar', 'Data'],
                          """json_out keys not expected for html_type accuracy""")
 
     def test_format_FmtJson_to_json_html_type_sensitivity(self):

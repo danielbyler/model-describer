@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import GradientBoostingRegressor
-from whitebox.eval import WhiteBoxSensitivity
+from mdesc.eval import SensitivityViz
 
 
 df = pd.read_csv('docs/output/final_data.csv', low_memory=False)
@@ -71,17 +71,17 @@ keepfeaturelist = ['WorkChallengeFrequencyPolitics',
 WB=None
 
 #'Continent','DataScienceIdentitySelect','WorkChallengeFrequencyPolitics', 'AlgorithmUnderstandingLevel',
-WB = WhiteBoxSensitivity(est,
-                   model_df=finaldf,
-                   ydepend=dependentVar,
-                   cat_df=df,
-                   keepfeaturelist=keepfeaturelist,
-                   groupbyvars=[ 'Continent','DataScienceIdentitySelect','WorkChallengeFrequencyPolitics', 'AlgorithmUnderstandingLevel','TitleFit'],
-                   verbose=None,
+WB = SensitivityViz(est,
+                    model_df=finaldf,
+                    ydepend=dependentVar,
+                    cat_df=df,
+                    keepfeaturelist=keepfeaturelist,
+                    groupbyvars=[ 'Continent','DataScienceIdentitySelect','WorkChallengeFrequencyPolitics', 'AlgorithmUnderstandingLevel','TitleFit'],
+                    verbose=None,
                     std_num=1,
                     autoformat_types=True,
                     round_num=2
-                   )
+                    )
 
 WB.run(output_type='html',
        output_path='kaggle_test.html')

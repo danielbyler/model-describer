@@ -3,7 +3,7 @@ import logging
 try:
     import utils.utils as wb_utils
 except ImportError:
-    import whitebox.utils.utils as wb_utils
+    import mdesc.utils.utils as wb_utils
 
 
 def fmt_sklearn_preds(predict_engine,
@@ -54,10 +54,6 @@ def fmt_sklearn_preds(predict_engine,
     cat_df['predictedYSmooth'] = preds
     # return
     return cat_df
-
-
-def fmt_tf_preds():
-    pass
 
 
 

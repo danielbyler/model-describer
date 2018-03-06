@@ -5,11 +5,12 @@ import pkg_resources
 import warnings
 
 import pandas as pd
+import numpy as np
 
 try:
     import utils.utils as wb_utils
 except ImportError:
-    import whitebox.utils.utils as wb_utils
+    import mdesc.utils.utils as wb_utils
 
 
 def autoformat_types(inputdf):
@@ -79,7 +80,8 @@ class FmtJson(object):
             vartype='Continuous',
             html_type='error',
             incremental_val=None,
-            err_type=None):
+            err_type=None,
+            ydepend=None):
         """
         convert input dataframe to json
 
@@ -89,6 +91,7 @@ class FmtJson(object):
         :param incremental_val: If sensitivity used, include incremental value
             used to construct synthetic data
         :param err_type: User defined error type
+        :param ydepend: str dependent variable
         :return: formatted json output
         :rtype: dict
         """
@@ -103,12 +106,19 @@ class FmtJson(object):
         json_dict = dict(percentile={'Type': vartype},
                          error={'Type': vartype},
                          accuracy={'Type': vartype,
-                                   'ErrType': err_type},
+                                   'ErrType': err_type,
+                                   'Yvar': ydepend},
                          sensitivity={'Type': vartype,
                                       'Change': str(incremental_val)})
 
         json_out = json_dict[html_type]
         # create data records from values in df
+        # remove long numbers by recasting
+        numcols = dataframe.select_dtypes(include=[np.number])
+        # iterate over cols and conform numbers
+        for col in numcols:
+            dataframe[col] = dataframe.loc[:, col].apply(lambda x: float(x))
+        # assign to data out
         json_out['Data'] = dataframe.to_dict(orient='records')
 
         return json_out
@@ -156,8 +166,8 @@ class HTML(object):
         :rtype: str
         """
         assert htmltype in ['html_error', 'html_sensitivity'], 'htmltype must be html_error or html_sensitivity'
-        html_path = pkg_resources.resource_filename('whitebox', '{}.txt'.format(htmltype))
-        # utility class to hold whitebox files
+        html_path = pkg_resources.resource_filename('mdesc', '{}.txt'.format(htmltype))
+        # utility class to hold mdesc files
         try:
             wbox_html = open('{}.txt'.format(htmltype), 'r').read()
         except IOError:

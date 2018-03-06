@@ -8,7 +8,7 @@ import numpy as np
 try:
     import sys
     sys.path.insert(0, "/home/travis/build/Data4Gov/WhiteBox_Production")
-    from whitebox.utils import categorical_conversions
+    from mdesc.utils import categorical_conversions
 
 except ImportError:
     from utils import categorical_conversions

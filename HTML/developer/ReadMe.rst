@@ -16,7 +16,7 @@ Requirements:
 
 Developer Friendly Code:
 ------------------------
-To start with the developement, a few JavaScript libraries are required. These are listed in the packages.json file. Open the command line and switch to the relevant WhiteBox directory (WhiteBoxError or Whitebox_Impact). Run the following command:
+To start with the developement, a few JavaScript libraries are required. These are listed in the packages.json file. Open the command line and switch to the relevant WhiteBox directory (ErrorViz or Whitebox_Impact). Run the following command:
 
 ```
 npm install

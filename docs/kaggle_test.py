@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import GradientBoostingRegressor
-from whitebox.eval import WhiteBoxSensitivity
+from mdesc.eval import SensitivityViz
 
 
 keepfeaturelist = ['WorkChallengeFrequencyPolitics',
@@ -65,17 +65,17 @@ est.fit(finaldf, df.loc[:, dependentVar])
 #'Continent','DataScienceIdentitySelect','WorkChallengeFrequencyPolitics', 'AlgorithmUnderstandingLevel',
 # df['TitleFit'] = df['TitleFit'].fillna('nan')
 
-WB = WhiteBoxSensitivity(est,
-                   model_df=finaldf,
-                   ydepend=dependentVar,
-                   cat_df=df,
-                   keepfeaturelist=keepfeaturelist,
-                   groupbyvars= [ 'Continent','DataScienceIdentitySelect','WorkChallengeFrequencyPolitics', 'AlgorithmUnderstandingLevel', 'TitleFit'],
-                   verbose=None,
+WB = SensitivityViz(est,
+                    model_df=finaldf,
+                    ydepend=dependentVar,
+                    cat_df=df,
+                    keepfeaturelist=keepfeaturelist,
+                    groupbyvars= [ 'Continent','DataScienceIdentitySelect','WorkChallengeFrequencyPolitics', 'AlgorithmUnderstandingLevel', 'TitleFit'],
+                    verbose=None,
                     std_num=1,
                     autoformat_types=True,
                     round_num=2
-                   )
+                    )
 
 WB.run(output_type='html',
        output_path='kaggle_test_5groupby.html')

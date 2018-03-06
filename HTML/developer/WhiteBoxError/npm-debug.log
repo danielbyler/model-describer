@@ -10,8 +10,8 @@
 6 silly lifecycle HPMinteractive@0.0.1~predev: no script for predev, continuing
 7 info lifecycle HPMinteractive@0.0.1~dev: HPMinteractive@0.0.1
 8 verbose lifecycle HPMinteractive@0.0.1~dev: unsafe-perm in lifecycle true
-9 verbose lifecycle HPMinteractive@0.0.1~dev: PATH: C:\Program Files\nodejs\node_modules\npm\bin\node-gyp-bin;C:\Users\vegangavarapu\Documents\GitHub\WhiteBox_Production\HTML\developer\WhiteBoxError\node_modules\.bin;C:\ProgramData\Oracle\Java\javapath;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\Program Files (x86)\Intel\iCLS Client\;C:\Program Files\Intel\iCLS Client\;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files\nodejs\;C:\Python27\Scripts\;C:\Program Files (x86)\Bitvise SSH Client;C:\Program Files (x86)\PuTTY\;C:\Program Files (x86)\Microsoft SQL Server\Client SDK\ODBC\130\Tools\Binn\;C:\Program Files (x86)\Microsoft SQL Server\140\Tools\Binn\;C:\Program Files (x86)\Microsoft SQL Server\140\DTS\Binn\;C:\Program Files (x86)\Microsoft SQL Server\140\Tools\Binn\ManagementStudio\;C:\Program Files (x86)\Brackets\command;C:\Users\vegangavarapu\AppData\Local\atom\bin;C:\Users\vegangavarapu\AppData\Roaming\npm
-10 verbose lifecycle HPMinteractive@0.0.1~dev: CWD: C:\Users\vegangavarapu\Documents\GitHub\WhiteBox_Production\HTML\developer\WhiteBoxError
+9 verbose lifecycle HPMinteractive@0.0.1~dev: PATH: C:\Program Files\nodejs\node_modules\npm\bin\node-gyp-bin;C:\Users\vegangavarapu\Documents\GitHub\WhiteBox_Production\HTML\developer\ErrorViz\node_modules\.bin;C:\ProgramData\Oracle\Java\javapath;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\Program Files (x86)\Intel\iCLS Client\;C:\Program Files\Intel\iCLS Client\;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files\nodejs\;C:\Python27\Scripts\;C:\Program Files (x86)\Bitvise SSH Client;C:\Program Files (x86)\PuTTY\;C:\Program Files (x86)\Microsoft SQL Server\Client SDK\ODBC\130\Tools\Binn\;C:\Program Files (x86)\Microsoft SQL Server\140\Tools\Binn\;C:\Program Files (x86)\Microsoft SQL Server\140\DTS\Binn\;C:\Program Files (x86)\Microsoft SQL Server\140\Tools\Binn\ManagementStudio\;C:\Program Files (x86)\Brackets\command;C:\Users\vegangavarapu\AppData\Local\atom\bin;C:\Users\vegangavarapu\AppData\Roaming\npm
+10 verbose lifecycle HPMinteractive@0.0.1~dev: CWD: C:\Users\vegangavarapu\Documents\GitHub\WhiteBox_Production\HTML\developer\ErrorViz
 11 silly lifecycle HPMinteractive@0.0.1~dev: Args: [ '/d /s /c',
 11 silly lifecycle   'webpack-dev-server --content-base . --output-public-path=/lib/ --inline --hot' ]
 12 silly lifecycle HPMinteractive@0.0.1~dev: Returned: code: 1  signal: null
@@ -27,7 +27,7 @@
 14 verbose stack     at maybeClose (internal/child_process.js:877:16)
 14 verbose stack     at Process.ChildProcess._handle.onexit (internal/child_process.js:226:5)
 15 verbose pkgid HPMinteractive@0.0.1
-16 verbose cwd C:\Users\vegangavarapu\Documents\GitHub\WhiteBox_Production\HTML\developer\WhiteBoxError
+16 verbose cwd C:\Users\vegangavarapu\Documents\GitHub\WhiteBox_Production\HTML\developer\ErrorViz
 17 error Windows_NT 10.0.10586
 18 error argv "C:\\Program Files\\nodejs\\node.exe" "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js" "run-script" "dev"
 19 error node v6.9.2

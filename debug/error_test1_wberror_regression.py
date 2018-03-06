@@ -1,7 +1,7 @@
 from sklearn.ensemble import RandomForestRegressor
 import pandas as pd
-from whitebox import utils
-from whitebox.eval import WhiteBoxError
+from mdesc import utils
+from mdesc.eval import ErrorViz
 import requests
 import io
 import numpy as np
@@ -51,13 +51,13 @@ featuredict = {'fixed acidity': 'FIXED ACIDITY_test',
 
 
 
-WB = WhiteBoxError(modelobj=modelObjc,
-                   model_df=xTrainData,
-                   ydepend=yDepend,
-                   cat_df=wine_sub,
-                   groupbyvars=['Type'],
-                   featuredict=featuredict,
-                   verbose=None)
+WB = ErrorViz(modelobj=modelObjc,
+              model_df=xTrainData,
+              ydepend=yDepend,
+              cat_df=wine_sub,
+              groupbyvars=['Type'],
+              featuredict=featuredict,
+              verbose=None)
 
 
 
@@ -75,13 +75,13 @@ final_df = pd.concat([pd.get_dummies(df.select_dtypes(include=['O'])),
 modelObjc.fit(final_df.loc[:, final_df.columns != ydepend],
               final_df.loc[:, ydepend])
 
-WB = WhiteBoxError(modelobj=modelObjc,
-                   model_df=final_df,
-                   ydepend=ydepend,
-                   cat_df=df,
-                   groupbyvars=groupby,
-                   featuredict=None,
-                   verbose=None)
+WB = ErrorViz(modelobj=modelObjc,
+              model_df=final_df,
+              ydepend=ydepend,
+              cat_df=df,
+              groupbyvars=groupby,
+              featuredict=None,
+              verbose=None)
 
 df.groupby('col1').get_group('level_1')
 

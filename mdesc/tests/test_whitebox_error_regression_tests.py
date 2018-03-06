@@ -10,8 +10,8 @@ from sklearn.ensemble import RandomForestClassifier
 try:
     import sys
     sys.path.insert(0, "/home/travis/build/Data4Gov/WhiteBox_Production")
-    from whitebox.utils import utils as wb_utils
-    from whitebox.eval import WhiteBoxError
+    from mdesc.utils import utils as wb_utils
+    from mdesc.eval import ErrorViz
 
 except ImportError:
     import utils as wb_utils
@@ -25,7 +25,10 @@ class TestWBBaseMethods(unittest.TestCase):
 
     def setUp(self):
         # create wine dataset
-        wine = pd.read_csv('testdata/wine.csv')
+        try:
+            wine = pd.read_csv('testdata/wine.csv')
+        except FileNotFoundError:
+            wine = pd.read_csv('mdesc/tests/testdata/wine.csv')
 
         # init randomforestregressor
         modelObjc = RandomForestRegressor()
@@ -52,7 +55,7 @@ class TestWBBaseMethods(unittest.TestCase):
 
         wine_sub['alcohol'] = wine_sub['alcohol'].astype('object')
 
-        self.WB = WhiteBoxError(modelobj=modelObjc,
+        self.WB = ErrorViz(modelobj=modelObjc,
                            model_df=mod_df,
                            ydepend=ydepend,
                            cat_df=wine_sub,
@@ -60,7 +63,7 @@ class TestWBBaseMethods(unittest.TestCase):
                            keepfeaturelist=keepfeaturelist,
                            verbose=None,
                            autoformat_types=True,
-                                round_num=GLOBAL_ROUND)
+                           round_num=GLOBAL_ROUND)
 
         self.wine = wine
 

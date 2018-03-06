@@ -5,8 +5,8 @@ try:
     import utils.utils as wb_utils
     import utils.formatting as formatting
 except ImportError:
-    import whitebox.utils.utils as wb_utils
-    import whitebox.utils.formatting as formatting
+    import mdesc.utils.utils as wb_utils
+    import mdesc.utils.formatting as formatting
 
 
 def create_group_percentiles(df,

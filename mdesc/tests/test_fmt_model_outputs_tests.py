@@ -12,8 +12,8 @@ from sklearn.ensemble import GradientBoostingRegressor
 try:
     import sys
     sys.path.insert(0, "/home/travis/build/Data4Gov/WhiteBox_Production")
-    from whitebox.utils import fmt_model_outputs
-    from whitebox.utils import utils
+    from mdesc.utils import fmt_model_outputs
+    from mdesc.utils import utils
 
 except:
     from utils import fmt_model_outputs

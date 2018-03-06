@@ -2,12 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import requests
-import pandas as pd
+import logging
+import sys
+import random
 import numpy as np
 import io
+
 from sklearn.datasets import make_blobs, make_regression
-import random
-import logging
+import pandas as pd
 
 
 class Settings(object):
@@ -15,8 +17,8 @@ class Settings(object):
     supported_agg_errors = ['MSE', 'MAE', 'RMSE', 'MEAN', 'MED']
     # placeholder class swithc - if Sensitivity then pull in html_sensitivity code
     # if Error then pull in html_error code
-    html_type = {'WhiteBoxSensitivity': 'html_sensitivity',
-                 'WhiteBoxError': 'html_error'}
+    html_type = {'SensitivityViz': 'html_sensitivity',
+                 'ErrorViz': 'html_error'}
 
     # define desired output percentiles
     output_percentiles = [0, .01, .1, .25, .5, .75, .9, 1]
@@ -51,7 +53,7 @@ class ErrorWarningMsgs(object):
                             \nmodel_df shape: {}"""
     # modelobj prediction method error
     predict_model_obj_error = """modelObj does not have predict method. 
-                                WhiteBoxError only works with model 
+                                ErrorViz only works with model 
                                 objects with predict method"""
 
     # missing keepfeaturelist error message
@@ -145,7 +147,7 @@ def create_synthetic(nrows=100,
                      max_levels=10,
                      mod_type='regression'):
     """
-    synthetic dataset creation for testing whitebox
+    synthetic dataset creation for testing mdesc
 
     :param nrows: int number of observations
     :param ncols: int number of features
@@ -272,3 +274,14 @@ def util_logger(name):
     logger.addHandler(handler)
     logger.setLevel(logging.DEBUG)
     return logger
+
+def sysprint(message):
+    """
+    print message to console
+
+    :param message: str - message to print
+    :return: sys.stdout
+    :rtype: sys.stdout.write()
+    """
+    sys.stdout.write('\r{}'.format(message))
+    sys.stdout.flush()

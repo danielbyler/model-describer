@@ -10,8 +10,8 @@ from sklearn.ensemble import RandomForestClassifier
 try:
     import sys
     sys.path.insert(0, "/home/travis/build/Data4Gov/WhiteBox_Production")
-    from whitebox.utils import utils as wb_utils
-    from whitebox.eval import WhiteBoxError
+    from mdesc.utils import utils as wb_utils
+    from mdesc.eval import ErrorViz
 
 except ImportError:
     import utils as wb_utils
@@ -49,7 +49,7 @@ class TestWBBaseMethods(unittest.TestCase):
 
         wine_sub['alcohol'] = wine_sub['alcohol'].astype('object')
 
-        self.WB = WhiteBoxError(modelobj=modelObjc,
+        self.WB = ErrorViz(modelobj=modelObjc,
                            model_df=mod_df,
                            ydepend=ydepend,
                            cat_df=wine_sub,

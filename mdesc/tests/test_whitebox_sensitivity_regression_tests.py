@@ -10,8 +10,8 @@ from sklearn.ensemble import RandomForestClassifier
 try:
     import sys
     sys.path.insert(0, "/home/travis/build/Data4Gov/WhiteBox_Production")
-    from whitebox.utils import utils as wb_utils
-    from whitebox.eval import WhiteBoxSensitivity
+    from mdesc.utils import utils as wb_utils
+    from mdesc.eval import SensitivityViz
 
 except ImportError:
     import utils as wb_utils
@@ -22,7 +22,10 @@ class TestWBBaseMethods(unittest.TestCase):
 
     def setUp(self):
         # create wine dataset
-        wine = pd.read_csv('testdata/wine.csv')
+        try:
+            wine = pd.read_csv('testdata/wine.csv')
+        except FileNotFoundError:
+            wine = pd.read_csv('mdesc/tests/testdata/wine.csv')
 
         # init randomforestregressor
         modelObjc = RandomForestRegressor()
@@ -48,14 +51,14 @@ class TestWBBaseMethods(unittest.TestCase):
 
         wine_sub['alcohol'] = wine_sub['alcohol'].astype('object')
 
-        self.WB = WhiteBoxSensitivity(modelobj=modelObjc,
-                           model_df=mod_df,
-                           ydepend=ydepend,
-                           cat_df=wine_sub,
-                           groupbyvars=['Type'],
-                           keepfeaturelist=keepfeaturelist,
-                           verbose=None,
-                           autoformat_types=True)
+        self.WB = SensitivityViz(modelobj=modelObjc,
+                                 model_df=mod_df,
+                                 ydepend=ydepend,
+                                 cat_df=wine_sub,
+                                 groupbyvars=['Type'],
+                                 keepfeaturelist=keepfeaturelist,
+                                 verbose=None,
+                                 autoformat_types=True)
 
         self.wine = wine
 

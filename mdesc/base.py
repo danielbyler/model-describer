@@ -9,21 +9,21 @@ import numpy as np
 import pandas as pd
 
 try:
-    import utils.utils as wb_utils
+    import utils.utils as md_utils
     import utils.check_utils as checks
     import utils.percentiles as percentiles
     import utils.formatting as formatting
     import modelconfig.fmt_sklearn_preds as fmt_sklearn_preds
 except ImportError:
-    import whitebox.utils.utils as wb_utils
-    import whitebox.utils.check_utils as checks
-    import whitebox.utils.percentiles as percentiles
-    import whitebox.utils.formatting as formatting
-    from whitebox.utils.fmt_model_outputs import fmt_sklearn_preds
+    import mdesc.utils.utils as md_utils
+    import mdesc.utils.check_utils as checks
+    import mdesc.utils.percentiles as percentiles
+    import mdesc.utils.formatting as formatting
+    from mdesc.utils.fmt_model_outputs import fmt_sklearn_preds
 
-logger = wb_utils.util_logger(__name__)
+logger = md_utils.util_logger(__name__)
 
-class WhiteBoxBase(object):
+class MdescBase(object):
 
     __metaclass__ = ABCMeta
 
@@ -61,15 +61,15 @@ class WhiteBoxBase(object):
         :param round_num: round numeric columns to specified level for output
         :param verbose: set verbose level -- 0 = debug, 1 = warning, 2 = error
         """
-        logger.setLevel(wb_utils.Settings.verbose2log[verbose])
+        logger.setLevel(md_utils.Settings.verbose2log[verbose])
         logger.info('Initilizing {} parameters'.format(self.__class__.__name__))
         # check error type is supported format
-        if error_type not in wb_utils.Settings.supported_agg_errors:
-            raise wb_utils.ErrorWarningMsgs.error_msgs['error_type']
+        if error_type not in md_utils.Settings.supported_agg_errors:
+            raise md_utils.ErrorWarningMsgs.error_msgs['error_type']
 
             # check groupby vars
         if not groupbyvars:
-            raise wb_utils.ErrorWarningMsgs.error_msgs['groupbyvars']
+            raise md_utils.ErrorWarningMsgs.error_msgs['groupbyvars']
 
         # make copy, reset index and assign model dataframe
         self._model_df = model_df.copy(deep=True).reset_index(drop=True)
@@ -101,7 +101,7 @@ class WhiteBoxBase(object):
         self.ydepend = ydepend
         # if user specified keepfeaturelist, use column mappings otherwise use original groupby
         self.groupbyvars = groupbyvars
-        # determine the calling class (WhiteBoxError or WhiteBoxSensitivity)
+        # determine the calling class (ErrorViz or SensitivityViz)
         self.called_class = self.__class__.__name__
         # create percentiles
         self.Percentiles = percentiles.Percentiles(self._cat_df,
@@ -291,10 +291,10 @@ class WhiteBoxBase(object):
         :rtype: pd.DataFrame or .html
         """
         # ensure supported output types
-        if output_type not in wb_utils.Settings.supported_out_types:
+        if output_type not in md_utils.Settings.supported_out_types:
             error_out = """Output type {} not supported.
                                 \nCurrently support {} output""".format(output_type,
-                                                                        wb_utils.Settings.supported_out_types)
+                                                                        md_utils.Settings.supported_out_types)
 
             logger.error(error_out)
 
@@ -339,7 +339,7 @@ class WhiteBoxBase(object):
                                 """Creating accuracy metric for 
                                 groupby variable: {}""".format(groupby_var))
                     # create error metrics for slices of groupby data
-                    acc = wb_utils.create_accuracy(self.model_type,
+                    acc = md_utils.create_accuracy(self.model_type,
                                                    self._cat_df,
                                                    self.error_type,
                                                    groupby=groupby_var)
@@ -354,10 +354,9 @@ class WhiteBoxBase(object):
             if len(colhold) > 0:
                 placeholder.append(formatting.FmtJson.flatten_json(colhold))
             # TODO redirect stdout so progress bar can output to single line
-            sys.stdout.write('\rPercent Complete: {per:2.0f}%'.format(per=(idx/len(to_iter_cols))*100))
-            sys.stdout.flush()
-        sys.stdout.write('\rPercent Complete: 100%')
-        sys.stdout.flush()
+            md_utils.sysprint('Percent Complete: {per:2.0f}%'.format(per=(idx / len(to_iter_cols)) * 100))
+
+        md_utils.sysprint('Percent Complete: 100%')
         logging.info('Converting accuracy outputs to json format')
         # finally convert insights_df into json object
         # convert insights list to dataframe
@@ -365,7 +364,8 @@ class WhiteBoxBase(object):
         insights_json = formatting.FmtJson.to_json(insights_df.round(self.round_num),
                                                    html_type='accuracy',
                                                    vartype='Accuracy',
-                                                   err_type=self.error_type)
+                                                   err_type=self.error_type,
+                                                   ydepend=self.ydepend)
         # append to outputs
         placeholder.append(insights_json)
         # append percentiles
@@ -412,7 +412,7 @@ class WhiteBoxBase(object):
         
         :param fpath: file path to save html file to
         """
-        logging.info("""creating html output for type: {}""".format(wb_utils.Settings.html_type[self.called_class]))
+        logging.info("""creating html output for type: {}""".format(md_utils.Settings.html_type[self.called_class]))
 
         # tweak self.ydepend if classification case (add dominate class)
         if self.model_type == 'classification':
@@ -425,7 +425,7 @@ class WhiteBoxBase(object):
         html_out = formatting.HTML.fmt_html_out(
                                             str(self.outputs),
                                             ydepend_out,
-                                            htmltype=wb_utils.Settings.html_type[self.called_class])
+                                            htmltype=md_utils.Settings.html_type[self.called_class])
         # save html_out to disk
         with open(fpath, 'w') as outfile:
             logging.info("""Writing html file out to disk""")
