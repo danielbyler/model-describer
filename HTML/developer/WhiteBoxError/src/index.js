@@ -327,6 +327,24 @@ function intializeTreeMap(type) {
             }
         })
         .style("fill", "#fff");
+    
+    cell.append("text")
+        .attr("clip-path", function (d) {
+            return "url(#clip-" + d.data.id + ")";
+        })
+        .attr("dx", 10)
+        .attr("dy", 60)
+        .text(function (d) {
+            if (d.x1 - d.x0 > 100) {
+                var statEach = metaData['statData'].filter(function (s) {
+                    return s['groupByVarName'] == groupBy && s['groupByValue'] == d.data.name
+                })[0]
+                return "Error Type: " + metaData['ErrType'];
+            } else {
+                return ""
+            }
+        })
+        .style("fill", "#fff");
 
 
 
