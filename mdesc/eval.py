@@ -8,16 +8,10 @@ import numpy as np
 import pandas as pd
 from pandas.api.types import is_object_dtype, is_numeric_dtype
 
-try:
-    import utils.utils as wb_utils
-    from utils.categorical_conversions import pandas_switch_modal_dummy
-    import utils.formatting as formatting
-    from base import MdescBase
-except ImportError:
-    import utils.utils as wb_utils
-    from utils.categorical_conversions import pandas_switch_modal_dummy
-    from base import MdescBase
-    from utils import formatting
+from mdesc.utils import utils as wb_utils
+from mdesc.utils.categorical_conversions import pandas_switch_modal_dummy
+from mdesc.utils import formatting
+from mdesc.base import MdescBase
 
 logger = wb_utils.util_logger(__name__)
 

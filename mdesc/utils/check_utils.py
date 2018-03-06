@@ -4,13 +4,9 @@
 import logging
 import warnings
 
-from sklearn.utils.validation import (check_consistent_length,
-                                      check_is_fitted)
+from sklearn.utils.validation import check_consistent_length
 
-try:
-    import utils.utils as wb_utils
-except ImportError:
-    import utils as wb_utils
+from mdesc.utils import utils as wb_utils
 
 
 class CheckInputs(object):

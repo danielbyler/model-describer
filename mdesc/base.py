@@ -8,18 +8,11 @@ import sys
 import numpy as np
 import pandas as pd
 
-try:
-    import utils.utils as md_utils
-    import utils.check_utils as checks
-    import utils.percentiles as percentiles
-    import utils.formatting as formatting
-    import modelconfig.fmt_sklearn_preds as fmt_sklearn_preds
-except ImportError:
-    import utils.utils as md_utils
-    import utils.check_utils as checks
-    import utils.percentiles
-    import utils.formatting
-    from fmt_model_outputs import fmt_sklearn_preds
+from mdesc.utils import utils as md_utils
+from mdesc.utils import check_utils as checks
+from mdesc.utils import percentiles
+from mdesc.utils import formatting
+from mdesc.utils.fmt_model_outputs import fmt_sklearn_preds
 
 logger = md_utils.util_logger(__name__)
 

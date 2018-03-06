@@ -7,11 +7,6 @@ import warnings
 import pandas as pd
 import numpy as np
 
-try:
-    import utils.utils as wb_utils
-except ImportError:
-    import utils as wb_utils
-
 
 def autoformat_types(inputdf):
     """

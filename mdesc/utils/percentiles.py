@@ -1,12 +1,8 @@
 import pandas as pd
 import numpy as np
 
-try:
-    import utils.utils as wb_utils
-    import utils.formatting as formatting
-except ImportError:
-    import utils as wb_utils
-    import formatting as formatting
+from mdesc.utils import utils as wb_utils
+from mdesc.utils import formatting
 
 
 def create_group_percentiles(df,

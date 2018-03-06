@@ -1,9 +1,6 @@
 import logging
 
-try:
-    import utils.utils as wb_utils
-except ImportError:
-    import utils as wb_utils
+from mdesc.utils import utils as wb_utils
 
 
 def fmt_sklearn_preds(predict_engine,
