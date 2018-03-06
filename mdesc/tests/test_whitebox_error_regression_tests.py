@@ -20,7 +20,7 @@ class TestWBBaseMethods(unittest.TestCase):
         try:
             wine = pd.read_csv('testdata/wine.csv')
         except FileNotFoundError:
-            wine = pd.read_csv('mdesc/tests/testdata/wine.csv')
+            wine = pd.read_csv('/home/travis/build/DataScienceSquad/model-describer/mdesc/tests/testdata/wine.csv')
 
         # init randomforestregressor
         modelObjc = RandomForestRegressor()

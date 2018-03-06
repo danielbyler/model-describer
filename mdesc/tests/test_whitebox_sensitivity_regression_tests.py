@@ -18,7 +18,7 @@ class TestWBBaseMethods(unittest.TestCase):
         try:
             wine = pd.read_csv('testdata/wine.csv')
         except FileNotFoundError:
-            wine = pd.read_csv('mdesc/tests/testdata/wine.csv')
+            wine = pd.read_csv('/home/travis/build/DataScienceSquad/model-describer/mdesc/tests/testdata/wine.csv')
 
         # init randomforestregressor
         modelObjc = RandomForestRegressor()
@@ -54,6 +54,7 @@ class TestWBBaseMethods(unittest.TestCase):
                                  autoformat_types=True)
 
         self.wine = wine
+        self.mod_df = mod_df
 
     def test_transform_function_predictedYSmooth(self):
         """test predictedYSmooth present after _transform_function called"""
@@ -97,104 +98,6 @@ class TestWBBaseMethods(unittest.TestCase):
         self.assertEqual(res['predictedYSmooth'].values.tolist()[0],
                          correct,
                          """unexpected value for predictedYSmooth - should be median default""")
-
-    def test_handle_categorical_preds(self):
-        """test modal value identified"""
-
-        copydf = self.WB._model_df.copy(deep=True)
-
-        col_indices = ['alcohol', 'errors', 'predictedYSmooth', 'Type', 'diff']
-
-        self.WB._cat_df['errors'] = np.random.uniform(-1, 1, self.WB._cat_df.shape[0])
-
-        self.WB._cat_df['predictedYSmooth'] = np.random.uniform(-1, 1, self.WB._cat_df.shape[0])
-        copydf['predictedYSmooth'] = np.random.uniform(-1, 1, self.WB._cat_df.shape[0])
-
-        self.WB._cat_df['diff'] = np.random.uniform(-1, 1, self.WB._cat_df.shape[0])
-
-        modal, res = self.WB._predict_synthetic('alcohol',
-                                                'Type',
-                                                copydf,
-                                                col_indices,
-                                                vartype='Categorical')
-        self.assertEqual(modal,
-                         self.wine['alcohol'].mode().values[0],
-                         """unexpected modal value on _handle_categorical_preds""")
-
-    def test_handle_categorical_preds_df_output(self):
-        """test dataframe output returned"""
-
-        copydf = self.WB._model_df.copy(deep=True)
-
-        col_indices = ['alcohol', 'errors', 'predictedYSmooth', 'Type', 'diff']
-
-        self.WB._cat_df['errors'] = np.random.uniform(-1, 1, self.WB._cat_df.shape[0])
-
-        self.WB._cat_df['predictedYSmooth'] = np.random.uniform(-1, 1, self.WB._cat_df.shape[0])
-        copydf['predictedYSmooth'] = np.random.uniform(-1, 1, self.WB._cat_df.shape[0])
-
-        self.WB._cat_df['diff'] = np.random.uniform(-1, 1, self.WB._cat_df.shape[0])
-
-        print(copydf.columns)
-        print(self.WB._mod_df.columns)
-
-        modal, res = self.WB._predict_synthetic('alcohol',
-                                                'Type',
-                                                copydf,
-                                                col_indices,
-                                                vartype='Categorical')
-
-        self.assertIsInstance(res,
-                              pd.DataFrame,
-                              """pd.DataFrame not returned in _predict_synthetic""")
-
-    def test_handle_continuous_incremental_val_output(self):
-        """test incremental val output returned is correct"""
-
-        copydf = self.WB._model_df.copy(deep=True)
-
-        col_indices = ['density', 'errors', 'predictedYSmooth', 'Type', 'diff']
-
-        self.WB._cat_df['errors'] = np.random.uniform(-1, 1, self.WB._cat_df.shape[0])
-
-        self.WB._cat_df['predictedYSmooth'] = np.random.uniform(-1, 1, self.WB._cat_df.shape[0])
-        copydf['predictedYSmooth'] = np.random.uniform(-1, 1, self.WB._cat_df.shape[0])
-
-        self.WB._cat_df['diff'] = np.random.uniform(-1, 1, self.WB._cat_df.shape[0])
-
-        incremental_val, res = self.WB._predict_synthetic('alcohol',
-                                                          'Type',
-                                                          copydf,
-                                                          col_indices,
-                                                          vartype='Continuous')
-
-        self.assertEqual(round(incremental_val, 4),
-                         round(copydf['density'].std() * 0.5, 4),
-                         """incremental_val is incorrect""")
-
-    def test_handle_continuous_sensitivity_output(self):
-        """test sensitvity output is of type dataframe"""
-
-        copydf = self.WB._model_df.copy(deep=True)
-
-        col_indices = ['density', 'errors', 'predictedYSmooth', 'Type', 'diff']
-
-        self.WB._cat_df['errors'] = np.random.uniform(-1, 1, self.WB._cat_df.shape[0])
-
-        self.WB._cat_df['predictedYSmooth'] = np.random.uniform(-1, 1, self.WB._cat_df.shape[0])
-        copydf['predictedYSmooth'] = np.random.uniform(-1, 1, self.WB._cat_df.shape[0])
-
-        self.WB._cat_df['diff'] = np.random.uniform(-1, 1, self.WB._cat_df.shape[0])
-
-        incremental_val, res = self.WB._predict_synthetic('alcohol',
-                                                          'Type',
-                                                          copydf,
-                                                          col_indices,
-                                                          vartype='Continuous')
-
-        self.assertIsInstance(res,
-                              pd.DataFrame,
-                              """sensitivity output not of type dataframe""")
 
     def test_var_check_output(self):
         """test return of json like object after var_check run"""

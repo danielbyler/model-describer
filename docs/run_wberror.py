@@ -7,6 +7,7 @@ import numpy as np
 import requests
 import io
 
+
 def create_wine_data(cat_cols):
     """
     create UCI wine machine learning dataset
@@ -45,7 +46,7 @@ def create_wine_data(cat_cols):
 #====================
 # wine quality dataset example
 # featuredict - cat and continuous variables
-wine = utils.create_wine_data(None)
+wine = create_wine_data(None)
 
 wine.head()
 
@@ -94,6 +95,14 @@ WB = ErrorViz(modelobj=modelObjc,
 
 WB.run(output_type='html',
        output_path='error_viz_regressions.html')
+
+col_indices = ['alcohol', 'errors', 'predictedYSmooth', 'Type', 'diff']
+
+WB._predict_synthetic('alcohol',
+                      'Type',
+                      mod_df,
+                      col_indices,
+                      vartype='Continuous')
 
 store2 = []
 for out in WB.outputs:
