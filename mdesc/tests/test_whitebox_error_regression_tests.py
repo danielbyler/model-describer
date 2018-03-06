@@ -12,6 +12,10 @@ from mdesc.eval import ErrorViz
 
 GLOBAL_ROUND = 2
 
+try:
+    FileNotFoundError
+except NameError:
+    FileNotFoundError = IOError
 
 class TestWBBaseMethods(unittest.TestCase):
 
@@ -19,7 +23,7 @@ class TestWBBaseMethods(unittest.TestCase):
         # create wine dataset
         try:
             wine = pd.read_csv('testdata/wine.csv')
-        except:
+        except FileNotFoundError:
             wine = pd.read_csv('/home/travis/build/DataScienceSquad/model-describer/mdesc/tests/testdata/wine.csv')
 
         # init randomforestregressor

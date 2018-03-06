@@ -101,7 +101,7 @@ class TestWhiteBoxError(unittest.TestCase):
 
         self.assertEqual(list(json_out.keys()),
                          ['Type', 'Data'],
-                         """json_out keys not expected for html_type error""")
+                         """json_out keys not expected for html_type error: {}""".format(json_out.keys()))
 
     def test_format_FmtJson_to_json_html_type_percentiles(self):
         """ format json output for html_type=percentiles """
@@ -109,8 +109,8 @@ class TestWhiteBoxError(unittest.TestCase):
         json_out = formatting.FmtJson.to_json(self.df,
                                               html_type='percentile')
 
-        self.assertEqual(list(json_out.keys()),
-                         ['Type', 'Data'],
+        self.assertEqual(sorted(list(json_out.keys())),
+                         ['Data', 'Type'],
                          """json_out keys not expected for html_type percentiles""")
 
     def test_format_FmtJson_to_json_html_type_accuracy(self):
@@ -119,8 +119,8 @@ class TestWhiteBoxError(unittest.TestCase):
         json_out = formatting.FmtJson.to_json(self.df,
                                               html_type='accuracy')
 
-        self.assertEqual(list(json_out.keys()),
-                         ['Type', 'ErrType', 'Yvar', 'Data'],
+        self.assertEqual(sorted(list(json_out.keys())),
+                         ['Data', 'ErrType', 'Type', 'Yvar'],
                          """json_out keys not expected for html_type accuracy""")
 
     def test_format_FmtJson_to_json_html_type_sensitivity(self):
@@ -129,9 +129,9 @@ class TestWhiteBoxError(unittest.TestCase):
         json_out = formatting.FmtJson.to_json(self.df,
                                               html_type='sensitivity')
 
-        self.assertEqual(list(json_out.keys()),
-                         ['Type', 'Change', 'Data'],
-                         """json_out keys not expected for html_type sensitivity""")
+        self.assertEqual(sorted(list(json_out.keys())),
+                         ['Change', 'Data', 'Type'],
+                         """json_out keys not expected for html_type sensitivity: {}""".format(list(json_out.keys())))
 
     def test_flatten_json_out(self):
         """ test flatten_json flattening list of dicts """

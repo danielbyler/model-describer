@@ -11,6 +11,10 @@ from mdesc.base import MdescBase
 from mdesc.eval import ErrorViz
 from mdesc.utils import utils as wb_utils
 
+try:
+    FileNotFoundError
+except NameError:
+    FileNotFoundError = IOError
 
 class TestWBBaseMethods(unittest.TestCase):
 
@@ -18,7 +22,7 @@ class TestWBBaseMethods(unittest.TestCase):
         # create wine dataset
         try:
             wine = pd.read_csv('testdata/wine.csv')
-        except:
+        except FileNotFoundError:
             wine = pd.read_csv('/home/travis/build/DataScienceSquad/model-describer/mdesc/tests/testdata/wine.csv')
 
 
