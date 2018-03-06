@@ -224,11 +224,11 @@ def create_insights(
                   'MEAN': np.mean(errors),
                   'MED': np.median(errors)}
 
-    msedf = pd.DataFrame({'groupByValue': group.name,
+    errdf = pd.DataFrame({'groupByValue': group.name,
                           'groupByVarName': group_var,
                           error_type: error_dict[error_type],
                           'Total': float(group.shape[0])}, index=[0])
-    return msedf
+    return errdf
 
 
 def create_accuracy(model_type,

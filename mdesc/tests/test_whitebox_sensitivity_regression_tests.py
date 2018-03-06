@@ -15,7 +15,7 @@ try:
 
 except ImportError:
     import utils as wb_utils
-    from eval import WhiteBoxSensitivity
+    from eval import SensitivityViz
 
 
 class TestWBBaseMethods(unittest.TestCase):
@@ -119,10 +119,11 @@ class TestWBBaseMethods(unittest.TestCase):
 
         self.WB._cat_df['diff'] = np.random.uniform(-1, 1, self.WB._cat_df.shape[0])
 
-        modal, res = self.WB._handle_categorical_preds('alcohol',
+        modal, res = self.WB._predict_synthetic('alcohol',
                                                 'Type',
                                                 copydf,
-                                                col_indices)
+                                                col_indices,
+                                                vartype='Categorical')
         self.assertEqual(modal,
                          self.wine['alcohol'].mode().values[0],
                          """unexpected modal value on _handle_categorical_preds""")
@@ -141,13 +142,18 @@ class TestWBBaseMethods(unittest.TestCase):
 
         self.WB._cat_df['diff'] = np.random.uniform(-1, 1, self.WB._cat_df.shape[0])
 
-        modal, res = self.WB._handle_categorical_preds('alcohol',
+        print(copydf.columns)
+        print(self.WB._mod_df.columns)
+
+        modal, res = self.WB._predict_synthetic('alcohol',
                                                 'Type',
                                                 copydf,
-                                                col_indices)
+                                                col_indices,
+                                                vartype='Categorical')
+
         self.assertIsInstance(res,
                               pd.DataFrame,
-                              """pd.DataFrame not returned in _handle_categorical_preds""")
+                              """pd.DataFrame not returned in _predict_synthetic""")
 
     def test_handle_continuous_incremental_val_output(self):
         """test incremental val output returned is correct"""
@@ -163,10 +169,12 @@ class TestWBBaseMethods(unittest.TestCase):
 
         self.WB._cat_df['diff'] = np.random.uniform(-1, 1, self.WB._cat_df.shape[0])
 
-        incremental_val, res = self.WB._handle_continuous_preds('density',
-                                                'Type',
-                                                copydf,
-                                                col_indices)
+        incremental_val, res = self.WB._predict_synthetic('alcohol',
+                                                          'Type',
+                                                          copydf,
+                                                          col_indices,
+                                                          vartype='Continuous')
+
         self.assertEqual(round(incremental_val, 4),
                          round(copydf['density'].std() * 0.5, 4),
                          """incremental_val is incorrect""")
@@ -185,10 +193,11 @@ class TestWBBaseMethods(unittest.TestCase):
 
         self.WB._cat_df['diff'] = np.random.uniform(-1, 1, self.WB._cat_df.shape[0])
 
-        incremental_val, res = self.WB._handle_continuous_preds('density',
-                                                'Type',
-                                                copydf,
-                                                col_indices)
+        incremental_val, res = self.WB._predict_synthetic('alcohol',
+                                                          'Type',
+                                                          copydf,
+                                                          col_indices,
+                                                          vartype='Continuous')
 
         self.assertIsInstance(res,
                               pd.DataFrame,

@@ -17,9 +17,9 @@ var appHelper = new AppHelper();
 //Creating the layout for all the elements
 var main = d3.select('#App');
 //Main Heading
-var heading = main.append("div").attr('class', "heading").append("a").attr("href", "https://github.com/DataScienceSquad/WhiteBox_Production").html("White Box - Prediction Error By Variable")
+var heading = main.append("div").attr('class', "heading").append("a").attr("href", "https://github.com/DataScienceSquad/model-describer").html("Model Describer - Prediction Error By Variable")
 
-var heading2 = main.append("div").attr('class', "subheading").append("a").attr("href", "https://github.com/DataScienceSquad/WhiteBox_Production/wiki/How-to-interpret-WhiteBox-charts").html("How to interpret WhiteBox Charts")
+var heading2 = main.append("div").attr('class', "subheading").append("a").attr("href", "https://github.com/DataScienceSquad/model-describer/wiki/How-to-interpret-model-describer-charts").html("How to interpret model-describer Charts")
 //Heat map and the type dropdown
 var summary = main.append("div").attr("class", "summary")
 var heatMapContainer = summary.append('div').attr('class', 'heatMapContainer')

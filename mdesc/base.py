@@ -365,7 +365,8 @@ class MdescBase(object):
                                                    html_type='accuracy',
                                                    vartype='Accuracy',
                                                    err_type=self.error_type,
-                                                   ydepend=self.ydepend)
+                                                   ydepend=self.ydepend,
+                                                   mod_type=self.model_type)
         # append to outputs
         placeholder.append(insights_json)
         # append percentiles

@@ -36,7 +36,7 @@ class ErrorViz(MdescBase):
     Example:
     >>> from mdesc.eval import ErrorViz
     ...
-    >>> WB = ErrorViz(modelobj=modelObjc,
+    >>> EV = ErrorViz(modelobj=modelObjc,
     ...                model_df=mod_df,
     ...                ydepend=ydepend,
     ...                cat_df=wine_sub,
@@ -46,7 +46,7 @@ class ErrorViz(MdescBase):
     ...                round_num=2,
     ...                autoformat_types=True)
     >>> # run MLReveal error calibration and save output to local html file
-    >>> WB.run(output_type='html', output_path='path/to/save.html')
+    >>> EV.run(output_type='html', output_path='path/to/save.html')
 
     Parameters
 
@@ -463,10 +463,10 @@ class SensitivityViz(MdescBase):
                                                                         copydf)
 
         # make predictions with the switches to the dataset
-        copydf['new_predictions'] = self._create_preds(copydf)
+        new_preds = self._create_preds(copydf)
 
         # calculate difference between actual predictions and new_predictions
-        cat_df['diff'] = copydf['new_predictions'] - cat_df['predictedYSmooth']
+        cat_df['diff'] = new_preds - cat_df['predictedYSmooth']
 
         if vartype == 'Continuous':
             # groupby and apply

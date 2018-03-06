@@ -46,7 +46,7 @@ keepfeaturelist = ['fixed acidity',
                    'sulphates']
 
 
-EV = ErrorViz(modelobj=modelObjc,
+WB = ErrorViz(modelobj=modelObjc,
               model_df=mod_df,
               ydepend=ydepend,
               cat_df=wine_sub,
@@ -56,5 +56,12 @@ EV = ErrorViz(modelobj=modelObjc,
               round_num=2,
               autoformat_types=True)
 
-EV.run(output_type='html',
-       output_path='wberror_regression.html')
+WB.run(output_type='html',
+       output_path='error_viz_regressions.html')
+
+store2 = []
+for out in WB.outputs:
+    if out['Type'] == 'Accuracy':
+        store2.append(out)
+
+store2

@@ -42,3 +42,5 @@ WB = SensitivityViz(clf,
 
 WB.run(output_type='html',
        output_path='sensitivity_classification.html')
+
+WB.model_type

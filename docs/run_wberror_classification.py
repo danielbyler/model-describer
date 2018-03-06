@@ -24,7 +24,7 @@ clf.fit(model_df,
 
 from sklearn.utils.validation import check_is_fitted
 
-WB = ErrorViz(clf,
+EV = ErrorViz(clf,
               model_df=model_df,
               ydepend=ydepend,
               cat_df=df,
@@ -35,5 +35,16 @@ WB = ErrorViz(clf,
               autoformat_types=True
               )
 
-WB.run(output_path='error_viz_classification.html',
+EV.run(output_path='error_viz_classification.html',
        output_type='html')
+
+EV.model_type
+
+
+store = []
+for out in EV.outputs:
+    if out['Type'] == 'Accuracy':
+        store.append(out)
+
+store
+EV.model_type

@@ -81,7 +81,8 @@ class FmtJson(object):
             html_type='error',
             incremental_val=None,
             err_type=None,
-            ydepend=None):
+            ydepend=None,
+            mod_type='classification'):
         """
         convert input dataframe to json
 
@@ -102,6 +103,10 @@ class FmtJson(object):
 
         assert html_type in ['error', 'sensitivity', 'percentile', 'accuracy'], \
             'html_type must be error, sensitivity, percentile, accuracy'
+
+        # classification model type only supports mean errors
+        if mod_type == 'classification':
+            err_type = 'MEAN'
 
         json_dict = dict(percentile={'Type': vartype},
                          error={'Type': vartype},

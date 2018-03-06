@@ -15,8 +15,8 @@ try:
 
 except ImportError:
     import utils as wb_utils
-    from base import WhiteBoxBase
-    from eval import WhiteBoxError
+    from base import MdescBase
+    from eval import ErrorViz
 
 
 class TestWBBaseMethods(unittest.TestCase):
@@ -111,7 +111,7 @@ class TestWBBaseMethods(unittest.TestCase):
                            'errNeg': np.random.rand(100),
                            'predictedYSmooth': np.random.rand(100)})
 
-        self.WB.fmt_raw_df(col='alcohol',
+        self.WB._fmt_raw_df(col='alcohol',
                       groupby_var='Type',
                       cur_group=df)
 
@@ -127,7 +127,7 @@ class TestWBBaseMethods(unittest.TestCase):
                            'errNeg': np.random.rand(100),
                            'predictedYSmooth': np.random.rand(100)})
 
-        self.WB.fmt_raw_df(col='alcohol',
+        self.WB._fmt_raw_df(col='alcohol',
                       groupby_var='Type',
                       cur_group=df)
 
@@ -143,7 +143,7 @@ class TestWBBaseMethods(unittest.TestCase):
                            'errNeg': np.random.rand(100),
                            'predictedYSmooth': np.random.rand(100)})
 
-        self.WB.fmt_raw_df(col='alcohol',
+        self.WB._fmt_raw_df(col='alcohol',
                       groupby_var='Type',
                       cur_group=df)
 
@@ -159,7 +159,7 @@ class TestWBBaseMethods(unittest.TestCase):
                            'errNeg': np.random.rand(100),
                            'predictedYSmooth': np.random.rand(100)})
 
-        self.WB.fmt_agg_df(col='alcohol',
+        self.WB._fmt_agg_df(col='alcohol',
                            agg_errors=df)
 
         self.assertIn('col_value',
@@ -174,7 +174,7 @@ class TestWBBaseMethods(unittest.TestCase):
                            'errNeg': np.random.rand(100),
                            'predictedYSmooth': np.random.rand(100)})
 
-        self.WB.fmt_agg_df(col='alcohol',
+        self.WB._fmt_agg_df(col='alcohol',
                            agg_errors=df)
 
         self.assertIn('col_name',
@@ -189,7 +189,7 @@ class TestWBBaseMethods(unittest.TestCase):
                            'errNeg': np.random.rand(100),
                            'predictedYSmooth': np.random.rand(100)})
 
-        self.WB.fmt_raw_df(col='alcohol',
+        self.WB._fmt_raw_df(col='alcohol',
                            groupby_var='Type',
                            cur_group=df)
 
@@ -208,7 +208,7 @@ class TestWBBaseMethods(unittest.TestCase):
                            'errNeg': np.random.rand(100),
                            'predictedYSmooth': np.random.rand(100)})
 
-        self.WB.fmt_agg_df(col='alcohol',
+        self.WB._fmt_agg_df(col='alcohol',
                            agg_errors=df)
 
         with self.assertRaises(RuntimeError) as context:
