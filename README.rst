@@ -121,12 +121,12 @@ In many models, categorical variables are present as independent variables. To p
 Handling NaN's
 -----------------
 
-Missing data needs to be specially handled. Some machine learning models are more adept to handling missing data than others. Dependent upon your model, you may have an interest in keeping your missing data as is. Numeric columns must maintain the original missing value NaN, however categories can map NaN to a string for more informative output. In order to map missing data into the html output, you can use the following construct:
+Missing data needs to be specially handled within model-describer. For any data the user wishes to treat as missing, numeric columns must maintain the original missing value NaN. Users should map NaN values in string variables to a more descriptive value like 'Missing'. In order to make missing data more visually appealing the html output, you can use the following construct:
 
 .. code-block:: python
 
     # fill object dtype columns with null to map to html output as a category
-    df = df.apply(lambda x: x.fillna('null') if x.dtype.kind == 'O' else x)
+    df = df.apply(lambda x: x.fillna('Missing') if x.dtype.kind == 'O' else x)
     # and get dummies as usual
     ydepend = 'target'
     model_df = pd.get_dummies(df.loc[:, df.columns != ydepend])
