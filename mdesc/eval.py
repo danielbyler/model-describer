@@ -14,8 +14,8 @@ try:
     import utils.formatting as formatting
     from base import MdescBase
 except ImportError:
-    import utils as wb_utils
-    from categorical_conversions import pandas_switch_modal_dummy
+    import utils.utils as wb_utils
+    from utils.categorical_conversions import pandas_switch_modal_dummy
     from base import MdescBase
     from utils import formatting
 
