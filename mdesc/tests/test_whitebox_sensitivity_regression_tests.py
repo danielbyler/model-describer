@@ -17,7 +17,7 @@ class TestWBBaseMethods(unittest.TestCase):
         # create wine dataset
         try:
             wine = pd.read_csv('testdata/wine.csv')
-        except FileNotFoundError:
+        except:
             wine = pd.read_csv('/home/travis/build/DataScienceSquad/model-describer/mdesc/tests/testdata/wine.csv')
 
         # init randomforestregressor
