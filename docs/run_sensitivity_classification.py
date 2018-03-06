@@ -20,8 +20,6 @@ df.loc[:, ydepend] = df.loc[:, ydepend].apply(lambda x: 0 if x < 5 else 1)
 # convert categorical
 model_df = pd.get_dummies(df.loc[:, df.columns != ydepend])
 
-model_df.head()
-
 # build model
 clf = RandomForestClassifier(max_depth=2, random_state=0)
 clf = LogisticRegression()
@@ -43,10 +41,4 @@ WB = SensitivityViz(clf,
 
 
 WB.run(output_type='html',
-       output_path='WINEQUALITY_SENSITIVITY_CLASSIFICATION.html')
-
-rdf = WB.raw_df
-
-rdf[(rdf['groupByVar'] == 'Type') & (rdf['col_name'] == 'fixed acidity')]
-
-sum(range(49999951,50000000))
+       output_path='sensitivity_classification.html')

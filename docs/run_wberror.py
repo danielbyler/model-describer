@@ -45,6 +45,7 @@ keepfeaturelist = ['fixed acidity',
                    'alcohol',
                    'sulphates']
 
+
 EV = ErrorViz(modelobj=modelObjc,
               model_df=mod_df,
               ydepend=ydepend,
@@ -56,4 +57,4 @@ EV = ErrorViz(modelobj=modelObjc,
               autoformat_types=True)
 
 EV.run(output_type='html',
-       output_path='REGRESSIONTEST2.html')
+       output_path='wberror_regression.html')

@@ -40,8 +40,4 @@ WB = SensitivityViz(clf,
                     )
 
 WB.run(output_type='html',
-       output_path='SENSITIVITYTESTPYTHON2.html')
-
-df = pd.DataFrame({'col1': np.random.uniform(10000000, 20000000, 1000)})
-
-df['col1(10000000s)'] = list(map(lambda p: round(p, 2), df['col1']/10000000))
+       output_path='sensitivityviz_regression.html')

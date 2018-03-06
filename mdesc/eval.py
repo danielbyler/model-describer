@@ -204,8 +204,11 @@ class ErrorViz(MdescBase):
         # iterate over groups
         for group_level in self._cat_df[groupby_var].unique():
             # subset data to current group
-            cur_group = self._cat_df[self._cat_df[groupby_var] == group_level][col_indices]\
-                                                                                .reset_index(drop=True).copy(deep=True)
+            cur_group = (self._cat_df[self._cat_df[groupby_var] == group_level][col_indices]
+                         .reset_index(drop=True)
+                         .copy(deep=True))
+
+
 
             # check if categorical
             if is_object_dtype(self._cat_df.loc[:, col]):
@@ -213,10 +216,12 @@ class ErrorViz(MdescBase):
                 vartype = 'Categorical'
                 logger.info("""Categorical variable detected - group_level: {}""".format(group_level))
                 # apply transform function
-                group_errors = self._transform_function(cur_group,
-                                                        col=col,
-                                                        vartype=vartype,
-                                                        groupby_var=groupby_var)
+
+                group_errors = cur_group.groupby(col).apply(self._transform_function,
+                                                            col=col,
+                                                            vartype=vartype,
+                                                            groupby_var=groupby_var)
+
 
             elif is_numeric_dtype(self._cat_df.loc[:, col]):
                 vartype = 'Continuous'
@@ -468,6 +473,7 @@ class SensitivityViz(MdescBase):
             sensitivity = cat_df[col_indices].groupby(groupby).apply(self._continuous_slice,
                                                                      col=col,
                                                                      groupby_var=groupby)
+        # categorical
         else:
             sensitivity = cat_df[col_indices].groupby([col, groupby]).apply(self._transform_function,
                                                                             col=col,
@@ -517,8 +523,8 @@ class SensitivityViz(MdescBase):
                                                                vartype=vartype)
 
         sensitivity = (sensitivity.reset_index(drop=True)
-                                                .fillna('null'))
-                                                #.round(self.round_num)) # TODO discuss rounding issue
+                       .fillna('null'))
+
 
         logging.info("""Converting output to json type using to_json utility function""")
         # convert to json structure
