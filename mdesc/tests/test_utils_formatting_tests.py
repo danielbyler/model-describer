@@ -99,8 +99,8 @@ class TestWhiteBoxError(unittest.TestCase):
         json_out = formatting.FmtJson.to_json(self.df,
                                               html_type='error')
 
-        self.assertEqual(list(json_out.keys()),
-                         ['Type', 'Data'],
+        self.assertEqual(sorted(list(json_out.keys())),
+                         ['Data', 'Type'],
                          """json_out keys not expected for html_type error: {}""".format(json_out.keys()))
 
     def test_format_FmtJson_to_json_html_type_percentiles(self):
