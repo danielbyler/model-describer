@@ -1,6 +1,6 @@
 .. -*- mode: rst -*-
-.. image:: https://travis-ci.com/Data4Gov/model-describer.svg?token=1GNkopDprh4icqumn6Mz&branch=master
-    :target: https://travis-ci.com/Data4Gov/model-describer
+.. image:: https://travis-ci.com/DataScienceSquad/model-describer.svg?token=1GNkopDprh4icqumn6Mz&branch=master
+    :target: https://travis-ci.com/DataScienceSquad/model-describer
 
 .. image:: https://img.shields.io/badge/License-MIT-blue.svg
     :target: https://lbesson.mit-license.org/

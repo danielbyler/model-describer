@@ -347,7 +347,7 @@ class MdescBase(object):
             if len(colhold) > 0:
                 placeholder.append(formatting.FmtJson.flatten_json(colhold))
             # TODO redirect stdout so progress bar can output to single line
-            md_utils.sysprint('Percent Complete: {per:2.0f}%'.format(per=(idx / len(to_iter_cols)) * 100))
+            md_utils.sysprint('Percent Complete: {per:2.0f}%'.format(per=(float(idx) / float(len(to_iter_cols))) * 100))
 
         md_utils.sysprint('Percent Complete: 100%')
         logging.info('Converting accuracy outputs to json format')

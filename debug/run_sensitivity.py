@@ -14,6 +14,8 @@ import pandas as pd
 import numpy as np
 
 
+
+
 def create_wine_data(cat_cols):
     """
     create UCI wine machine learning dataset
@@ -79,15 +81,6 @@ WB = SensitivityViz(clf,
 WB.run(output_type='html',
        output_path='sensitivityviz_regression.html')
 
-col_indices = ['density', 'errors', 'predictedYSmooth', 'Type', 'diff']
-
-WB._predict_synthetic('density',
-                      'Type',
-                      model_df,
-                      col_indices,
-                      vartype='Continuous')
-
-model_df.columns
 
 """
 old tests

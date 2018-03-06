@@ -9,7 +9,7 @@ def readme():
 
 setup(
     name='model-describer',
-    version='0.0.1',
+    version='0.0.1.1',
     packages=find_packages("."),
     url='https://github.com/DataScienceSquad/model-describer',
     license='MIT',

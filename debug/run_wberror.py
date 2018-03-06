@@ -96,17 +96,3 @@ WB = ErrorViz(modelobj=modelObjc,
 WB.run(output_type='html',
        output_path='error_viz_regressions.html')
 
-col_indices = ['alcohol', 'errors', 'predictedYSmooth', 'Type', 'diff']
-
-WB._predict_synthetic('alcohol',
-                      'Type',
-                      mod_df,
-                      col_indices,
-                      vartype='Continuous')
-
-store2 = []
-for out in WB.outputs:
-    if out['Type'] == 'Accuracy':
-        store2.append(out)
-
-store2
