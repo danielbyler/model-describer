@@ -15,11 +15,11 @@ try:
     import utils.formatting as formatting
     import modelconfig.fmt_sklearn_preds as fmt_sklearn_preds
 except ImportError:
-    import mdesc.utils.utils as md_utils
-    import mdesc.utils.check_utils as checks
-    import mdesc.utils.percentiles as percentiles
-    import mdesc.utils.formatting as formatting
-    from mdesc.utils.fmt_model_outputs import fmt_sklearn_preds
+    import utils as md_utils
+    import check_utils as checks
+    import percentiles
+    import formatting
+    from fmt_model_outputs import fmt_sklearn_preds
 
 logger = md_utils.util_logger(__name__)
 

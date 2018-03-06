@@ -14,10 +14,10 @@ try:
     import utils.formatting as formatting
     from base import MdescBase
 except ImportError:
-    import mdesc.utils.utils as wb_utils
-    from mdesc.utils.categorical_conversions import pandas_switch_modal_dummy
-    from mdesc.base import MdescBase
-    from mdesc.utils import formatting
+    import utils as wb_utils
+    from categorical_conversions import pandas_switch_modal_dummy
+    from base import MdescBase
+    from utils import formatting
 
 logger = wb_utils.util_logger(__name__)
 
