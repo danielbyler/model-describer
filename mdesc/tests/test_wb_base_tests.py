@@ -7,16 +7,9 @@ import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.ensemble import RandomForestClassifier
 
-try:
-    import sys
-    sys.path.insert(0, "/home/travis/build/Data4Gov/WhiteBox_Production")
-    from mdesc.utils import utils as wb_utils
-    from mdesc.eval import ErrorViz
-
-except ImportError:
-    import utils as wb_utils
-    from base import MdescBase
-    from eval import ErrorViz
+from mdesc.base import MdescBase
+from mdesc.eval import ErrorViz
+from mdesc.utils import utils as wb_utils
 
 
 class TestWBBaseMethods(unittest.TestCase):

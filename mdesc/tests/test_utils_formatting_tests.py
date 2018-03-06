@@ -5,14 +5,9 @@ import unittest
 import pandas as pd
 import numpy as np
 
-try:
-    import sys
-    sys.path.insert(0, "/home/travis/build/Data4Gov/WhiteBox_Production")
-    from mdesc.utils import formatting
-    from mdesc.utils import utils as wb_utils
-except ImportError:
-    from utils import formatting
-    from utils import utils as wb_utils
+
+from mdesc.utils import formatting
+from mdesc.utils import utils as wb_utils
 
 
 class TestWhiteBoxError(unittest.TestCase):

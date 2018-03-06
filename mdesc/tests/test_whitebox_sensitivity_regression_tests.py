@@ -7,15 +7,8 @@ import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.ensemble import RandomForestClassifier
 
-try:
-    import sys
-    sys.path.insert(0, "/home/travis/build/Data4Gov/WhiteBox_Production")
-    from mdesc.utils import utils as wb_utils
-    from mdesc.eval import SensitivityViz
-
-except ImportError:
-    import utils as wb_utils
-    from eval import SensitivityViz
+from mdesc.utils import utils as wb_utils
+from mdesc.eval import SensitivityViz
 
 
 class TestWBBaseMethods(unittest.TestCase):

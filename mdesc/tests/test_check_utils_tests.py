@@ -7,13 +7,7 @@ import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.ensemble import RandomForestClassifier
 
-try:
-    import sys
-    sys.path.insert(0, "/home/travis/build/Data4Gov/WhiteBox_Production")
-    from mdesc.utils import check_utils
-
-except ImportError:
-    from utils import check_utils
+from mdesc.utils import check_utils
 
 Check = check_utils.CheckInputs
 
