@@ -30,7 +30,7 @@ DataFrame of variables with the object data type. This dataframe may contain str
 groupbyvars : List, required
 ------------
 
-List of variables that 'groups' the output into discrete segments for comparison. If the user would like to see the entire population without subgroups, just add a categorical variable to cat_df that only has one category (such as 'Entire Population') and add that variable to the groupbyvars list. 
+List of variables that 'groups' the output into discrete segments for comparison. If the user would like to see the entire population without subgroups, just add a variable to cat_df that only has one category (such as 'Entire Population') and add that variable to the groupbyvars list. In this special case, it must be the only variable in the groupbyvars list.   
 
 .. code-block:: python
 
@@ -47,11 +47,6 @@ Note- Groupbyvars must be listed if featuredict is specified.
 verbose : int, optional 
 -------------
 Logging level of output. Level -- 0 = debug, 1 = warning, 2 = error.
-
-aggregate_func : numpy function, optional
----------------------
-
-Numpy function which summarizes the center of the series in question (error or sensitivity depending on the function). For example, passing np.mean in WhiteBox error will make the central line in the plot for each group the average error. Passing np.median to SensitivityViz will show the median sensitivity for each group selected.
 
 ErrorViz Specific Parameter
 =======================
