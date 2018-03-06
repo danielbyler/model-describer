@@ -9,7 +9,7 @@
     :target: https://pypi.python.org/pypi/model-describer
 
 model-describer: Simple code to make 'black box' machine learning models interpretable to humans.
-===============================================================================================
+===================================================================================================
 
 model-describer makes it possible for everyday humans to understand 'black-box' machine learning models in two key ways:
 

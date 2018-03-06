@@ -13,10 +13,10 @@ setup(
     packages=find_packages("."),
     url='https://github.com/DataScienceSquad/model-describer',
     license='MIT',
-    author='Jason Lewris, Daniel Byler, Venkat Gangavarapu, Shruti Panda',
-    author_email='jlewris@deloitte.com',
+    author='Jason Lewris, Venkat Gangavarapu, Daniel Byler,  Shruti Panda',
+    author_email=['jlewris@deloitte.com', 'vegangavarapu@deloitte.com', 'dybler@deloitte.com', 'shrupanda@deloitte.com'],
     description="""How can I unlock what my model is thinking? model-describer helps answer this problem for sklearn machine learning models. Specifically, model-describer helps address two key issues: error and model sensitivity. For error, model-describer analyzes how well the model is performing within key regions of the data in a visually compelling way. For sensitivity, model-describer identifies what parts of different variable distributions have the biggest impact on model predictions and plots them.""",
-    download_url='https://github.com/data4gov/model-describer/archive/v0.0.6.tar.gz',
+    download_url='https://github.com/DataScienceSquad/model-describer/archive/v0.0.6.tar.gz',
     long_description=readme(),
     classifiers=[
         'License :: OSI Approved :: MIT License',
