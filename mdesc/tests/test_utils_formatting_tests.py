@@ -7,7 +7,6 @@ import numpy as np
 
 
 from mdesc.utils import formatting
-from mdesc.utils import utils as wb_utils
 
 
 class TestWhiteBoxError(unittest.TestCase):
@@ -89,8 +88,8 @@ class TestWhiteBoxError(unittest.TestCase):
                                              formatdict,
                                              subset=True)
 
-        self.assertEqual(formatted.columns.tolist(),
-                         ['finalout', 'finalout2'],
+        self.assertEqual(sorted(formatted.columns.tolist()),
+                         sorted(['finalout', 'finalout2']),
                          """formatting.format_inputs did not subset and map dataframe correctly""")
 
     def test_format_FmtJson_to_json_html_type_error(self):
