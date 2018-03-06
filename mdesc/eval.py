@@ -65,7 +65,7 @@ class ErrorViz(MdescBase):
     cat_df : pandas DataFrame
         Raw, unadjusted dataframe with categorical columns converted to pandas
         data type Categorical. These categorical designations are picked up throughout
-        and are important for proper functioning of WhiteBoxSensitvitiy
+        and are important for proper functioning of SensitivityViz
 
     keepfeaturelist : list
         Optional user defined list to subset
@@ -285,7 +285,7 @@ class SensitivityViz(MdescBase):
     cat_df : pandas DataFrame
         Raw, unadjusted dataframe with categorical columns converted to pandas
         data type Categorical. These categorical designations are picked up throughout
-        and are important for proper functioning of WhiteBoxSensitvitiy
+        and are important for proper functioning of SensitivityViz
 
     featuredict : dict
         Optional user defined dictionary to clean up column name and subset
@@ -326,7 +326,7 @@ class SensitivityViz(MdescBase):
     ------------
 
     ErrorViz : analyze how the model errors are doing for various groups of data
-    MdescBase : base class inherited from WhiteBoxSensitivity to perform key functionality
+    MdescBase : base class inherited from SensitivityViz to perform key functionality
         and grouping logic
     """
 

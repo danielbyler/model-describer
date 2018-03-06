@@ -38,13 +38,3 @@ EV = ErrorViz(clf,
 EV.run(output_path='error_viz_classification.html',
        output_type='html')
 
-EV.model_type
-
-
-store = []
-for out in EV.outputs:
-    if out['Type'] == 'Accuracy':
-        store.append(out)
-
-store
-EV.model_type

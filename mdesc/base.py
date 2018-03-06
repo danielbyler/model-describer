@@ -42,7 +42,7 @@ class MdescBase(object):
                     round_num=2,
                     verbose=None):
         """
-        WhiteBox base class instantiation and parameter checking
+        MdescBase base class instantiation and parameter checking
 
         :param modelobj: fitted sklearn model object
         :param model_df: dataframe used for training sklearn object
