@@ -10,7 +10,7 @@ from sklearn.utils.validation import (check_consistent_length,
 try:
     import utils.utils as wb_utils
 except ImportError:
-    import mdesc.utils.utils as wb_utils
+    import utils as wb_utils
 
 
 class CheckInputs(object):
