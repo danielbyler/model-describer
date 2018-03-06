@@ -660,6 +660,7 @@ function prepareAppData() {
         if (d.Type == "Accuracy") {
             metaData['statData'] = d.Data
             metaData['ErrType'] = d['ErrType']
+            metaData['yVar'] = d['Yvar']
             AppData.splice(i, 1)
         }
     })
@@ -685,6 +686,7 @@ intializeTreeMap(AppData[0]['Data'][0]['groupByVarName'])
 
 //Function that will loop across the data list for each variable and create the charts
 function loopVariables(varInd) {
+    yVar = metaData.yVar
     //seeting up layout for each chart and intitalizing variables required
     var margin = {
         top: 30,
@@ -1161,9 +1163,7 @@ function loopVariables(varInd) {
                     tooltipHtml += " a <span style='color:"+colorDict[varX][q]+"'>"+appHelper.formatLabel(filt[0]['predictedYSmooth'])+(appHelper.formatLabel(filt[0]['predictedYSmooth']) >= 0 ? " increase" : " decrease")+"</span> for " +q+","
                     }
                 })
-                tooltipHtml = tooltipHtml.slice(0,tooltipHtml.length-1)
-                
-                +appHelper.formatLabel(filtTotal['predictedYSmooth'])+  "</span>."
+                tooltipHtml = tooltipHtml.slice(0,tooltipHtml.length-1)+  "</span>."
 
                 tooltip.html(tooltipHtml).style("color","#63666A")
 
@@ -1839,8 +1839,11 @@ function loopVariables(varInd) {
                 })
                 .attr("width", x1.bandwidth())
                 .attr("height", function (d) {
-
-                    return y(d["value"]) - y(0) >= 0 ? y(d["value"]) - y(0) : y(0) - y(d["value"])
+                    if (y(d["value"]) - y(0)==0){
+                        return 1
+                    }
+                else{
+                    return y(d["value"]) - y(0) >= 0 ? y(d["value"]) - y(0) : y(0) - y(d["value"])}
                 })
                 .attr("fill", function (d, i) {
 
@@ -1850,8 +1853,8 @@ function loopVariables(varInd) {
                 .on("mousemove", mousemove)
                 .on("mouseout", mouseout)
                 .style("cursor", "pointer")
-                .style("stroke", "#000")
-                .style("stroke-width", "1px")
+                .style("stroke", function(d){return '#000'})
+                .style("stroke-width", "0px")
 
             //adding grid lines and positioning axes
             yAxisElement.selectAll("line").attr("opacity", 0.15).style("stroke-dasharray", ("4, 4"))
@@ -1887,7 +1890,7 @@ function loopVariables(varInd) {
                 tooltip.style("color", colorDict[varX][d])
 
                 d3.selectAll(".layer" + varInd).style("opacity", "0.4")
-                d3.select(this).style("opacity", 1).style('stroke', 'black').attr("stroke-width", "1px")
+                d3.select(this).style("opacity", 1).style('stroke', 'black').style("stroke-width", "1px")
             }
 
             function mousemove(d, i) {
@@ -1910,7 +1913,7 @@ function loopVariables(varInd) {
                 tooltip.style("color", colorDict[varX][d.key])
 
                 d3.selectAll(".layer" + varInd).style("opacity", "0.4")
-                d3.select(this).style("opacity", 1).style('stroke', 'black').attr("stroke-width", "1px")
+                d3.select(this).style("opacity", 1).style('stroke', 'black').style("stroke-width", "1px")
             }
 
             function mouseout(d, i) {
@@ -1918,7 +1921,7 @@ function loopVariables(varInd) {
                 showingTooltip = false;
                 refLine.transition().style("opacity", 0)
 
-                d3.select(this).attr("stroke-width", "0px")
+                d3.select(this).style("stroke-width", "0px")
             }
 
             //creating legend buttons in the top
@@ -1940,11 +1943,11 @@ function loopVariables(varInd) {
 
             //event listeners for the legend buttons
             function legendMouseOver(d, i) {
-                d3.selectAll(".rect" + d.replace(/[^a-zA-Z]/g, "")).style('stroke', 'black').attr("stroke-width", "1px")
+                d3.selectAll(".rect" + d.replace(/[^a-zA-Z]/g, "")).style('stroke', 'black').style("stroke-width", "1px")
             }
 
             function legendMouseOut(d, i) {
-                d3.selectAll(".rect" + d.replace(/[^a-zA-Z]/g, "")).style('stroke', 'black').attr("stroke-width", "0px")
+                d3.selectAll(".rect" + d.replace(/[^a-zA-Z]/g, "")).style('stroke', 'black').style("stroke-width", "0px")
             }
 
             function legendClick(d, i) {

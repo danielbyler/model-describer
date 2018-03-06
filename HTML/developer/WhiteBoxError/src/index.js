@@ -5,7 +5,7 @@ import AppHelper from './AppHelper.js';
 import {
     AppData
 } from './AppData.js';
-
+console.log(AppData)
 
 //SASS Import to DOM at runtime
 require('./styles/index.scss');
@@ -357,7 +357,7 @@ function getTreeMapData(type) {
         return d['groupByVarName'] == type
     })
     var statDataF = metaData['statData'].filter(function (d) {
-        return d['groupByVarName'] == type
+        return d['groupByVarName'] == type 
     })
     var nestedSample = d3.nest()
         .key(function (d) {
@@ -1317,7 +1317,7 @@ function loopVariables(varInd) {
         // creating the svg element for bar charts
         svg = appHelper.createChart(chartContainer, width);
         //settign up title for the chart
-        appHelper.setTitle(title, "Error Distribution Graph: " + varX + " (Grouped by Type) ");
+        appHelper.setTitle(title, "Error Distribution Graph: " + varX + " (Grouped by "+groupBy +") ");
 
         //setting up the layout for the chart
         svg.selectAll('*').remove();
