@@ -63,7 +63,7 @@ There are a hundred ways to skin an error chart. Almost all of them are reasonab
    #Send To Boss As Attachment With No Additional Editing
     EV.save('/filepathtoboss')
 
-model-describer helps fill that gap for you. These error charts group the level of error by type and show where the error vary for different parts of different variables. Again, only one line of code is required to run it
+model-describer helps fill that gap for you. These error charts group the level of error by type and show where the error vary for different parts of different variables. Again, only one line of code is required to run it.
 
 .. code-block:: python
 
