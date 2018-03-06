@@ -8,7 +8,7 @@
 .. image:: https://img.shields.io/pypi/pyversions/ansicolortags.svg
     :target: https://pypi.python.org/pypi/model-describer
 
-model-describer: Simple code to make 'black box' machine learning models interpretable to humans.
+model-describer: Simple code to make 'black box' machine learning models interpretable to humans
 ===================================================================================================
 
 model-describer makes it possible for everyday humans to understand 'black-box' machine learning models in two key ways:
@@ -118,7 +118,7 @@ In many models, categorical variables are present as independent variables. To p
    model_df = df.loc[:, df.columns != ydepend]
    model_df = pd.get_dummies(model_df)
 
-Handling NaN's
+Handling NaNs
 -----------------
 
 Missing data needs to be specially handled within model-describer. For any data the user wishes to treat as missing, numeric columns must maintain the original missing value NaN. Users should map NaN values in string variables to a more descriptive value like 'Missing'. In order to make missing data more visually appealing the html output, you can use the following construct:
@@ -135,11 +135,12 @@ Missing data needs to be specially handled within model-describer. For any data 
     # pass to model-describer
     WB = ErrorViz(...cat_df = df, model_df = model_df)
 
+model-describer uses the prediction methods native to the machine learning method used for training. As such, if the trained model fed to model-describer cannot process NaNs, model-describer will also be unable to process those NaNs.
 
 Managing Output Length
 ------------------------
 
-Many times, models will have hundreds (or more) of independent variables. To select a more managable number of variables,use the keepfeaturelist parameter (present in both functions). By feeding in this list you will make the HTML output only print output relating to the specified variables.
+Many times, models will have hundreds (or more) of independent variables. To select a more managable subset of variables, use the keepfeaturelist parameter (present in both functions). By feeding in this list the user will make the HTML output only print output relating to the specified variables.
 
 .. code-block:: python
 
@@ -152,13 +153,13 @@ Many times, models will have hundreds (or more) of independent variables. To sel
 Formatting Column Names for Output HTML
 ----------------------------------------
 
-If your columns have unintuitive or especially long names, simply rename the columns up front in your anlaysis script and the new names will propagate throughout the pipeline into the html output.
+If columns have unintuitive or especially long names, simply rename the columns up front in your anlaysis script and the new names will propagate throughout the pipeline into the html output.
 
 .. code-block:: python
 
     col_rename = {'col1': 'demographic_age', 'col2': 'demographic_sex', 'col3': 'demographic_race'}
     df.rename(columns=col_rename, inplace=True)
-    # and then create your modelling dataframe, create dummies, build model, and specify model-describer
+    # create modelling dataframe, create dummies, build model, and specify model-describer
 
 Formatting numeric variable outputs
 --------------------------------------
@@ -200,6 +201,6 @@ Authors include: `Daniel Byler <https://www.linkedin.com/in/danielbyler/>`_, `Ve
 Acknowledgements
 -------------------
 
-Thanks to `Kenton Andersen <https://www.linkedin.com/in/kentonandersen/>`_ for his tireless help in running and operating our development environment
+Thanks to `Kenton Andersen <https://www.linkedin.com/in/kentonandersen/>`_ for his tireless help in running and operating our development environment.
  
- Please drop us a line in the issues section as bugs or feature requests arise. 
+Please drop us a line in the issues section as bugs or feature requests arise. 
