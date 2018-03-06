@@ -5,6 +5,7 @@ from mdesc.utils import percentiles
 from mdesc.eval import ErrorViz
 import numpy as np
 
+
 #====================
 # wine quality dataset example
 # featuredict - cat and continuous variables
@@ -44,7 +45,7 @@ keepfeaturelist = ['fixed acidity',
                    'alcohol',
                    'sulphates']
 
-WB = ErrorViz(modelobj=modelObjc,
+EV = ErrorViz(modelobj=modelObjc,
               model_df=mod_df,
               ydepend=ydepend,
               cat_df=wine_sub,
@@ -54,5 +55,5 @@ WB = ErrorViz(modelobj=modelObjc,
               round_num=2,
               autoformat_types=True)
 
-WB.run(output_type='html',
+EV.run(output_type='html',
        output_path='REGRESSIONTEST2.html')

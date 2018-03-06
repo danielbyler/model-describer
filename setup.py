@@ -8,15 +8,15 @@ def readme():
         return f.read()
 
 setup(
-    name='mdesc',
-    version='0.0.7.9.6',
+    name='model-describer',
+    version='0.0.1',
     packages=find_packages("."),
-    url='https://github.com/Data4Gov/WhiteBox_Production',
+    url='https://github.com/DataScienceSquad/model-describer',
     license='MIT',
     author='Jason Lewris, Daniel Byler, Venkat Gangavarapu, Shruti Panda',
     author_email='jlewris@deloitte.com',
-    description="""How can I unlock what my model is thinking? WhiteBox helps answer this problem for sklearn machine learning models. Specifically, WhiteBox helps address two key issues: error and model sensitivity. For error, WhiteBox analyzes how well the model is performing within key regions of the data in a visually compelling way. For sensitivity, WhiteBox identifies what parts of different variable distributions have the biggest impact on model predictions and plots them.""",
-    download_url='https://github.com/data4gov/WhiteBox_Production/archive/v0.0.6.tar.gz',
+    description="""How can I unlock what my model is thinking? model-describer helps answer this problem for sklearn machine learning models. Specifically, model-describer helps address two key issues: error and model sensitivity. For error, model-describer analyzes how well the model is performing within key regions of the data in a visually compelling way. For sensitivity, model-describer identifies what parts of different variable distributions have the biggest impact on model predictions and plots them.""",
+    download_url='https://github.com/data4gov/model-describer/archive/v0.0.6.tar.gz',
     long_description=readme(),
     classifiers=[
         'License :: OSI Approved :: MIT License',
