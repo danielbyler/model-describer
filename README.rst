@@ -8,7 +8,7 @@
 .. image:: https://img.shields.io/pypi/pyversions/ansicolortags.svg
     :target: https://pypi.python.org/pypi/model-describer
 
-model-describer: Simple code to make 'black box' machine learning models interpretable to humans.
+model-describer: Simple code to make 'black box' machine learning models interpretable to humans
 ===================================================================================================
 
 model-describer makes it possible for everyday humans to understand 'black-box' machine learning models in two key ways:
@@ -63,7 +63,7 @@ There are a hundred ways to skin an error chart. Almost all of them are reasonab
    #Send To Boss As Attachment With No Additional Editing
     EV.save('/filepathtoboss')
 
-model-describer helps fill that gap for you. These error charts group the level of error by type and show where the error vary for different parts of different variables. Again, only one line of code is required to run it
+model-describer helps fill that gap for you. These error charts group the level of error by type and show where the error vary for different parts of different variables. Again, only one line of code is required to run it.
 
 .. code-block:: python
 
@@ -118,15 +118,15 @@ In many models, categorical variables are present as independent variables. To p
    model_df = df.loc[:, df.columns != ydepend]
    model_df = pd.get_dummies(model_df)
 
-Handling NaN's
+Handling NaNs
 -----------------
 
-Missing data needs to be specially handled. Some machine learning models are more adept to handling missing data than others. Dependent upon your model, you may have an interest in keeping your missing data as is. Numeric columns must maintain the original missing value NaN, however categories can map NaN to a string for more informative output. In order to map missing data into the html output, you can use the following construct:
+Missing data needs to be specially handled within model-describer. For any data the user wishes to treat as missing, numeric columns must maintain the original missing value NaN. Users should map NaN values in string variables to a more descriptive value like 'Missing'. In order to make missing data more visually appealing the html output, you can use the following construct:
 
 .. code-block:: python
 
     # fill object dtype columns with null to map to html output as a category
-    df = df.apply(lambda x: x.fillna('null') if x.dtype.kind == 'O' else x)
+    df = df.apply(lambda x: x.fillna('Missing') if x.dtype.kind == 'O' else x)
     # and get dummies as usual
     ydepend = 'target'
     model_df = pd.get_dummies(df.loc[:, df.columns != ydepend])
@@ -135,11 +135,12 @@ Missing data needs to be specially handled. Some machine learning models are mor
     # pass to model-describer
     WB = ErrorViz(...cat_df = df, model_df = model_df)
 
+model-describer uses the prediction methods native to the machine learning method used for training. As such, if the trained model fed to model-describer cannot process NaNs, model-describer will also be unable to process those NaNs.
 
 Managing Output Length
 ------------------------
 
-Many times, models will have hundreds (or more) of independent variables. To select a more managable number of variables,use the keepfeaturelist parameter (present in both functions). By feeding in this list you will make the HTML output only print output relating to the specified variables.
+Many times, models will have hundreds (or more) of independent variables. To select a more managable subset of variables, use the keepfeaturelist parameter (present in both functions). By feeding in this list the user will make the HTML output only print output relating to the specified variables.
 
 .. code-block:: python
 
@@ -152,13 +153,13 @@ Many times, models will have hundreds (or more) of independent variables. To sel
 Formatting Column Names for Output HTML
 ----------------------------------------
 
-If your columns have unintuitive or especially long names, simply rename the columns up front in your anlaysis script and the new names will propagate throughout the pipeline into the html output.
+If columns have unintuitive or especially long names, simply rename the columns up front in your anlaysis script and the new names will propagate throughout the pipeline into the html output.
 
 .. code-block:: python
 
     col_rename = {'col1': 'demographic_age', 'col2': 'demographic_sex', 'col3': 'demographic_race'}
     df.rename(columns=col_rename, inplace=True)
-    # and then create your modelling dataframe, create dummies, build model, and specify model-describer
+    # create modelling dataframe, create dummies, build model, and specify model-describer
 
 Formatting numeric variable outputs
 --------------------------------------
@@ -200,6 +201,6 @@ Authors include: `Daniel Byler <https://www.linkedin.com/in/danielbyler/>`_, `Ve
 Acknowledgements
 -------------------
 
-Thanks to `Kenton Andersen <https://www.linkedin.com/in/kentonandersen/>`_ for his tireless help in running and operating our development environment
+Thanks to `Kenton Andersen <https://www.linkedin.com/in/kentonandersen/>`_ for his tireless help in running and operating our development environment.
  
- Please drop us a line in the issues section as bugs or feature requests arise. 
+Please drop us a line in the issues section as bugs or feature requests arise. 
