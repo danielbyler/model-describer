@@ -14,11 +14,11 @@
 /dist/
 
 # ignore debug folder
-/debug
-debug
+/debug/*
+debug/*
 
 #__pycache__
-/whitebox/__pycache__/
+/mdesc/__pycache__/
 
 # Python egg metadata, regenerated from source files by setuptools.
 /*.egg-info

@@ -79,7 +79,7 @@ WB = SensitivityViz(clf,
                     )
 
 WB.run(output_type='html',
-       output_path='sensitivityviz_regression.html')
+       output_path='debug/sensitivityviz_regression.html')
 
 
 """

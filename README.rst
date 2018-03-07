@@ -201,6 +201,9 @@ Authors include: `Daniel Byler <https://www.linkedin.com/in/danielbyler/>`_, `Ve
 Acknowledgements
 -------------------
 
-Thanks to `Kenton Andersen <https://www.linkedin.com/in/kentonandersen/>`_ for his tireless help in running and operating our development environment.
+Thanks to `Kenton Andersen <https://www.linkedin.com/in/kentonandersen/>`_ for his tireless help in running and operating our development environment. Additional acknowledgements include:
+
+- `Shanti Jha <https://www.linkedin.com/in/shantijha/>`_
+- `Brian Ray <https://www.linkedin.com/in/brianray/>`_
  
 Please drop us a line in the issues section as bugs or feature requests arise. 
