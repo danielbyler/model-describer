@@ -96,11 +96,10 @@ Requirements
 
 model-describer requires:
 
-- numpy==1.11.3
-- pandas==0.19.2
-- sklearn==0.0
-- scipy==0.18.1
-- tqdm==4.19.5
+- numpy==1.14.0
+- pandas==0.22.0
+- scikit-learn==0.19.1
+- scipy==1.0.0
 
 Helpful Tips
 ===============
